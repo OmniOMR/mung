@@ -29,6 +29,10 @@ in the details. To better understand what kind of [relations are useful](https:/
 and which kind of relations are stored for common western music notation, check out the
 [annotator instruction from MUSCIMarker](https://muscimarker.readthedocs.io/en/latest/instructions.html).
 
+## Ontology
+
+The definitions of valid MuNG classes and dependency relationships are in the `ontology/`
+folder.
 
 
 ## Dataset
