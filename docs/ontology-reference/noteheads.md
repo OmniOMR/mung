@@ -1,5 +1,7 @@
 # Noteheads
 
+Corresponding SMuFL group: [4.7. Noteheads](https://w3c.github.io/smufl/latest/tables/noteheads.html)
+
 Class names in this group:
 
 - [`noteheadWhole`](#noteheadwhole)
@@ -12,8 +14,6 @@ Class names in this group:
 - `noteheadDoubleWholeSquare`
 - `noteheadXBlack`
 - `noteheadXOrnate`
-
-Corresponding SMuFL group: [4.7. Noteheads](https://w3c.github.io/smufl/latest/tables/noteheads.html)
 
 
 ## `noteheadWhole`
@@ -32,6 +32,8 @@ Represents a note that has 4 beats of duration. Has no stem. In typeset music no
 
 <img src="noteheads/noteheadWhole_mpp20-w13-p002-id127.png" height="100" />
 
+🔗 **Inlinks:** None. Noteheads are roots of syntax trees.
+
 🤖 **Validation rules:**
 
 - `noteheadWhole` should have no links to `stem`.
@@ -48,6 +50,8 @@ Represents a note that has 2 beats of duration. Has a stem. Can have two stems i
 
 This class has the same 🎯 **Goals** as `noteheadWhole`.
 
+🔗 **Inlinks:** None. Noteheads are roots of syntax trees.
+
 🤖 **Validation rules:**
 
 - `noteheadHalf` must have at least one link to a `stem` (can have two).
@@ -61,6 +65,8 @@ This class has the same 🎯 **Goals** as `noteheadWhole`.
 <img src="noteheads/noteheadBlack_omniomr-1d507bc2-id96.png" height="100" />
 
 Represents a note that has 1 beat and less of duration. Has a stem, optionally flags or beams. Can have two stems if it belongs to two voices.
+
+🔗 **Inlinks:** None. Noteheads are roots of syntax trees.
 
 🤖 **Validation rules:**
 

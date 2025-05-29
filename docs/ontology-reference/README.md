@@ -6,4 +6,6 @@ This is an overview of all MuNG node classes, their meaning, and related links. 
 ## Groups
 
 - [Noteheads](noteheads.md)
-- TODO
+- [Stems](stems.md)
+- Grace Notes (noteheads and ornaments)
+- ...
