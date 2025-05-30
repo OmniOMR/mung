@@ -24,4 +24,4 @@ A notehead can have two stems, if the notehead represents two simultaneous notes
 
 🤖 **Validation rules:**
 
-- `stem` must have exactly one inlink from some notehead.
+- `stem` must have at least one inlink from some notehead (chord stems have more than one).
