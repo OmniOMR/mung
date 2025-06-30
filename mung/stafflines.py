@@ -245,7 +245,7 @@ def staffline_surroundings_mask(staffline_node: Node) -> Tuple[numpy.ndarray, nu
     # Blur, to plug small holes somewhat:
     elevation = gaussian(elevation, sigma=1.0)
     # Prepare the segmentation markers: 1 is ABOVE, 2 is BELOW
-    markers = numpy.zeros(staffline_node.mask.shape)
+    markers = numpy.zeros(staffline_node.mask.shape, dtype=numpy.int32)
     markers[0, :] = 1
     markers[-1, :] = 2
     markers[staffline_node.mask != 0] = 0
@@ -265,9 +265,9 @@ def build_staff_nodes(nodes: List[Node]) -> List[Node]:
     Assumes each staff has 5 stafflines.
 
     Assumes the stafflines have already been merged."""
-    stafflines = [c for c in nodes
+    stafflines = sorted([c for c in nodes
                   if c.class_name == _CONST.STAFFLINE and
-                  not __has_parent_staff(c, nodes)]
+                  not __has_parent_staff(c, nodes)], key=lambda c: c.top)
     if len(stafflines) == 0:
         return []
 
@@ -338,12 +338,12 @@ def build_staffspace_nodes(nodes: List[Node]) -> List[Node]:
     dataset = nodes[0].dataset
     document = nodes[0].document
 
-    staff_nodes = [node for node in nodes
+    staff_nodes = sorted([node for node in nodes
                    if node.class_name == _CONST.STAFF
-                   and not __has_child_staffspace(node, nodes)]
-    staffline_nodes = [node for node in nodes
+                   and not __has_child_staffspace(node, nodes)], key=lambda c: c.top)
+    staffline_nodes = sorted([node for node in nodes
                        if node.class_name == _CONST.STAFFLINE
-                       and not __has_neighbor_staffspace(node, nodes)]
+                       and not __has_neighbor_staffspace(node, nodes)], key=lambda c: c.top)
 
     staff_spaces = []
 
