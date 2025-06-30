@@ -204,6 +204,7 @@ import logging
 import os
 
 import collections
+from pathlib import Path
 from typing import List, Tuple
 
 from lxml import etree
@@ -437,10 +438,15 @@ def get_edges(nodes: List[Node], validate: bool = True) -> List[Tuple[int, int]]
     return edges
 
 
-def write_nodes_to_file(nodes: List[Node], file_path: str, document: str = None, dataset: str = None) -> None:
+def write_nodes_to_file(nodes: List[Node], file_path: str | Path, document: str = None, dataset: str = None) -> None:
     output = write_nodes_to_string(nodes, document, dataset)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, mode="w") as output_file:
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
+    if file_path.parent != Path():
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with file_path.open(mode="w", encoding="utf-8") as output_file:
         output_file.write(output)
 
 

@@ -6,12 +6,14 @@ import operator
 from queue import Queue
 
 from typing import List, Union, Dict, Set, Tuple, Iterable, Optional, Self
+from collections.abc import Container
 
 from mung.node import Node
 from mung.constants import InferenceEngineConstants, PrecedenceLinksConstants
 from mung.io import read_nodes_from_file, write_nodes_to_file
 
 _CONST = InferenceEngineConstants()
+
 
 class NotationGraphError(ValueError):
     pass
@@ -53,6 +55,13 @@ class NotationGraph(object):
             return node_or_id
 
     @property
+    def next_node_id(self) -> int:
+        """
+        Returns the next node ID.
+        """
+        return max([c.id for c in self.vertices]) + 1
+
+    @property
     def edges(self) -> Set[Tuple[int, int]]:
         edges = set()
         for node in self.__nodes:
@@ -62,7 +71,7 @@ class NotationGraph(object):
         return edges
 
     @property
-    def precedence_edges(self) -> set[tuple[int,int]]:
+    def precedence_edges(self) -> set[tuple[int, int]]:
         edges = set()
         for node in self.__nodes:
             if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
@@ -74,6 +83,11 @@ class NotationGraph(object):
     @property
     def vertices(self) -> List[Node]:
         return self.__nodes
+
+    def filter_vertices(self, class_name_or_names: Container[str] | str) -> list[Node]:
+        if isinstance(class_name_or_names, str):
+            class_name_or_names = [class_name_or_names]
+        return [x for x in self.vertices if x.class_name in class_name_or_names]
 
     def __getitem__(self, node_id: int) -> Node:
         """Returns a Node based on its id."""
@@ -415,6 +429,7 @@ class NotationGraph(object):
 
         from_node.add_precedence_outlinks(to_id)
         to_node.add_precedence_inlinks(from_id)
+
 
 ##############################################################################
 
