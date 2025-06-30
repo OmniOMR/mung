@@ -5,10 +5,12 @@ import logging
 import operator
 from queue import Queue
 
-from typing import List, Union, Dict, Set, Tuple, Iterable, Optional
+from typing import List, Union, Dict, Set, Tuple, Iterable, Optional, Self
 
 from mung.node import Node
-from mung.constants import InferenceEngineConstants
+from mung.constants import InferenceEngineConstants, PrecedenceLinksConstants
+from mung.io import read_nodes_from_file, write_nodes_to_file
+
 _CONST = InferenceEngineConstants()
 
 class NotationGraphError(ValueError):
@@ -27,6 +29,20 @@ class NotationGraph(object):
         self.__nodes = nodes
         self.__id_to_node_mapping = {node.id: node for node in self.__nodes}  # type: Dict[int, Node]
 
+    @classmethod
+    def from_file(cls, filename: str) -> Self:
+        return NotationGraph(read_nodes_from_file(filename))
+
+    def save_to_file(self, file_path: str, document: str = None, dataset: str = None) -> None:
+        """
+        Save the notation graph to a file.
+
+        :param file_path: The path to the file where the notation graph should be saved.
+        :param document: The document ID.
+        :param dataset: The dataset ID.
+        """
+        write_nodes_to_file(self.__nodes, file_path, document, dataset)
+
     def __len__(self):
         return len(self.__nodes)
 
@@ -42,6 +58,16 @@ class NotationGraph(object):
         for node in self.__nodes:
             for t in node.outlinks:
                 if (node.id, t) not in edges:
+                    edges.add((node.id, t))
+        return edges
+
+    @property
+    def precedence_edges(self) -> set[tuple[int,int]]:
+        edges = set()
+        for node in self.__nodes:
+            if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
+                for t in node.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
+                    t: int
                     edges.add((node.id, t))
         return edges
 
@@ -264,17 +290,17 @@ class NotationGraph(object):
 
         # Check if the node has at least some predecessors or descendants
         _has_predecessors = False
-        if 'precedence_inlinks' in node.data:
-            _has_predecessors = (len(node.data['precedence_inlinks']) > 0)
+        if PrecedenceLinksConstants.PrecedenceInlinks in node.data:
+            _has_predecessors = (len(node.data[PrecedenceLinksConstants.PrecedenceInlinks]) > 0)
         if _has_predecessors:
             predecessors = copy.deepcopy(
-                node.data['precedence_inlinks'])  # That damn iterator modification
+                node.data[PrecedenceLinksConstants.PrecedenceInlinks])  # That damn iterator modification
 
         _has_descendants = False
-        if 'precedence_outlinks' in node.data:
-            _has_descendants = (len(node.data['precedence_outlinks']) > 0)
+        if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
+            _has_descendants = (len(node.data[PrecedenceLinksConstants.PrecedenceOutlinks]) > 0)
         if _has_descendants:
-            descendants = copy.deepcopy(node.data['precedence_outlinks'])
+            descendants = copy.deepcopy(node.data[PrecedenceLinksConstants.PrecedenceOutlinks])
 
         if (not _has_predecessors) and (not _has_descendants):
             return
@@ -282,37 +308,37 @@ class NotationGraph(object):
         # Remove inlinks
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
-            if 'precedence_outlinks' not in predecessor.data:
+            if PrecedenceLinksConstants.PrecedenceOutlinks not in predecessor.data:
                 raise ValueError(
                     'Predecessor {} of Node {} does not have precedence outlinks!'
                     ''.format(predecessor_id, node.id))
-            if node.id not in predecessor.data['precedence_outlinks']:
+            if node.id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
                 raise ValueError('Predecessor {} of Node {} does not have reciprocal outlink!'
                                  ''.format(predecessor_id, node.id))
-            predecessor.data['precedence_outlinks'].remove(node.id)
-            node.data['precedence_inlinks'].remove(predecessor_id)
+            predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(node.id)
+            node.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(predecessor_id)
 
         # Remove outlinks
         for descentant_id in descendants:
             descentant = self.__id_to_node_mapping[descentant_id]
-            if 'precedence_inlinks' not in descentant.data:
+            if PrecedenceLinksConstants.PrecedenceInlinks not in descentant.data:
                 raise ValueError('Descendant {} of node {} does not have precedence inlinks!'
                                  ''.format(descentant_id, node.id))
-            if node.id not in descentant.data['precedence_inlinks']:
+            if node.id not in descentant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
                 raise ValueError('Descendant {} of node {} does not have reciprocal inlink!'
                                  ''.format(descentant_id, node.id))
-            descentant.data['precedence_inlinks'].remove(node.id)
-            node.data['precedence_outlinks'].remove(descentant_id)
+            descentant.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(node.id)
+            node.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(descentant_id)
 
         # Bridge removed element
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
             for descentant_id in descendants:
                 descentant = self.__id_to_node_mapping[descentant_id]
-                if descentant_id not in predecessor.data['precedence_outlinks']:
-                    predecessor.data['precedence_outlinks'].append(descentant_id)
-                if predecessor_id not in descentant.data['precedence_inlinks']:
-                    descentant.data['precedence_inlinks'].append(predecessor_id)
+                if descentant_id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
+                    predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].append(descentant_id)
+                if predecessor_id not in descentant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
+                    descentant.data[PrecedenceLinksConstants.PrecedenceInlinks].append(predecessor_id)
 
     def has_edge(self, from_id: int, to_id: int) -> bool:
         if from_id not in self.__id_to_node_mapping:
@@ -344,7 +370,7 @@ class NotationGraph(object):
 
         if to_id in self.__id_to_node_mapping[from_id].outlinks:
             if from_id in self.__id_to_node_mapping[to_id].inlinks:
-                logging.info('Adding edge that is alredy in the graph: {} --> {}'
+                logging.info('Adding edge that is already in the graph: {} --> {}'
                              ' -- doing nothing'.format(from_id, to_id))
                 return
             else:
@@ -359,6 +385,36 @@ class NotationGraph(object):
         self.__id_to_node_mapping[from_id].outlinks.append(to_id)
         self.__id_to_node_mapping[to_id].inlinks.append(from_id)
 
+    def add_precedence_edge(self, from_id: int, to_id: int):
+        """
+        Add a *precedence* edge between the MuNGOs with ids ``from --> to``.
+        If the edge is already in the graph, warns and does nothing.
+        TODO: Does not check if given nodes can have precedence links - but it should.
+        """
+        if from_id not in self.__id_to_node_mapping:
+            raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
+        if to_id not in self.__id_to_node_mapping:
+            raise NotationGraphError('Cannot remove edge to id {0}: not in graph!'.format(to_id))
+
+        from_node = self.__id_to_node_mapping[from_id]
+        to_node = self.__id_to_node_mapping[to_id]
+
+        if to_id in from_node.precedence_outlinks:
+            if from_id in to_node.precedence_inlinks:
+                logging.info('Adding edge that is already in the graph: {} --> {}'
+                             ' -- doing nothing'.format(from_id, to_id))
+                return
+            else:
+                raise NotationGraphError('add_edge({}, {}): found {} in outlinks'
+                                         ' of {}, but not {} in inlinks of {}!'
+                                         ''.format(from_id, to_id, to_id, from_id, from_id, to_id))
+        elif from_id in to_node.precedence_inlinks:
+            raise NotationGraphError('add_edge({}, {}): found {} in inlinks'
+                                     ' of {}, but not {} in outlinks of {}!'
+                                     ''.format(from_id, to_id, from_id, to_id, to_id, from_id))
+
+        from_node.add_precedence_outlinks(to_id)
+        to_node.add_precedence_inlinks(from_id)
 
 ##############################################################################
 
@@ -398,7 +454,7 @@ def group_staffs_into_systems(nodes: List[Node],
                     (len([inlink for inlink in node.inlinks
                           if ((id_to_node_mapping[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
                               (id_to_node_mapping[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
-    print('Empty staffs: {0}'.format('\n'.join([str(node.id) for node in empty_staffs])))
+    logging.info('Empty staffs: {0}'.format('\n'.join([str(node.id) for node in empty_staffs])))
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.

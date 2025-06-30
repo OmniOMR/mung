@@ -1,6 +1,15 @@
 """This module implements constants that are used inside the pitch,
 duration and onset inference algorithm."""
 
+
+class PrecedenceLinksConstants(object):
+    """
+    This class stores names of precedence-link-related fields in ``Node.data``.
+    """
+    PrecedenceInlinks: str = "precedence_inlinks"
+    PrecedenceOutlinks: str = "precedence_outlinks"
+
+
 class InferenceEngineConstants(object):
     """This class stores the constants used for pitch inference."""
 

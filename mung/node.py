@@ -7,6 +7,7 @@ import numpy
 from math import ceil
 
 from mung.utils import compute_connected_components
+from mung.constants import PrecedenceLinksConstants
 
 
 class Node(object):
@@ -310,7 +311,7 @@ class Node(object):
     @property
     def class_name(self) -> str:
         return self.__class_name
-    
+
     def set_class_name(self, class_name_):
         self.__class_name = class_name_
 
@@ -640,13 +641,41 @@ class Node(object):
 
         self.set_mask(new_mask)
 
+    @property
+    def precedence_inlinks(self) -> list[int]:
+        return self.data.get(PrecedenceLinksConstants.PrecedenceInlinks, [])
+
+    @property
+    def precedence_outlinks(self) -> list[int]:
+        return self.data.get(PrecedenceLinksConstants.PrecedenceOutlinks, [])
+
+    def __add_values_to_data_template(self, data_index: Any, value_or_values: list[Any]) -> None:
+        if not data_index in self.data:
+            self.data[data_index] = []
+
+        if not isinstance(value_or_values, list):
+            value_or_values = [value_or_values]
+
+        self.data[data_index] += value_or_values
+
+    def add_precedence_inlinks(self, precedence_inlink_or_inlinks_id: list[int] | int) -> None:
+        self.__add_values_to_data_template(
+            PrecedenceLinksConstants.PrecedenceInlinks, precedence_inlink_or_inlinks_id
+        )
+
+    def add_precedence_outlinks(self, precedence_outlink_or_outlinks_id: list[int] | int) -> None:
+        self.__add_values_to_data_template(
+            PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
+        )
+
     def __str__(self):
         """Format the Node as string representation. See the documentation
         of :module:`mung.io` for details."""
         lines = []
         lines.append('<Node>')
         lines.append('\t<Id>{0}</Id>'.format(self.id))
-        lines.append('\t<ClassName>{0}</ClassName>'.format(self.class_name)) # TODO change this if relevant for final XML notation 
+        lines.append('\t<ClassName>{0}</ClassName>'.format(
+            self.class_name))  # TODO change this if relevant for final XML notation
         lines.append('\t<Top>{0}</Top>'.format(self.top))
         lines.append('\t<Left>{0}</Left>'.format(self.left))
         lines.append('\t<Width>{0}</Width>'.format(self.__width))
@@ -810,7 +839,7 @@ class Node(object):
         if mask_string == 'None':
             return None
 
-        mask_flat = numpy.zeros(shape[0]*shape[1], numpy.uint8)
+        mask_flat = numpy.zeros(shape[0] * shape[1], numpy.uint8)
         index = 0
 
         mask_string = mask_string.rstrip()
@@ -819,7 +848,7 @@ class Node(object):
             k_string, v_string = kv.split(':')
             k, v = int(k_string), int(v_string)
             if k == 1:
-                mask_flat[index:index+v] = 1
+                mask_flat[index:index + v] = 1
             index += v
 
         mask = mask_flat.reshape(shape)
