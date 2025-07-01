@@ -642,6 +642,14 @@ class Node(object):
         self.set_mask(new_mask)
 
     @property
+    def is_precedence_sink(self):
+        return len(self.precedence_outlinks) == 0
+
+    @property
+    def is_precedence_source(self):
+        return len(self.precedence_inlinks) == 0
+
+    @property
     def precedence_inlinks(self) -> list[int]:
         return self.data.get(PrecedenceLinksConstants.PrecedenceInlinks, [])
 
@@ -706,6 +714,7 @@ class Node(object):
             return self.encode_mask_rle(self.mask)
         elif mode == 'bitmap':
             return self.encode_mask_bitmap(self.mask)
+        raise ValueError('Invalid mode')
 
     def encode_data(self) -> Optional[str]:
         if self.data is None:
