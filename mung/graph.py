@@ -61,7 +61,9 @@ class NotationGraph(object):
             return node_or_id
 
     @staticmethod
-    def __to__iterable(node_or_id: Iterable[Any] | Any) -> list[Any]:
+    def __to__iterable(node_or_id: Iterable[Any] | Any | None) -> list[Any] | None:
+        if node_or_id is None:
+            return None
         if isinstance(node_or_id, (str, bytes)):
             return [node_or_id]
         if isinstance(node_or_id, Iterable):
@@ -130,6 +132,7 @@ class NotationGraph(object):
         """
         node_id = self.__to_id(node_or_id)
         class_filter = self.__to__iterable(class_filter)
+
         if node_id not in self.__id_to_node_mapping:
             raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
 
@@ -261,7 +264,7 @@ class NotationGraph(object):
         else:
             return False
 
-    def is_parent_of(self, parent_node_or_id:  Node | int, child_node_or_id:  Node | int) -> bool:
+    def is_parent_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
         """
         Check whether the first ``Node`` is a parent of the second ``Node``.
 
@@ -559,7 +562,8 @@ def group_staffs_into_systems(nodes: list[Node],
                     (len([inlink for inlink in node.inlinks
                           if ((id_to_node_mapping[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
                               (id_to_node_mapping[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
-    logging.info('Empty staffs: {0}'.format('\n'.join([str(node.id) for node in empty_staffs])))
+    if len(empty_staffs) > 0:
+        logging.info('Empty staffs: {0}'.format('\n'.join([str(node.id) for node in empty_staffs])))
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
