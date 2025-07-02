@@ -523,6 +523,28 @@ class NotationGraph(object):
         from_node.add_precedence_outlinks(to_id)
         to_node.add_precedence_inlinks(from_id)
 
+    def remove_precedence_edge(self, from_id: int, to_id: int, suppress_not_in_list_error: bool = False):
+        """
+        Removes precedence edge ``from -> to``, does **not** bridge the created gap.
+        """
+        if from_id not in self.__id_to_node_mapping:
+            raise ValueError(f"Cannot remove edge from id {from_id}: not in graph!")
+        if to_id not in self.__id_to_node_mapping:
+            raise ValueError(f"Cannot remove edge to id {to_id}: not in graph!")
+
+        from_node = self.__id_to_node_mapping[from_id]
+        to_node = self.__id_to_node_mapping[to_id]
+        if suppress_not_in_list_error:
+            if to_id not in from_node.precedence_outlinks:
+                logging.warning(f"Suppressing \"not in list\" error, {to_id} not in outlinks of {from_id}")
+                return
+            if from_id not in to_node.precedence_inlinks:
+                logging.warning(f"Suppressing \"not in list\" error, {from_id} not in inlinks of {to_id}")
+                return
+
+        from_node.precedence_outlinks.remove(to_id)
+        to_node.precedence_inlinks.remove(from_id)
+
 
 ##############################################################################
 
@@ -563,7 +585,7 @@ def group_staffs_into_systems(nodes: list[Node],
                           if ((id_to_node_mapping[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
                               (id_to_node_mapping[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
     if len(empty_staffs) > 0:
-        logging.info('Empty staffs: {0}'.format('\n'.join([str(node.id) for node in empty_staffs])))
+        logging.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.

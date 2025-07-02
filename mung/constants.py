@@ -2,6 +2,7 @@
 duration and onset inference algorithm."""
 
 from enum import Enum
+from typing import Self, Optional
 
 
 class PrecedenceLinksConstants(object):
@@ -86,6 +87,33 @@ class ClassNamesConstants(object):
         n7 = "numeral7"
         n8 = "numeral8"
         n9 = "numeral9"
+
+        @classmethod
+        def interpret(cls, numeral_list: list[str] | str) -> Optional[int]:
+            if isinstance(numeral_list, str):
+                numeral_list = [numeral_list]
+            if len(numeral_list) == 0:
+                return None
+
+            numeral_to_digit = {
+                cls.n0.value: 0,
+                cls.n1.value: 1,
+                cls.n2.value: 2,
+                cls.n3.value: 3,
+                cls.n4.value: 4,
+                cls.n5.value: 5,
+                cls.n6.value: 6,
+                cls.n7.value: 7,
+                cls.n8.value: 8,
+                cls.n9.value: 9,
+            }
+            result = 0
+            for numeral in numeral_list:
+                current_num = numeral_to_digit.get(numeral, None)
+                if current_num is None:
+                    return None
+                result = result * 10 + current_num
+            return result
 
 
 class InferenceEngineConstants(ClassNamesConstants):
@@ -289,29 +317,29 @@ class InferenceEngineConstants(ClassNamesConstants):
     TIME_SIGNATURE_MEMBERS = {
         ClassNamesConstants.TIME_SIG_COMMON,
         ClassNamesConstants.TIME_SIG_CUT_COMMON,
-        ClassNamesConstants.Numerals.n0,
-        ClassNamesConstants.Numerals.n1,
-        ClassNamesConstants.Numerals.n2,
-        ClassNamesConstants.Numerals.n3,
-        ClassNamesConstants.Numerals.n4,
-        ClassNamesConstants.Numerals.n5,
-        ClassNamesConstants.Numerals.n6,
-        ClassNamesConstants.Numerals.n7,
-        ClassNamesConstants.Numerals.n8,
-        ClassNamesConstants.Numerals.n9
+        ClassNamesConstants.Numerals.n0.value,
+        ClassNamesConstants.Numerals.n1.value,
+        ClassNamesConstants.Numerals.n2.value,
+        ClassNamesConstants.Numerals.n3.value,
+        ClassNamesConstants.Numerals.n4.value,
+        ClassNamesConstants.Numerals.n5.value,
+        ClassNamesConstants.Numerals.n6.value,
+        ClassNamesConstants.Numerals.n7.value,
+        ClassNamesConstants.Numerals.n8.value,
+        ClassNamesConstants.Numerals.n9.value
     }
 
     NUMERALS = {
-        ClassNamesConstants.Numerals.n0,
-        ClassNamesConstants.Numerals.n1,
-        ClassNamesConstants.Numerals.n2,
-        ClassNamesConstants.Numerals.n3,
-        ClassNamesConstants.Numerals.n4,
-        ClassNamesConstants.Numerals.n5,
-        ClassNamesConstants.Numerals.n6,
-        ClassNamesConstants.Numerals.n7,
-        ClassNamesConstants.Numerals.n8,
-        ClassNamesConstants.Numerals.n9
+        ClassNamesConstants.Numerals.n0.value,
+        ClassNamesConstants.Numerals.n1.value,
+        ClassNamesConstants.Numerals.n2.value,
+        ClassNamesConstants.Numerals.n3.value,
+        ClassNamesConstants.Numerals.n4.value,
+        ClassNamesConstants.Numerals.n5.value,
+        ClassNamesConstants.Numerals.n6.value,
+        ClassNamesConstants.Numerals.n7.value,
+        ClassNamesConstants.Numerals.n8.value,
+        ClassNamesConstants.Numerals.n9.value
     }
 
     @property

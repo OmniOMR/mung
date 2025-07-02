@@ -676,6 +676,25 @@ class Node(object):
             PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
         )
 
+    def __remove_values_from_data_template(self, data_index: Any, value_or_values: list[Any]) -> None:
+        if not data_index in self.data:
+            self.data[data_index] = []
+
+        if not isinstance(value_or_values, list):
+            value_or_values = [value_or_values]
+
+        self.data[data_index] += value_or_values
+
+    def remove_precedence_inlinks(self, precedence_inlink_or_inlinks_id: list[int] | int) -> None:
+        self.__remove_values_from_data_template(
+            PrecedenceLinksConstants.PrecedenceInlinks, precedence_inlink_or_inlinks_id
+        )
+
+    def remove_precedence_outlinks(self, precedence_outlink_or_outlinks_id: list[int] | int) -> None:
+        self.__remove_values_from_data_template(
+            PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
+        )
+
     def __str__(self):
         """Format the Node as string representation. See the documentation
         of :module:`mung.io` for details."""
