@@ -1,12 +1,13 @@
 import collections
 import copy
+import inspect
 import logging
 import operator
-from typing import Optional
 import warnings
-import inspect
+from fractions import Fraction
+from typing import Optional, Iterable
 
-from mung.constants import InferenceEngineConstants, ClassNamesConstants
+from mung.constants import InferenceEngineConstants, ClassNamesConstants, PrecedenceLinksConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
 from .precedence_graph_node import PrecedenceGraphNode
@@ -22,6 +23,7 @@ class OnsetsInferenceStrategy(object):
 
 class OnsetsInferenceEngine(object):
     _CONST = InferenceEngineConstants()
+    _DEFAULT_FRACTIONAL_VERTICAL_IOU_THRESHOLD = 0.8
 
     def __init__(
             self,
@@ -76,7 +78,7 @@ class OnsetsInferenceEngine(object):
                              ' beats only available for notes and rests.'
                              ''.format(node.id, node.class_name))
 
-    def notehead_beats(self, notehead, ignore_modifiers=False) -> float:
+    def notehead_beats(self, notehead: Node, ignore_modifiers=False) -> Fraction:
         """Retrieves the duration for the given notehead, in beats.
 
         It is possible that the notehead has two stems.
@@ -86,17 +88,18 @@ class OnsetsInferenceEngine(object):
 
         Grace notes currently return 0 beats.
 
+        :param notehead: Notehead to infer beats for.
         :param ignore_modifiers: If given, will ignore all duration
             modifiers: Duration dots, tuples, and other potential duration
             modifiers when computing the durations. Effectively, this
             gives you classes that correspond to note(head) type:
             whole (4.0), half (2.0), quarter (1.0), eighth (0.5), etc.
-
-        :returns: A list of possible durations for the given notehead.
+        :returns: A single possible durations for the given notehead.
             Mostly its length is just 1; for multi-stem noteheads,
-            you might get more.
+            the output is reduced to just the first one.
+            TODO: This might lead to problems later.
         """
-        beat = [0]
+        beat = [Fraction(0)]
 
         stems = self.children(notehead, [self._CONST.STEM])
         flags_and_beams = self.children(
@@ -106,7 +109,7 @@ class OnsetsInferenceEngine(object):
         if notehead.class_name in self._CONST.GRACE_NOTEHEAD_CLASS_NAMES:
             logging.warning('Notehead {0}: Grace notes get zero duration!'
                             ''.format(notehead.id))
-            beat = [0]
+            beat = [Fraction(0)]
 
         elif len(stems) > 1:
             logging.warning('Inferring duration for multi-stem notehead: {0}'
@@ -123,15 +126,15 @@ class OnsetsInferenceEngine(object):
                     'Notehead {0} is empty, but has {1} flags and beams!'.format(notehead.id, len(flags_and_beams)))
 
             if len(stems) == 0:
-                beat = [4]
+                beat = [Fraction(4)]
             else:
-                beat = [2]
+                beat = [Fraction(2)]
 
         elif notehead.class_name == self._CONST.NOTEHEAD_FULL:
             if len(stems) == 0:
                 self.__warning_or_error('Full notehead {0} has no stem!'.format(notehead.id))
 
-            beat = [0.5 ** len(flags_and_beams)]
+            beat = [Fraction(1, 2) ** len(flags_and_beams)]
 
         else:
             raise ValueError('Notehead {0}: unknown class_name {1}'
@@ -156,7 +159,7 @@ class OnsetsInferenceEngine(object):
         else:
             self.__graph: NotationGraph = NotationGraph(nodes_or_graph)
 
-    def _compute_duration_modifier(self, notehead: Node):
+    def _compute_duration_modifier(self, notehead: Node) -> Fraction:
         """Computes the duration modifier (multiplicative, in beats)
         for the given notehead (or rest) from the tuples and duration dots.
 
@@ -176,7 +179,7 @@ class OnsetsInferenceEngine(object):
             tuple_ = tuples[0]
 
             # Find the number in the tuple.
-            numerals = self.__graph.children(tuple_, InferenceEngineConstants.NUMERALS)
+            numerals = self.children(tuple_, InferenceEngineConstants.NUMERALS)
 
             if len(numerals) == 0:
                 logging.warning(f"Tuple {tuple_.id} has no numerals!")
@@ -188,25 +191,25 @@ class OnsetsInferenceEngine(object):
             # Fallback, the list of numbers was empty or corrupted in some way,
             # Count noteheads attached to that tuple
             if tuple_number is None:
-                tuple_number = len(self.__graph.parents(tuple_, InferenceEngineConstants.NOTEHEAD_CLASS_NAMES))
+                tuple_number = len(self.__parents(tuple_, InferenceEngineConstants.NOTEHEAD_CLASS_NAMES))
 
             # Last note in tuple should get complementary duration
             # to sum to a whole. Otherwise, playing brings slight trouble.
 
             if tuple_number == 2:
                 # Duola makes notes *longer*
-                duration_modifier = 3 / 2
+                duration_modifier = Fraction(3, 2)
             elif tuple_number == 3:
-                duration_modifier = 2 / 3
+                duration_modifier = Fraction(2, 3)
             elif tuple_number == 4:
                 # This one also makes notes longer
-                duration_modifier = 4 / 3
+                duration_modifier = Fraction(4, 3)
             elif tuple_number == 5:
-                duration_modifier = 4 / 5
+                duration_modifier = Fraction(4, 5)
             elif tuple_number == 6:
                 # Most often done for two consecutive triolas,
                 # e.g. 16ths with a 6-tuple filling one beat
-                duration_modifier = 2 / 3
+                duration_modifier = Fraction(2, 3)
             elif tuple_number == 7:
                 # Here we get into trouble, because this one
                 # can be both 4 / 7 (7 16th in a beat)
@@ -217,30 +220,27 @@ class OnsetsInferenceEngine(object):
                 # For MUSCIMA++ specifically, we can cheat: there is only one
                 # septuple, which consists of 7 x 32rd in 1 beat, so they
                 # get 8 / 7.
-                logging.warning('MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat'
-                                ' in page 14.')
-                duration_modifier = 8 / 7
+                logging.warning('MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.')
+                duration_modifier = Fraction(8, 7)
             elif tuple_number == 10:
-                logging.warning('MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat'
-                                ' in page 04.')
-                duration_modifier = 4 / 5
+                logging.warning('MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.')
+                duration_modifier = Fraction(4, 5)
             else:
-                raise NotImplementedError('Notehead {0}: Cannot deal with tuple '
-                                          'number {1}'.format(notehead.id,
-                                                              tuple_number))
+                raise NotImplementedError(f"Notehead {notehead.id}: Cannot deal with tuple number {tuple_number}")
 
         # Duration dots
-        ddots = self.children(notehead, [self._CONST.AUGMENTATION_DOT])
-        dot_duration_modifier = 1
+        ddots = self.children(notehead, ClassNamesConstants.AUGMENTATION_DOT)
+        dot_duration_modifier = Fraction(1)
         for i, d in enumerate(ddots):
-            dot_duration_modifier += 1 / (2 ** (i + 1))
+            dot_duration_modifier += Fraction(1, 2) ** (i + 1)
         duration_modifier *= dot_duration_modifier
 
         return duration_modifier
 
-    def rest_beats(self, rest: Node, ignore_modifiers=False) -> float:
+    def rest_beats(self, rest: Node, ignore_modifiers=False) -> Fraction:
         """Compute the duration of the given rest in beats.
 
+        :param rest: Rest node.
         :param ignore_modifiers: If given, will ignore all duration
             modifiers: Duration dots, tuples, and other potential duration
             modifiers when computing the durations. Effectively, this
@@ -248,31 +248,8 @@ class OnsetsInferenceEngine(object):
             whole (4.0), half (2.0), quarter (1.0), eighth (0.5), etc.
             Also ignores deriving duration from the time signature
             for whole rests.
-
         """
-
-        rest_beats_dict = {self._CONST.REST_WHOLE: 4,  # !!! We should find the Time Signature.
-                           self._CONST.REST_HALF: 2,
-                           self._CONST.REST_QUARTER: 1,
-                           self._CONST.REST_8TH: 0.5,
-                           self._CONST.REST_16TH: 0.25,
-                           self._CONST.REST_32ND: 0.125,
-                           self._CONST.REST_64TH: 0.0625,
-                           # Technically, these two should just apply time sig.,
-                           # but the measure-factorized precedence graph
-                           # means these durations never have sounding
-                           # descendants anyway:
-                           self._CONST.MULTI_MEASURE_REST: 4,
-                           self._CONST.REPEAT_ONE_BAR: 4,
-                           }
-
-        try:
-            base_rest_duration = rest_beats_dict[rest.class_name]
-
-        except KeyError:
-            raise KeyError('Symbol {0}: Unknown rest type {1}!'
-                           ''.format(rest.id, rest.class_name))
-
+        base_rest_duration = ClassNamesConstants.rest_name_to_duration(rest.class_name)
         # Process the whole rest:
         #  - if it is the only symbol in the measure, it should take on
         #    the duration of the current time signature.
@@ -300,7 +277,7 @@ class OnsetsInferenceEngine(object):
                             ''.format(rest.id, beat))
         return beat[0]
 
-    def measure_lasting_beats(self, node: Node):
+    def measure_lasting_beats(self, node: Node) -> Fraction:
         """Find the duration of an object that lasts for an entire measure
         by interpreting the time signature valid for the given point in
         the score.
@@ -317,14 +294,14 @@ class OnsetsInferenceEngine(object):
             logging.warning('Interpreting object {0} as measure-lasting, but'
                             ' it is not attached to any staff! Returning default: 4'
                             ''.format(node.id))
-            return 4
+            return Fraction(4)
 
         if len(staffs) > 1:
             logging.warning('Interpreting object {0} as measure-lasting, but'
                             ' it is connected to more than 1 staff: {1}'
                             ' Returning default: 4'
                             ''.format(node.id, [s.id for s in staffs]))
-            return 4
+            return Fraction(4)
 
         logging.info('Found staffs: {0}'.format([s.id for s in staffs]))
 
@@ -342,26 +319,27 @@ class OnsetsInferenceEngine(object):
             logging.warning('Interpreting object {0} as measure-lasting, but'
                             ' there is no applicable time signature. Returnig'
                             ' default: 4'.format(node.id))
-            return 4
+            return Fraction(4)
 
         valid_time_signature = applicable_time_signatures[-1]
         beats = self.interpret_time_signature(valid_time_signature)
         return beats
 
-    def process_multistem_notehead(self, notehead):
+    def process_multistem_notehead(self, notehead: Node) -> list[Fraction]:
         """Attempts to recover the duration options of a multi-stem note."""
-        stems = self.children(notehead, ['stem'])
+        stems = self.children(notehead, ClassNamesConstants.STEM)
         flags_and_beams = self.children(
             notehead,
-            self._CONST.FLAGS_AND_BEAMS)
+            InferenceEngineConstants.FLAGS_AND_BEAMS
+        )
 
         if len(flags_and_beams) == 0:
-            if notehead.class_name == self._CONST.NOTEHEAD_FULL:
-                return [1]
-            elif notehead.class_name in self._CONST.NOTEHEADS_EMPTY:
-                return [2]
+            if notehead.class_name == ClassNamesConstants.NOTEHEAD_FULL:
+                return [Fraction(1)]
+            elif notehead.class_name in InferenceEngineConstants.NOTEHEADS_EMPTY:
+                return [Fraction(2)]
 
-        if notehead.class_name in self._CONST.NOTEHEADS_EMPTY:
+        if notehead.class_name in InferenceEngineConstants.NOTEHEADS_EMPTY:
             raise NotationGraphError('Empty notehead with flags and beams: {0}'
                                      ''.format(notehead.id))
 
@@ -379,8 +357,8 @@ class OnsetsInferenceEngine(object):
                 f_and_b_below.append(c)
                 print('Appending below')
 
-        beat_above = 0.5 ** len(f_and_b_above)
-        beat_below = 0.5 ** len(f_and_b_below)
+        beat_above = Fraction(1, 2) ** len(f_and_b_above)
+        beat_below = Fraction(1, 2) ** len(f_and_b_below)
 
         if beat_above != beat_below:
             raise NotImplementedError('Cannot deal with multi-stem note'
@@ -403,7 +381,7 @@ class OnsetsInferenceEngine(object):
 
     ##########################################################################
     # Onsets inference
-    def infer_precedence_from_annotations(self, nodes: list[Node]):
+    def _infer_precedence_from_annotations(self, nodes: list[Node]):
         """Infer precedence graph based solely on the "green lines"
         in MUSCIMA++ annotation: precedence edges. These are encoded
         in the data as inlink/outlink lists
@@ -415,9 +393,12 @@ class OnsetsInferenceEngine(object):
 
         :return: The list of source nodes of the precedence graph.
         """
-        _relevant_clsnames = self._CONST.classes_bearing_duration
-        precedence_nodes = [c for c in nodes
-                            if c.class_name in _relevant_clsnames]
+        self._check_graph_init()
+
+        _relevant_class_names = self._CONST.classes_bearing_duration
+        # precedence_nodes = [c for c in nodes
+        #                     if c.class_name in _relevant_clsnames]
+        precedence_nodes = self.__graph.filter_vertices(_relevant_class_names)
 
         if self.strategy.precedence_only_for_objects_connected_to_staff:
             precedence_nodes = [c for c in precedence_nodes
@@ -427,21 +408,22 @@ class OnsetsInferenceEngine(object):
 
         p_nodes = {}
         for c in precedence_nodes:
-            p_node = PrecedenceGraphNode(objid=c.id,
-                                         node=c,
-                                         inlinks=[],
-                                         outlinks=[],
-                                         duration=durations[c.id],
-                                         )
+            p_node = PrecedenceGraphNode(
+                objid=c.id,
+                node=c,
+                inlinks=[],
+                outlinks=[],
+                duration=durations[c.id],
+            )
             p_nodes[c.id] = p_node
 
         for c in p_nodes.values():
             inlinks = []
             outlinks = []
-            if 'precedence_inlinks' in c.data:
-                inlinks = c.data['precedence_inlinks']
-            if 'precedence_outlinks' in c.data:
-                outlinks = c.data['precedence_outlinks']
+            if PrecedenceLinksConstants.PrecedenceInlinks in c.data:
+                inlinks = c.data[PrecedenceLinksConstants.PrecedenceInlinks]
+            if PrecedenceLinksConstants.PrecedenceOutlinks in c.data:
+                outlinks = c.data[PrecedenceLinksConstants.PrecedenceOutlinks]
             p_node = p_nodes[c.node_id]
             p_node.outlinks = [p_nodes[o] for o in outlinks]
             p_node.inlinks = [p_nodes[i] for i in inlinks]
@@ -1123,10 +1105,13 @@ class OnsetsInferenceEngine(object):
         numeral_names = [n.class_name for n in sorted(numerals, key=lambda x: x.left)]
         return ClassNamesConstants.Numerals.interpret(numeral_names)
 
-    def interpret_time_signature(self, time_signature,
-                                 FRACTIONAL_VERTICAL_IOU_THRESHOLD=0.8):
-        """Converts the time signature into the beat count (in quarter
-        notes) it assigns to its following measures.
+    def interpret_time_signature(
+            self,
+            time_signature: Node,
+            fractional_vertical_iou_threshold: Optional[float] = None,
+    ) -> Fraction:
+        """Converts the time signature into the beat count
+        (in quarter notes) it assigns to its following measures.
 
         Dealing with numeric time signatures
         ------------------------------------
@@ -1144,8 +1129,7 @@ class OnsetsInferenceEngine(object):
                If the minimum vertical IoU between two symbols is more than
                0.8, we consider the time signature non-fractional.
 
-             (The threshold can be controlled through the
-             FRACTIONAL_VERTICAL_IOU_THRESHOLD parameter.)
+
 
         * If yes: assign numerals to either num. (top), or denom. (bottom)
         * If not: assume the number is no. of beats. (In some scores, the
@@ -1159,12 +1143,17 @@ class OnsetsInferenceEngine(object):
         * whole-time mark is interpreted as 4/4
         * alla breve mark is interpreted as 4/4
 
-
+        :param time_signature: Time signature Node.
+        :param fractional_vertical_iou_threshold: The threshold can be controlled
+            through this parameter. Defaults to 0.8.
         :returns: The denoted duration of a measure in beats.
         """
-        members = sorted(self.children(time_signature,
-                                       class_name_filter=self._CONST.TIME_SIGNATURE_MEMBERS),
-                         key=lambda x: x.top)
+        members = sorted(
+            self.children(
+                time_signature,
+                class_name_filter=self._CONST.TIME_SIGNATURE_MEMBERS),
+            key=lambda x: x.top)
+
         logging.info('Interpreting time signature {0}'.format(time_signature.id))
         logging.info('... Members {0}'.format([m.class_name for m in members]))
 
@@ -1184,7 +1173,7 @@ class OnsetsInferenceEngine(object):
         if is_whole or is_alla_breve:
             logging.info('Time signature {0}: whole or alla breve, returning 4.0'
                          ''.format(time_signature.id))
-            return 4.0
+            return Fraction(4)
 
         # Process numerals
         logging.info('... Found numeric time signature, determining whether'
@@ -1212,7 +1201,7 @@ class OnsetsInferenceEngine(object):
                 for m2 in members[_i_m:]:
                     vertical_overlaps.append(bounding_box_dice_coefficient(m1.bounding_box, m2.bounding_box))
             logging.info('... Vertical overlaps found: {0}'.format(vertical_overlaps))
-            if min(vertical_overlaps) < FRACTIONAL_VERTICAL_IOU_THRESHOLD:
+            if min(vertical_overlaps) < fractional_vertical_iou_threshold:
                 is_fraction_like = True
             else:
                 is_fraction_like = False
@@ -1228,7 +1217,7 @@ class OnsetsInferenceEngine(object):
                                          ''.format(time_signature.id))
             beats = OnsetsInferenceEngine.interpret_numerals(numerals)
             logging.info('... Beats: {0}'.format(beats))
-            return beats
+            return Fraction(beats)
 
         else:
             logging.info('... Fractional time sig.')
@@ -1246,7 +1235,7 @@ class OnsetsInferenceEngine(object):
             beat_count = OnsetsInferenceEngine.interpret_numerals(numerator)
             beat_units = OnsetsInferenceEngine.interpret_numerals(denominator)
 
-            beats = beat_count / (beat_units / 4)
+            beats = Fraction(beat_count * 4, beat_units)
             logging.info('...signature : {0} / {1}, beats: {2}'
                          ''.format(beat_count, beat_units, beats))
 
@@ -1268,7 +1257,7 @@ class OnsetsInferenceEngine(object):
         # only one, the way it is currently defined).
         self.__graph = NotationGraph(nodes)
 
-        precedence_graph = self.infer_precedence_from_annotations(nodes)
+        precedence_graph = self._infer_precedence_from_annotations(nodes)
         for node in precedence_graph:
             node.onset = 0
 
@@ -1363,15 +1352,17 @@ class OnsetsInferenceEngine(object):
 
         return onsets
 
-    def children(self, c, class_name_filter: list[str] = None):
+    def children(self, c, class_name_filter: Optional[Iterable[str] | str] = None):
         """Retrieve the children of the given Node ``c``
-        that have class in ``clsnames``."""
+        that have class in ``class_names``."""
+        self._check_graph_init()
         return self.__graph.children(c, class_name_filter)
 
-    def __parents(self, c, clsnames: list[str]):
+    def __parents(self, c, class_name_filter: Optional[Iterable[str] | str] = None):
         """Retrieve the parents of the given Node ``c``
-        that have class in ``clsnames``."""
-        return self.__graph.parents(c, clsnames)
+        that have class in ``class_names``."""
+        self._check_graph_init()
+        return self.__graph.parents(c, class_name_filter)
 
     def __warning_or_error(self, message):
         if self.strategy.permissive:

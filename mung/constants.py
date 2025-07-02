@@ -2,7 +2,8 @@
 duration and onset inference algorithm."""
 
 from enum import Enum
-from typing import Self, Optional
+from fractions import Fraction
+from typing import Optional
 
 
 class PrecedenceLinksConstants(object):
@@ -76,7 +77,36 @@ class ClassNamesConstants(object):
 
     LETTER_OTHER = "characterOther"
 
+    @staticmethod
+    def rest_name_to_duration(rest_name: str) -> Fraction:
+        """
+        Returns the duration of a rest as a fraction based on a rest name.
+
+        :param rest_name: The rest class name.
+        :return: The duration of the rest as a Fraction.
+        """
+        _LOOK_UP = {
+            ClassNamesConstants.REST_WHOLE: Fraction(4, 1),  # !!! We should find the Time Signature.
+            ClassNamesConstants.REST_HALF: Fraction(2, 1),
+            ClassNamesConstants.REST_QUARTER: Fraction(1, 1),
+            ClassNamesConstants.REST_8TH: Fraction(1, 2),
+            ClassNamesConstants.REST_16TH: Fraction(1, 4),
+            ClassNamesConstants.REST_32ND: Fraction(1, 8),
+            ClassNamesConstants.REST_64TH: Fraction(1, 16),
+            # Technically, these two should just apply time sig.,
+            # but the measure-factorized precedence graph
+            # means these durations never have sounding
+            # descendants anyway:
+            ClassNamesConstants.MULTI_MEASURE_REST: Fraction(4, 1),
+            ClassNamesConstants.REPEAT_ONE_BAR: Fraction(4, 1),
+        }
+        duration = _LOOK_UP.get(rest_name, None)
+        if duration is None:
+            raise ValueError(f"Unknown rest name \"{rest_name}\"")
+        return duration
+
     class Numerals(Enum):
+
         n0 = "numeral0"
         n1 = "numeral1"
         n2 = "numeral2"
