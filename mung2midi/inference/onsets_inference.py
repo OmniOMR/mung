@@ -11,14 +11,14 @@ from mung.constants import InferenceEngineConstants, ClassNamesConstants, Preced
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
 from .precedence_graph_node import PrecedenceGraphNode
+from dataclasses import dataclass
 
-
-class OnsetsInferenceStrategy(object):
-    def __init__(self):
-        self.permissive_desynchronization = True
-        self.precedence_only_for_objects_connected_to_staff = True
-        self.permissive = True
-        self.link_sinks_to_sources_at_ends_and_starts_of_systems = True
+@dataclass(frozen=True)
+class BaseOnsetsInferenceStrategy(object):
+    permissive_desynchronization: bool = True
+    precedence_only_for_objects_connected_to_staff: bool = True
+    permissive: bool = True
+    link_sinks_to_sources_at_ends_and_starts_of_systems: bool = True
 
 
 class OnsetsInferenceEngine(object):
@@ -27,13 +27,13 @@ class OnsetsInferenceEngine(object):
 
     def __init__(
             self,
-            strategy: Optional[OnsetsInferenceStrategy] = None,
+            strategy: Optional[BaseOnsetsInferenceStrategy] = None,
             nodes_or_graph: Optional[list[Node] | NotationGraph] = None
     ):
         """Initialize the onset inference engine with the full Node
         list in a document."""
         if strategy is None:
-            strategy = OnsetsInferenceStrategy()
+            strategy = BaseOnsetsInferenceStrategy()
         self.__strategy = strategy
         # self.id_to_node_mapping = {c.id: c for c in nodes}
         self.strategy = strategy
@@ -46,7 +46,7 @@ class OnsetsInferenceEngine(object):
         else:
             self.__graph: NotationGraph = None
 
-    def durations(self, nodes: list[Node], ignore_modifiers: bool = False) -> dict[int, float]:
+    def durations(self, nodes: list[Node], ignore_modifiers: bool = False) -> dict[int, Fraction]:
         """Returns a dict that contains the durations (in beats)
         of all Nodes that should be associated with a duration.
         The dict keys are ``id``.
@@ -263,7 +263,12 @@ class OnsetsInferenceEngine(object):
         # (technically this might also be needed for each measure).
         if (rest.class_name in self._CONST.MEASURE_LASTING_CLASS_NAMES) and not ignore_modifiers:
             base_rest_duration = self.measure_lasting_beats(rest)
-            beat = [base_rest_duration]  # Measure duration should never be ambiguous.
+            if rest.class_name == ClassNamesConstants.REST_BREVE:
+                beat = [base_rest_duration * 2]
+            elif rest.class_name == ClassNamesConstants.REST_LONGA:
+                beat = [base_rest_duration * 4]
+            else:
+                beat = [base_rest_duration]  # Measure duration should never be ambiguous.
 
         elif not ignore_modifiers:
             duration_modifier = self._compute_duration_modifier(rest)
@@ -285,10 +290,10 @@ class OnsetsInferenceEngine(object):
         If any assumption is broken, will return the default measure duration:
         4 beats."""
         # Find rightmost preceding time signature on the staff.
-        graph = NotationGraph(list(self.id_to_node_mapping.values()))
+        # graph = NotationGraph(list(self.id_to_node_mapping.values()))
 
         # Find current time signature
-        staffs = graph.children(node, class_filter=[self._CONST.STAFF])
+        staffs = self.__graph.children(node, class_filter=[self._CONST.STAFF])
 
         if len(staffs) == 0:
             logging.warning('Interpreting object {0} as measure-lasting, but'
@@ -306,7 +311,7 @@ class OnsetsInferenceEngine(object):
         logging.info('Found staffs: {0}'.format([s.id for s in staffs]))
 
         staff = staffs[0]
-        time_signatures = graph.ancestors(staff, class_filter=self._CONST.TIME_SIGNATURES)
+        time_signatures = self.__graph.ancestors(staff, class_filter=self._CONST.TIME_SIGNATURES)
 
         logging.info('Time signatures: {0}'.format([t.id for t in time_signatures]))
 
@@ -1241,7 +1246,7 @@ class OnsetsInferenceEngine(object):
 
             return beats
 
-    def onsets(self, nodes: list[Node]):
+    def onsets(self, nodes: list[Node]) -> dict[int, Fraction]:
         """Infers the onsets of notes in the given Nodes.
 
         The onsets are measured in beats.
@@ -1312,7 +1317,7 @@ class OnsetsInferenceEngine(object):
             # If the node did not yet get all its ancestors processed,
             # send it down the queue.
             if None in prec_onsets:
-                logging.warning('Found node with predecessor that has no onset yet; delaying processing: {0}'
+                logging.debug('Found node with predecessor that has no onset yet; delaying processing: {0}'
                                 ''.format(q.obj.id))
                 queue.append(q)
                 if q in delayed_prec_nodes:

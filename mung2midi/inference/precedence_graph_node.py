@@ -1,4 +1,6 @@
 from mung.node import Node
+from typing import Optional
+from fractions import Fraction
 
 
 class PrecedenceGraphNode(object):
@@ -7,8 +9,15 @@ class PrecedenceGraphNode(object):
     of other ``PrecedenceGraphNode`` instances.
     """
 
-    def __init__(self, objid=None, node: Node = None, inlinks: list[int] = None, outlinks: list[int] = None,
-                 onset=None, duration=0):
+    def __init__(
+        self,
+        objid=None,
+        node: Optional[Node] = None,
+        inlinks: Optional[list[int]] = None,
+        outlinks: Optional[list[int]] = None,
+        onset: Optional[Fraction] = None,
+        duration: Fraction = Fraction(0),
+    ):
         # Optional link to Nodes, or just a placeholder ID.
         self.obj = node
         if objid is None and node is not None:

@@ -5,12 +5,13 @@ import logging
 import operator
 from queue import Queue
 
-from typing import Iterable, Optional, Self, Any
-from collections.abc import Container
+from typing import Iterable, Optional, Self, Any, TypeVar
 
 from mung.node import Node
 from mung.constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
 from mung.io import read_nodes_from_file, write_nodes_to_file
+
+T = TypeVar("T")
 
 _CONST = InferenceEngineConstants()
 
@@ -26,6 +27,8 @@ class NotationGraphUnsupportedError(NotImplementedError):
 class NotationGraph(object):
     """The NotationGraph class is the abstraction for a notation graph."""
 
+    _CONST = InferenceEngineConstants()
+
     def __init__(self, nodes: list[Node]):
         """Initialize the notation graph with a list of Nodes."""
         self.__nodes = nodes
@@ -40,7 +43,7 @@ class NotationGraph(object):
         """
         return NotationGraph(read_nodes_from_file(filename))
 
-    def save_to_file(self, file_path: str, document: str = None, dataset: str = None) -> None:
+    def save_to_file(self, file_path: str, document: Optional[str] = None, dataset: Optional[str] = None) -> None:
         """
         Save the notation graph to a file.
 
@@ -61,11 +64,11 @@ class NotationGraph(object):
             return node_or_id
 
     @staticmethod
-    def __to__iterable(node_or_id: Iterable[Any] | Any | None) -> list[Any] | None:
+    def __to__iterable(node_or_id: Iterable[T] | Any | None) -> list[T] | None:
         if node_or_id is None:
             return None
         if isinstance(node_or_id, (str, bytes)):
-            return [node_or_id]
+            return [node_or_id] # type: ignore
         if isinstance(node_or_id, Iterable):
             return list(node_or_id)
         return [node_or_id]
@@ -106,15 +109,43 @@ class NotationGraph(object):
     def vertices(self) -> list[Node]:
         return self.__nodes
 
-    def filter_vertices(self, class_filter: Container[str] | str) -> list[Node]:
+    def filter_vertices(self, class_filter: Iterable[str] | str) -> list[Node]:
         """
         Returns all vertices inside the graph that have the given class name.
 
         :param class_filter: Filter to only get nodes of given class name or names.
-        :return: The vertices inside the graph that have the given class name
+        :return: The vertices inside the graph that have the given class name.
         """
         class_filter = self.__to__iterable(class_filter)
         return [x for x in self.vertices if x.class_name in class_filter]
+    
+    def collect_data(self, key: Any, class_filter: Optional[Iterable[str] | str]=None, raise_key_error: bool = False) -> dict[int, Any]:
+        """
+        Retrieves values from the ``Node`` 's data field
+        as a dictionary ``{ID: values}``.
+
+        :param key: Key to retrieves values from.
+        :param class_filter: Optional class filter.
+        :param raise_key_error: Raise ``KeyError``, if the key is not found inside node's data.
+        :return: Dictionary of node IDs to values.
+        """
+        if class_filter is None:
+            nodes = self.vertices
+        else:
+            nodes = self.filter_vertices(class_filter)
+
+        output: dict[int, Any] = {}
+        for node in nodes:
+            if key not in node.data:
+                message = f"Unknown key {key} for node {node.id}."
+                if raise_key_error:
+                    raise KeyError(message)
+                else:
+                    logging.info(message)
+            else:
+                output[node.id] = node.data[key]
+        
+        return output
 
     def __getitem__(self, node_id: int) -> Node:
         """
@@ -282,7 +313,7 @@ class NotationGraph(object):
             raise NotationGraphError('Asking for notehead which is not in graph: {0}'.format(notehead.id))
 
         # This works even if there is just one. There should always be one.
-        sibling_noteheads = self.parents(stem, class_filter=_CONST.NOTEHEAD_CLASS_NAMES)
+        sibling_noteheads = self.parents(stem, class_filter=self._CONST.NOTEHEAD_CLASS_NAMES)
         if notehead not in sibling_noteheads:
             raise ValueError('Asked for stem direction, but notehead {0} is'
                              ' unrelated to given stem {1}!'
@@ -549,6 +580,7 @@ class NotationGraph(object):
 ##############################################################################
 
 
+
 def group_staffs_into_systems(nodes: list[Node],
                               use_fallback_measure_separators: bool = True,
                               leftmost_measure_separators_only: bool = False) -> list[list[Node]]:
@@ -575,15 +607,13 @@ def group_staffs_into_systems(nodes: list[Node],
     :returns: A list of systems, where each system is a list of ``staff`` Nodes.
     """
     graph = NotationGraph(nodes)
-    id_to_node_mapping = {c.id: c for c in nodes}
-    staff_groups = [c for c in nodes
-                    if c.class_name == ClassNamesConstants.STAFF_GROUPING]
-
+    staff_groups = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
+    
     # Do not consider staffs that have no notehead or rest children.
-    empty_staffs = [node for node in nodes if (node.class_name == ClassNamesConstants.STAFF) and
-                    (len([inlink for inlink in node.inlinks
-                          if ((id_to_node_mapping[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
-                              (id_to_node_mapping[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
+    empty_staffs = [node for node in graph.filter_vertices(ClassNamesConstants.STAFF)
+                    if (len([inlink for inlink in node.inlinks
+                          if ((graph[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
+                              (graph[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
     if len(empty_staffs) > 0:
         logging.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
@@ -592,8 +622,8 @@ def group_staffs_into_systems(nodes: list[Node],
 
     if use_fallback_measure_separators:
         # Collect measure separators, sort them left to right
-        measure_separators = [c for c in nodes if c.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES]
-        measure_separators = sorted(measure_separators, key=operator.attrgetter('left'))
+        measure_separators = graph.filter_vertices(_CONST.MEASURE_SEPARATOR_CLASS_NAMES)
+        measure_separators = sorted(measure_separators, key=lambda x: x.left)
         # Use only the leftmost measure separator for each staff.
         staffs = [c for c in nodes if c.class_name in [_CONST.STAFF]]
 
@@ -611,8 +641,8 @@ def group_staffs_into_systems(nodes: list[Node],
             staff_groups += measure_separators
 
     if len(staff_groups) != 0:
-        staffs_per_group = {node.id: [id_to_node_mapping[i] for i in sorted(node.outlinks)
-                                      if id_to_node_mapping[i].class_name == ClassNamesConstants.STAFF] for node in
+        staffs_per_group = {node.id: [graph[i] for i in sorted(node.inlinks)
+                                      if graph[i].class_name == ClassNamesConstants.STAFF] for node in
                             staff_groups}
         # Build hierarchy of staff_grouping based on inclusion
         # between grouped staff sets.
@@ -637,12 +667,12 @@ def group_staffs_into_systems(nodes: list[Node],
             if is_outer:
                 outer_staff_groups.append(staff_group)
 
-        systems = [[c for c in nodes if (c.class_name == ClassNamesConstants.STAFF) and (c.id in staff_group.outlinks)]
+        systems = [[c for c in graph.filter_vertices(ClassNamesConstants.STAFF) if (c.id in staff_group.inlinks)]
                    for staff_group in
                    outer_staff_groups]
     else:
         # Here we use the empty staff fallback
-        systems = [[c] for c in nodes if (c.class_name == ClassNamesConstants.STAFF) and (c not in empty_staffs)]
+        systems = [[c] for c in graph.filter_vertices(ClassNamesConstants.STAFF) if (c not in empty_staffs)]
 
     return systems
 
@@ -676,6 +706,40 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
         objects_per_staff[staff.id] = list(staff_related)
 
     return objects_per_staff
+
+def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
+    """
+    Returns a closure of given ``nodes`` over chords.
+    Chord are defined as notehead connected by a stem.
+
+    Cannot deal with multistem noheads.
+
+    If nodes belong together to a chord, they are grouped together into a sublist.
+    If a node or a symbol is not part of any chord, it is outputted in its own sublist.
+
+    :param graph: Relevant ``NotationGraph`` instance.
+    :param nodes: List of nodes that will be separated into chords.
+    :return: List of lists of chords.
+    """
+    closure = []
+    chord_mapping: dict[int, list[Node]] = {}
+    for node in nodes:
+        stems = graph.children(node, ClassNamesConstants.STEM)
+        if len(stems) == 0:
+            closure.append([node])
+        elif len(stems) == 1:
+            if stems[0].id not in chord_mapping:
+                chord_mapping[stems[0].id] = [node]
+            else:
+                chord_mapping[stems[0].id].append(node)
+        else:
+            logging.debug("Cannot deal with multistem noteheads.")
+            closure.append([node])
+    
+    for chord in chord_mapping.values():
+        closure.append(chord)
+    
+    return closure
 
 
 ##############################################################################

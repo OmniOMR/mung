@@ -49,6 +49,10 @@ class ClassNamesConstants(object):
     REST_16TH = "rest16th"
     REST_32ND = "rest32nd"
     REST_64TH = "rest64th"
+
+    REST_BREVE = "rest_breve"
+    REST_LONGA = "rest_longa"
+
     REPEAT_ONE_BAR = "repeat1Bar"
     MULTI_MEASURE_REST = "multiMeasureRest"
     AUGMENTATION_DOT = "augmentationDot"
@@ -86,6 +90,8 @@ class ClassNamesConstants(object):
         :return: The duration of the rest as a Fraction.
         """
         _LOOK_UP = {
+            ClassNamesConstants.REST_LONGA: Fraction(16, 1),  # !!! We should find the Time Signature.
+            ClassNamesConstants.REST_BREVE: Fraction(8, 1),  # !!! We should find the Time Signature.
             ClassNamesConstants.REST_WHOLE: Fraction(4, 1),  # !!! We should find the Time Signature.
             ClassNamesConstants.REST_HALF: Fraction(2, 1),
             ClassNamesConstants.REST_QUARTER: Fraction(1, 1),
@@ -331,11 +337,15 @@ class InferenceEngineConstants(ClassNamesConstants):
         ClassNamesConstants.REST_16TH,
         ClassNamesConstants.REST_32ND,
         ClassNamesConstants.REST_64TH,
-        ClassNamesConstants.MULTI_MEASURE_REST
+        ClassNamesConstants.MULTI_MEASURE_REST,
+        ClassNamesConstants.REST_BREVE,
+        ClassNamesConstants.REST_LONGA
     }
 
     MEASURE_LASTING_CLASS_NAMES = {
         ClassNamesConstants.REST_WHOLE,
+        ClassNamesConstants.REST_BREVE,
+        ClassNamesConstants.REST_LONGA,
         ClassNamesConstants.MULTI_MEASURE_REST,
         ClassNamesConstants.REPEAT_ONE_BAR
     }

@@ -201,11 +201,10 @@ file is a reference for doing that.
 
 """
 import logging
-import os
+from typing import Optional
 
 import collections
 from pathlib import Path
-from typing import List, Tuple
 
 from lxml import etree
 
@@ -213,7 +212,7 @@ from mung.node import Node
 from mung.node_class import NodeClass
 
 
-def read_nodes_from_file(filename: str) -> List[Node]:
+def read_nodes_from_file(filename: str | Path) -> list[Node]:
     """From a xml file with a Nodes as the top element, parse
     a list of nodes. (See ``Node`` class documentation
     for a description of the XMl format.)
@@ -243,8 +242,11 @@ def read_nodes_from_file(filename: str) -> List[Node]:
 
     :returns: A list of ``Node``s.
     """
-    if not os.path.exists(filename):
-        print("Could not find {0} on disk. Absolute path: {1}".format(filename, os.path.abspath(filename)))
+    if not isinstance(filename, Path):
+        filename = Path(filename)
+    
+    if not filename.exists():
+        print("Could not find {0} on disk. Absolute path: {1}".format(filename, filename.absolute()))
         return None
 
     tree = etree.parse(filename)
@@ -349,7 +351,7 @@ def read_nodes_from_file(filename: str) -> List[Node]:
     return nodes
 
 
-def validate_nodes_graph_structure(nodes: List[Node]) -> bool:
+def validate_nodes_graph_structure(nodes: list[Node]) -> bool:
     """Check that the graph defined by the ``inlinks`` and ``outlinks``
     in the given list of Nodes is valid: no relationships
     leading from or to objects with non-existent ``id``s.
@@ -376,7 +378,7 @@ def validate_nodes_graph_structure(nodes: List[Node]) -> bool:
     return is_valid
 
 
-def validate_document_graph_structure(nodes: List[Node]) -> bool:
+def validate_document_graph_structure(nodes: list[Node]) -> bool:
     """Check that the graph defined by the ``inlinks`` and ``outlinks``
     in the given list of Nodes is valid: no relationships
     leading from or to objects with non-existent ``id``s.
@@ -414,7 +416,72 @@ def validate_document_graph_structure(nodes: List[Node]) -> bool:
     return is_valid
 
 
-def get_edges(nodes: List[Node], validate: bool = True) -> List[Tuple[int, int]]:
+def validate_nodes_graph_structure_precedence(nodes: list[Node]) -> bool:
+    """Check that the graph defined by the precedence ``inlinks`` and ``outlinks``
+    in the given list of Nodes is valid: no relationships
+    leading from or to objects with non-existent ``id``s.
+
+    Can deal with ``Nodes`` coming from a combination
+    of documents, through the Node ``document`` property.
+    Warns about documents which are found inconsistent.
+
+    :param nodes: A list of :class:`Node` instances.
+
+    :returns: ``True`` if graph is valid, ``False`` otherwise.
+    """
+    # Split into lists by document
+    nodes_by_document = collections.defaultdict(list)
+    for node in nodes:
+        nodes_by_document[node.document].append(node)
+
+    is_valid = True
+    for doc, document_nodes in list(nodes_by_document.items()):
+        document_is_valid = validate_document_graph_structure_precedence(document_nodes)
+        if not document_is_valid:
+            logging.warning('Document {0} has invalid Node graph!'.format(doc))
+            is_valid = False
+    return is_valid
+
+
+def validate_document_graph_structure_precedence(nodes: list[Node]) -> bool:
+    """Check that the graph defined by the precedence ``inlinks`` and ``outlinks``
+    in the given list of Nodes is valid: no relationships
+    leading from or to objects with non-existent ``id``s.
+
+    Checks that all the Nodes come from one document. (Raises
+    a ``ValueError`` otherwise.)
+
+    :param nodes: A list of :class:`Node` instances.
+
+    :returns: ``True`` if graph is valid, ``False`` otherwise.
+    """
+    docs = [node.document for node in nodes]
+    if len(set(docs)) != 1:
+        raise ValueError('Got Nodes from multiple documents!')
+
+    is_valid = True
+    node_ids = frozenset([node.id for node in nodes])
+    for c in nodes:
+        inlinks = c.precedence_inlinks
+        for i in inlinks:
+            if i not in node_ids:
+                logging.warning('Invalid graph structure in NodeList:'
+                                ' object {0} has inlink from non-existent'
+                                ' object {1}'.format(c, i))
+                is_valid = False
+
+        outlinks = c.precedence_outlinks
+        for o in outlinks:
+            if o not in node_ids:
+                logging.warning('Invalid graph structure in NodeList:'
+                                ' object {0} has outlink to non-existent'
+                                ' object {1}'.format(c, o))
+                is_valid = False
+
+    return is_valid
+
+
+def get_edges(nodes: list[Node], validate: bool = True) -> list[tuple[int, int]]:
     """Collects the inlink/outlink Node graph
     and returns it as a list of ``(from, to)`` edges.
 
@@ -438,7 +505,7 @@ def get_edges(nodes: List[Node], validate: bool = True) -> List[Tuple[int, int]]
     return edges
 
 
-def write_nodes_to_file(nodes: List[Node], file_path: str | Path, document: str = None, dataset: str = None) -> None:
+def write_nodes_to_file(nodes: list[Node], file_path: str | Path, document: Optional[str] = None, dataset: Optional[str] = None) -> None:
     output = write_nodes_to_string(nodes, document, dataset)
     if isinstance(file_path, str):
         file_path = Path(file_path)
@@ -450,7 +517,7 @@ def write_nodes_to_file(nodes: List[Node], file_path: str | Path, document: str 
         output_file.write(output)
 
 
-def write_nodes_to_string(nodes: List[Node], document: str = None, dataset: str = None) -> str:
+def write_nodes_to_string(nodes: list[Node], document: Optional[str] = None, dataset: Optional[str] = None) -> str:
     """Writes the Node data as an XML string. Does not write
     to a file -- use ``write_nodes_to_file`` if you want that behavior.
 
@@ -473,7 +540,7 @@ export_node_list = write_nodes_to_file
 ##############################################################################
 # Parsing NodeClass lists, mostly for grammars.
 
-def parse_node_classes(filename: str) -> List[NodeClass]:
+def parse_node_classes(filename: str) -> list[NodeClass]:
     """ Extract the list of :class:`NodeClass` objects from
         an xml file with a NodeClasses as the top element and NodeClass children.
     """
@@ -491,7 +558,7 @@ def parse_node_classes(filename: str) -> List[NodeClass]:
     return node_classes
 
 
-def export_nodeclass_list(node_classes: List[NodeClass]) -> str:
+def export_nodeclass_list(node_classes: list[NodeClass]) -> str:
     """Writes the Node data as a XML string. Does not write
     to a file -- use ``with open(output_file) as out_stream:`` etc.
     """
