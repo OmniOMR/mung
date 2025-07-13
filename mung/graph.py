@@ -2,7 +2,7 @@
 functions for manipulating notation graphs."""
 import copy
 import logging
-import operator
+from pathlib import Path
 from queue import Queue
 
 from typing import Iterable, Optional, Self, Any, TypeVar
@@ -35,7 +35,7 @@ class NotationGraph(object):
         self.__id_to_node_mapping = {node.id: node for node in self.__nodes}  # type: dict[int, Node]
 
     @classmethod
-    def from_file(cls, filename: str) -> Self:
+    def from_file(cls, filename: str | Path) -> Self:
         """
         Initialize the notation graph from a file.
 
