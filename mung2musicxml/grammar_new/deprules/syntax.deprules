@@ -1,0 +1,113 @@
+###################
+# SYNTAX DEPRULES #
+###################
+
+#########################################
+# LARGE NOTEHEAD-RELATED OBJECTS
+
+# Constructions spanning across multiple noteheads
+ANYOF(notehead* rest*) | beam{1,}
+ANYOF(notehead* rest*) | slur{2,}
+ANYOF(notehead* rest*) | tie{2,}
+ANYOF(notehead* rest* repeatOneBar) | horizontalSpanner{1,}
+ANYOF(notehead*) | figuredBassText{1,}
+
+# Dynamics
+ANYOF(noteheadFull noteheadHalf noteheadWhole repeatOneBar) | dynamicDiminuendoHairpin{1,} dynamicCrescendoHairpin{1,}
+# dynamics can span over rests
+rest* | dynamicDiminuendoHairpin dynamicCrescendoHairpin
+
+#########################################
+# NOTEHEADS
+
+ANYOF(noteheadFull* noteheadHalf*){1,2} | stem{1,}
+
+# Grace notes
+ANYOF(noteheadFull noteheadHalf noteheadWhole) | noteheadFullSmall{1} noteheadHalfSmall{1}
+
+# Note sound and time modifiers
+ANYOF(notehead*) | articulation*{1,}
+ANYOF(notehead*) | legerLine{1,}
+# single note tremolo / multiple note tremolos are kinda weird
+ANYOF(notehead*) | tremoloMark{1,} singleNoteTremolo{1,} multipleNoteTremolo{1,}
+EXACTLYONE(notehead* rest*) | augmentationDot{1}
+
+# notehead*{1,} | EXACTLYONE(legerLine staffLine)
+# repeatOneBar should be than snapped to staff
+# repeatOneBar{1} | staff
+
+ANYOF(notehead* rest* measureSeparator) | fermata*{1,}
+
+# notehead*{,1} | staffLine
+
+#########################################
+# FLAGS AND BEAMS
+
+# Flags and beams
+# flags and beams are exclusive, but a single note can have flag both up and down (two voices)
+notehead* | EXACTLYONE(flag8thDown beam)
+notehead* | EXACTLYONE(flag8thUp beam)
+notehead* | EXACTLYONE(flag16thDown beam)
+notehead* | EXACTLYONE(flag16thUp beam)
+notehead* | EXACTLYONE(flag32ndDown beam)
+notehead* | EXACTLYONE(flag32ndUp beam)
+notehead* | EXACTLYONE(flag64thDown beam)
+notehead* | EXACTLYONE(flag64thUp beam)
+
+# Accidentals
+# belong either to a notehead or a key signature
+EXACTLYONE(notehead* keySignature) | accidental*{1}
+keySignature{1,} | ANYOF(accidental*)
+
+# Time signatures
+timeSignature{,1} | timeSigDivider{1}
+timeSignature | timeSigCutCommon{1} timeSigCommon{1}
+
+*Clef{,1} | staffLine
+measureSeparator{1,} | ANYOF(barline barlineHeavy repeat) # confirm that repeat belongs here, add rule one MS on one repeat
+
+repeat{1,} | repeatDot{1}
+
+# Barline can be has to be connected to one measure separator or one repeat or to many groupings
+ANYOF(staffGrouping measureSeparator repeat) | barlineHeavy{1,} barline{1,}
+measureSeparator repeat | barlineHeavy{,1} barline{,1}
+
+staffGrouping | staffGrouping ANYOF(barline barlineHeavy)
+staffGrouping{1,} | staff
+
+# tuples
+ANYOF(notehead* rest*){,1} | tuple{2,}
+tuple{,1} | tupleBracket{1}
+# ?? how to correctly connect voltas?
+volta{1,} | ANYOF(notehead* rest*)
+
+# there is like one example of this
+systemSeparator | staff
+
+| ornament
+
+# Text rules from the old grammar
+| *Text
+dynamicsText | characterSmallP characterSmallF characterSmallM characterSmallS characterSmallZ characterSmallR
+dynamicsText | characterCapitalF characterCapitalM characterCapitalP
+dynamicsText | dynamicLetterP dynamicLetterM dynamicLetterF dynamicLetterS dynamicLetterZ dynamicLetterR dynamicLetterN
+
+tempoText | character* numeral* characterDot
+
+lyricsText | character* characterDot
+
+instrumentName | character* numeral* characterDot
+
+rehearsalMark | character* numeral* characterDot
+
+transpositionText | characterSmallV characterCapitalV characterSmallA characterCapitalA characterSmallM characterCapitalM characterSmallE characterCapitalE
+transpositionText | numeral1 numeral5 numeral8
+
+figuredBassText | numeral* accidental*
+
+otherText | character* numeral* characterDot
+
+barNumber | numeral*
+otherNumericSign | numeral* characterDot characterOther
+
+ANYOF(timeSignature tuple tempoText instrumentName rehearsalMark transpositionText figuredBassText otherText barNumber otherNumericSign) | numeral*{1}

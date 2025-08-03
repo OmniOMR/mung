@@ -1,0 +1,7 @@
+#######################
+# PRECEDENCE DEPRULES #
+#######################
+
+notehead* rest* repeatOneBar multiMeasureRest | notehead* rest* repeatOneBar multiMeasureRest
+
+lyricsText | lyricsText
