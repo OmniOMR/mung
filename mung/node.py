@@ -1,9 +1,9 @@
 import copy
 import itertools
 import logging
-from typing import List, Tuple, Optional, Any
+from typing import Optional, Any, Self
 
-import numpy
+import numpy as np
 from math import ceil
 
 from mung.utils import compute_connected_components
@@ -46,7 +46,7 @@ class Node(object):
     >>> left = 15
     >>> height = 10
     >>> width = 4
-    >>> mask = numpy.array([[1, 1, 0, 0],
+    >>> mask = np.array([[1, 1, 0, 0],
     ...                     [1, 0, 0, 0],
     ...                     [1, 0, 0, 0],
     ...                     [1, 0, 0, 0],
@@ -125,7 +125,7 @@ class Node(object):
 
     To recover the area corresponding to a Node `c`, use:
 
-    >>> image = numpy.array([]) #doctest: +SKIP
+    >>> image = np.array([]) #doctest: +SKIP
     >>> if node.mask is not None: crop = image[node.top:node.bottom, node.left:node.right] * node.mask  #doctest: +SKIP
     >>> if node.mask is None: crop = image[node.top:node.bottom, node.left:node.right]               #doctest: +SKIP
 
@@ -139,7 +139,7 @@ class Node(object):
 
     Above, note the multiplicative role of the mask: while we typically would
     expect the mask to be binary, in principle, this is not strictly necessary.
-    You could supply a different mask interpration, such as probabilistic.
+    You could supply a different mask interpretation, such as probabilistic.
     However, we strongly advise not to misuse this feature unless you have
     a really good reason; remember that the Node is supposed to represent
     an annotation of a given image. (One possible use for a non-binary mask
@@ -223,11 +223,11 @@ class Node(object):
                  left: int,
                  width: int,
                  height: int,
-                 outlinks: List[int] = None,
-                 inlinks: List[int] = None,
-                 mask: numpy.ndarray = None,
-                 dataset: str = None,
-                 document: str = None,
+                 outlinks: Optional[list[int]] = None,
+                 inlinks: Optional[list[int]] = None,
+                 mask: Optional[np.ndarray] = None,
+                 dataset: Optional[str] = None,
+                 document: Optional[str] = None,
                  data=None):
         self.__id = id_
         self.__class_name = class_name
@@ -244,11 +244,11 @@ class Node(object):
 
         if inlinks is None:
             inlinks = []
-        self.inlinks = inlinks  # type: List[int]
+        self.inlinks: list[int] = inlinks
 
         if outlinks is None:
             outlinks = []
-        self.outlinks = outlinks  # type: List[int]
+        self.outlinks: list[int] = outlinks
 
         if dataset is None:
             dataset = self.DEFAULT_DATASET
@@ -277,7 +277,7 @@ class Node(object):
                                         str(self.id)])
 
     @staticmethod
-    def parse_unique_id(uid: str) -> (str, str, int):
+    def parse_unique_id(uid: str) -> tuple[str, str, int | None]:
         """Parse a unique identifier. This breaks down the UID into the dataset name,
         document name, and id
 
@@ -312,7 +312,7 @@ class Node(object):
     def class_name(self) -> str:
         return self.__class_name
 
-    def set_class_name(self, class_name_):
+    def set_class_name(self, class_name_: str):
         self.__class_name = class_name_
 
     @property
@@ -354,12 +354,12 @@ class Node(object):
         return self.__height
 
     @property
-    def bounding_box(self) -> Tuple[int, int, int, int]:
+    def bounding_box(self) -> tuple[int, int, int, int]:
         """The ``top, left, bottom, right`` tuple of the Node's coordinates."""
         return self.top, self.left, self.bottom, self.right
 
     @property
-    def middle(self) -> Tuple[int, int]:
+    def middle(self) -> tuple[int, int]:
         """Returns the integer representation of where the middle
         of the Node lies, as a ``(m_vert, m_horz)`` tuple.
 
@@ -374,10 +374,10 @@ class Node(object):
         return int(vertical_center), int(horizontal_center)
 
     @property
-    def mask(self) -> numpy.ndarray:
+    def mask(self) -> Optional[np.ndarray]:
         return self.__mask
 
-    def set_mask(self, mask: numpy.ndarray):
+    def set_mask(self, mask: Optional[np.ndarray]):
         """Sets the Node's mask to the given array. Performs
         some compatibility checks: size, dtype (converts to ``uint8``)."""
         if mask is None:
@@ -399,8 +399,8 @@ class Node(object):
             self.__mask = mask.astype('uint8')
 
     @staticmethod
-    def round_bounding_box_to_integer(top: float, left: float, bottom: float, right: float) \
-            -> (int, int, int, int):
+    def round_bounding_box_to_integer(
+        top: float, left: float, bottom: float, right: float) -> tuple[int, int, int, int]:
         """Rounds off the Node bounds to the nearest integer
         so that no area is lost (e.g. bottom and right bounds are
         rounded up, top and left bounds are rounded down).
@@ -416,7 +416,7 @@ class Node(object):
         """
         return int(top), int(left), int(ceil(bottom)), int(ceil(right))
 
-    def project_to(self, image: numpy.ndarray):
+    def project_to(self, image: np.ndarray):
         """This function returns the *crop* of the input image
         corresponding to the Node (incl. masking).
         Assumes zeros are background."""
@@ -427,29 +427,29 @@ class Node(object):
             crop *= self.__mask
         return crop
 
-    def project_on(self, image: numpy.ndarray):
+    def project_on(self, image: np.ndarray):
         """This function returns only those parts of the input image
         that correspond to the Node and masks out everything else
         with zeros. The dimension of the returned array is the same
         as of the input image. This function basically reconstructs
         the symbol as an indicator function over the pixels of
         the annotated image."""
-        output = numpy.zeros(image.shape, image.dtype)
+        output = np.zeros(image.shape, image.dtype)
         crop = self.project_to(image)
         output[self.top:self.bottom, self.left:self.right] = crop
         return output
 
-    def render(self, image: numpy.ndarray, alpha: float = 0.3,
-               rgb: Tuple[float, float, float] = (1.0, 0.0, 0.0)) -> numpy.ndarray:
+    def render(self, image: np.ndarray, alpha: float = 0.3,
+               rgb: tuple[float, float, float] = (1.0, 0.0, 0.0)) -> np.ndarray:
         """Renders itself upon the given image as a rectangle
         of the given color and transparency. Might help visualization.
         """
-        color = numpy.array(rgb)
+        color = np.array(rgb)
         logging.debug('Rendering object {0}, class_name {1}, t/b/l/r: {2}'
                       ''.format(self.id, self.class_name,
                                 (self.top, self.bottom, self.left, self.right)))
         # logging.debug('Shape: {0}'.format((self.height, self.width, 3)))
-        mask = numpy.ones((self.__height, self.__width, 3)) * color
+        mask = np.ones((self.__height, self.__width, 3)) * color
         crop = image[self.top:self.bottom, self.left:self.right]
         # logging.debug('Mask done, creating crop')
         logging.debug('Shape: {0}. Got crop. Crop shape: {1}, img shape: {2}'
@@ -459,8 +459,7 @@ class Node(object):
         image[self.top:self.bottom, self.left:self.right] = mix
         return image
 
-    def overlaps(self, bounding_box_or_node):
-        # type: (Union[Tuple[int, int, int, int], Node]) -> bool
+    def overlaps(self, bounding_box_or_node: tuple[int, int, int, int] | Self) -> bool:
         """Check whether this Node overlaps the given bounding box or Node.
 
         >>> node = Node(0, 'test', 10, 100, height=20, width=10)
@@ -505,8 +504,7 @@ class Node(object):
                 return True
         return False
 
-    def contains(self, bounding_box_or_node):
-        # type: (Union[Tuple[int, int, int, int], Node]) -> bool
+    def contains(self, bounding_box_or_node: tuple[int, int, int, int] | Self) -> bool:
         """Check if this Node entirely contains the other bounding
         box (or, the other node's bounding box)."""
         if isinstance(bounding_box_or_node, Node):
@@ -519,8 +517,8 @@ class Node(object):
                 return True
         return False
 
-    def bounding_box_intersection(self, bounding_box: Tuple[int, int, int, int]) \
-            -> Optional[Tuple[int, int, int, int]]:
+    def bounding_box_intersection(self, bounding_box: tuple[int, int, int, int]
+                                  ) -> Optional[tuple[int, int, int, int]]:
         """Returns the sub-bounding box of this Node intersecting with the given bounding box.
         If the intersection is empty, returns None.
 
@@ -549,10 +547,12 @@ class Node(object):
         out_right = min(r, self.right)
 
         if (out_top < out_bottom) and (out_left < out_right):
-            return out_top - self.top, \
-                   out_left - self.left, \
-                   out_bottom - self.top, \
-                   out_right - self.left
+            return (
+                out_top - self.top,
+                out_left - self.left,
+                out_bottom - self.top,
+                out_right - self.left
+            )
         else:
             return None
 
@@ -565,7 +565,7 @@ class Node(object):
         in any situation where you care whether the object is empty
         or not (e.g. delete it after trimming).
 
-        >>> mask = numpy.zeros((20, 10))
+        >>> mask = np.zeros((20, 10))
         >>> mask[5:15, 3:8] = 1
         >>> node = Node(0, 'test', 10, 100, width=10, height=20, mask=mask)
         >>> node.bounding_box
@@ -657,8 +657,8 @@ class Node(object):
     def precedence_outlinks(self) -> list[int]:
         return self.data.get(PrecedenceLinksConstants.PrecedenceOutlinks, [])
 
-    def __add_values_to_data_template(self, data_index: Any, value_or_values: list[Any]) -> None:
-        if not data_index in self.data:
+    def __add_values_to_data_template(self, data_index: Any, value_or_values: Any | list[Any]) -> None:
+        if data_index not in self.data:
             self.data[data_index] = []
 
         if not isinstance(value_or_values, list):
@@ -673,25 +673,6 @@ class Node(object):
 
     def add_precedence_outlinks(self, precedence_outlink_or_outlinks_id: list[int] | int) -> None:
         self.__add_values_to_data_template(
-            PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
-        )
-
-    def __remove_values_from_data_template(self, data_index: Any, value_or_values: list[Any]) -> None:
-        if not data_index in self.data:
-            self.data[data_index] = []
-
-        if not isinstance(value_or_values, list):
-            value_or_values = [value_or_values]
-
-        self.data[data_index] += value_or_values
-
-    def remove_precedence_inlinks(self, precedence_inlink_or_inlinks_id: list[int] | int) -> None:
-        self.__remove_values_from_data_template(
-            PrecedenceLinksConstants.PrecedenceInlinks, precedence_inlink_or_inlinks_id
-        )
-
-    def remove_precedence_outlinks(self, precedence_outlink_or_outlinks_id: list[int] | int) -> None:
-        self.__remove_values_from_data_template(
             PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
         )
 
@@ -729,6 +710,9 @@ class Node(object):
         """Encode a binary array ``mask`` as a string, compliant
         with the Node format specification in :mod:`mung.io`.
         """
+        if self.mask is None:
+            raise ValueError("Mask is None")
+        
         if mode == 'rle':
             return self.encode_mask_rle(self.mask)
         elif mode == 'bitmap':
@@ -778,7 +762,7 @@ class Node(object):
         return '\n'.join(lines)
 
     @staticmethod
-    def encode_mask_bitmap(mask: numpy.ndarray) -> str:
+    def encode_mask_bitmap(mask: np.ndarray) -> str:
         """Encodes the mask array in a compact form. Returns 'None' if mask
         is None. If the mask is not None, uses the following algorithm:
 
@@ -795,7 +779,7 @@ class Node(object):
         return output
 
     @staticmethod
-    def encode_mask_rle(mask: numpy.ndarray) -> str:
+    def encode_mask_rle(mask: np.ndarray) -> str:
         """Encodes the mask array in Run-Length Encoding. Instead of
         having the bitmap ``0 0 1 1 1 0 0 0 1 1``, the RLE encodes
         the mask as ``0:2 1:3 0:3 1:2``. This is much more compact.
@@ -825,7 +809,7 @@ class Node(object):
         return output
 
     @staticmethod
-    def decode_mask(mask_string: str, shape) -> Optional[numpy.ndarray]:
+    def decode_mask(mask_string: str, shape) -> Optional[np.ndarray]:
         """Decodes a Node mask string into a binary
         numpy array of the given shape."""
         mode = Node.__determine_mask_mode(mask_string)
@@ -846,9 +830,9 @@ class Node(object):
         return mode
 
     @staticmethod
-    def decode_mask_bitmap(mask_string: str, shape) -> Optional[numpy.ndarray]:
+    def decode_mask_bitmap(mask_string: str, shape) -> Optional[np.ndarray]:
         """Decodes the mask array from the encoded form to the 2D numpy array."""
-        if mask_string == 'None':
+        if mask_string == 'None' or mask_string is None:
             return None
         try:
             values = list(map(float, mask_string.split()))
@@ -856,18 +840,18 @@ class Node(object):
             logging.info(
                 'Node.decode_mask_bitmap() Cannot decode mask values:\n{0}'.format(mask_string))
             raise
-        mask = numpy.array(values).reshape(shape)
+        mask = np.array(values).reshape(shape)
         return mask
 
     @staticmethod
-    def decode_mask_rle(mask_string: str, shape) -> Optional[numpy.ndarray]:
+    def decode_mask_rle(mask_string: str, shape) -> Optional[np.ndarray]:
         """Decodes the mask array from the RLE-encoded form
         to the 2D numpy array.
         """
         if mask_string == 'None':
             return None
 
-        mask_flat = numpy.zeros(shape[0] * shape[1], numpy.uint8)
+        mask_flat = np.zeros(shape[0] * shape[1], np.uint8)
         index = 0
 
         mask_string = mask_string.rstrip()
@@ -897,7 +881,9 @@ class Node(object):
             logging.warning(
                 "Trying to join Node from different documents, which is forbidden. Skipping join.")
             return
-
+        if self.mask is None or other.mask is None:
+            raise ValueError("Mask is None")
+        
         # Get combined bounding box
         new_top = min(self.top, other.top)
         new_left = min(self.left, other.left)
@@ -908,7 +894,7 @@ class Node(object):
         new_width = new_right - new_left
 
         # Create mask of corresponding size
-        new_mask = numpy.zeros((new_height, new_width), dtype=self.__mask.dtype)
+        new_mask = np.zeros((new_height, new_width), dtype=self.mask.dtype)
 
         # Find coordinates where to paste the masks
         spt = self.top - new_top
@@ -917,7 +903,7 @@ class Node(object):
         opl = other.left - new_left
 
         # Paste the masks into these places
-        new_mask[spt:spt + self.__height, spl:spl + self.__width] += self.__mask
+        new_mask[spt:spt + self.__height, spl:spl + self.__width] += self.mask
         new_mask[opt:opt + other.height, opl:opl + other.width] += other.mask
 
         # Normalize mask value
@@ -938,24 +924,21 @@ class Node(object):
             if (i not in self.inlinks) and (i != self.id):
                 self.inlinks.append(i)
 
-    def get_outlink_objects(self, nodes):
-        # type: (List[Node]) -> List[Node]
+    def get_outlink_objects(self, nodes: list[Self]) -> list[Self]:
         """Out of the given ``nodes`` list, return a list
         of those to which this Node has outlinks.
         Can deal with Nodes from multiple documents.
         """
         return self.__check_nodes_that_have_links(self.outlinks, nodes)
 
-    def get_inlink_objects(self, nodes):
-        # type: (List[Node]) -> List[Node]
+    def get_inlink_objects(self, nodes: list[Self]) -> list[Self]:
         """Out of the given ``nodes`` list, return a list
         of those from which this node has inlinks
         Can deal with Nodes from multiple documents.
         """
         return self.__check_nodes_that_have_links(self.inlinks, nodes)
 
-    def __check_nodes_that_have_links(self, links, nodes):
-        # type: (List[int], List[Node]) -> List[Node]
+    def __check_nodes_that_have_links(self, links: list[int], nodes: list[Self]) -> list[Self]:
         output = []
         if len(links) == 0:
             return output
@@ -978,14 +961,19 @@ class Node(object):
 
     def scale(self, zoom: float = 1.0):
         """Re-compute the Node with the given scaling factor."""
-        mask = self.__mask * 1.0
+        if self.mask is None:
+            raise ValueError("Mask is None")
+
+        mask = self.mask * 1.0 
         import skimage.transform
         new_mask_shape = max(int(self.__height * zoom), 1), max(int(self.__width * zoom), 1)
-        new_mask = skimage.transform.resize(mask,
-                                            output_shape=new_mask_shape)
-        new_mask[new_mask >= 0.5] = 1
-        new_mask[new_mask < 0.5] = 0
-        new_mask = new_mask.astype('uint8')
+        new_mask = skimage.transform.resize(mask, output_shape=new_mask_shape)
+        if new_mask is None:
+            raise ValueError("Mask is None")
+        
+        new_mask[new_mask >= 0.5] = 1 # type: ignore (checked above)
+        new_mask[new_mask < 0.5] = 0 # type: ignore (checked above)
+        new_mask = new_mask.astype(np.uint8) # type: ignore (checked above)
 
         new_height, new_width = new_mask.shape
         new_top = int(self.top * zoom)
@@ -1035,35 +1023,38 @@ class Node(object):
         else:
             delta_horz = self.left - node.right
 
-        return numpy.sqrt(delta_vert ** 2 + delta_horz ** 2)
+        return np.sqrt(delta_vert ** 2 + delta_horz ** 2)
 
-    def compute_recall_precision_fscore_on_mask(self, other_node):
-        # type: (Node) -> Tuple[float, float, float]
+    def compute_recall_precision_fscore_on_mask(self, other_node: Self) -> tuple[float, float, float]:
         """Compute the recall, precision and f-score of the predicted
         Node's mask against another node's mask."""
+        if self.mask is None or other_node.mask is None:
+            raise ValueError("Mask is None")
 
         if bounding_box_intersection(self.bounding_box, other_node.bounding_box) is None:
             return 0.0, 0.0, 0.0
 
         mask_intersection = compute_unifying_mask([(self), (other_node)], intersection=False)
+        if mask_intersection is None:
+            raise ValueError("Mask intersection is None")
 
         gt_pasted_mask = mask_intersection * 1
         t, l, b, r = compute_unifying_bounding_box([self, other_node])
         h, w = b - t, r - l
-        ct, cl, cb, cr = self.top - t, \
-                         self.left - l, \
-                         h - (b - self.bottom), \
-                         w - (r - self.right)
+        ct, cl, cb, cr = (self.top - t,
+                          self.left - l,
+                          h - (b - self.bottom),
+                          w - (r - self.right))
         gt_pasted_mask[ct:cb, cl:cr] += self.mask
         gt_pasted_mask[gt_pasted_mask != 0] = 1
 
         pred_pasted_mask = mask_intersection * 1
         t, l, b, r = other_node.bounding_box
         h, w = b - t, r - l
-        ct, cl, cb, cr = other_node.top - t, \
-                         other_node.left - l, \
-                         h - (b - other_node.bottom), \
-                         w - (r - other_node.right)
+        ct, cl, cb, cr = (other_node.top - t,
+                          other_node.left - l,
+                          h - (b - other_node.bottom),
+                          w - (r - other_node.right))
         pred_pasted_mask[ct:cb, cl:cr] += other_node.mask
         pred_pasted_mask[pred_pasted_mask != 0] = 1
 
@@ -1080,7 +1071,7 @@ class Node(object):
 ##############################################################################
 
 
-def split_node_by_its_connected_components(node: Node, next_node_id: int) -> List[Node]:
+def split_node_by_its_connected_components(node: Node, next_node_id: int) -> list[Node]:
     """Split the Node into one object per connected component
     of the mask. All inlinks/outlinks are retained in all the newly
     created Nodes, and the old object is not changed.
@@ -1093,7 +1084,10 @@ def split_node_by_its_connected_components(node: Node, next_node_id: int) -> Lis
     The ``data`` attribute is also retained.
     """
     # "Safety margin"
-    canvas = numpy.zeros((node.mask.shape[0] + 2, node.mask.shape[1] + 2))
+    if node.mask is None:
+        raise ValueError("Mask is None")
+    
+    canvas = np.zeros((node.mask.shape[0] + 2, node.mask.shape[1] + 2))
     canvas[1:-1, 1:-1] = node.mask
     number_of_connected_components, labels, bounding_boxes = compute_connected_components(canvas)
 
@@ -1139,7 +1133,7 @@ def merge_nodes(first_node: Node, second_node: Node, class_name: str, id_: int) 
     return merge_multiple_nodes([first_node, second_node], class_name, id_)
 
 
-def merge_multiple_nodes(nodes: List[Node], class_name: str, id_: int) -> Node:
+def merge_multiple_nodes(nodes: list[Node], class_name: str, id_: int) -> Node:
     """Merge multiple nodes. Does not modify any of the inputs."""
     if len(set([c.document for c in nodes])) > 1:
         raise ValueError('Cannot merge Nodes from different documents!')
@@ -1160,9 +1154,9 @@ def merge_multiple_nodes(nodes: List[Node], class_name: str, id_: int) -> Node:
     return output
 
 
-def compute_unifying_bounding_box(nodes: List[Node]) -> (int, int, int, int):
+def compute_unifying_bounding_box(nodes: list[Node]) -> tuple[int, int, int, int]:
     """ Computes the union bounding box of multiple nodes """
-    top, left, bottom, right = numpy.inf, numpy.inf, -1, -1
+    top, left, bottom, right = np.inf, np.inf, -1, -1
     for node in nodes:
         top = min(top, node.top)
         left = min(left, node.left)
@@ -1177,12 +1171,12 @@ def compute_unifying_bounding_box(nodes: List[Node]) -> (int, int, int, int):
     return it, il, ib, ir
 
 
-def compute_unifying_mask(nodes: List[Node], intersection=False) -> Optional[numpy.ndarray]:
+def compute_unifying_mask(nodes: list[Node], intersection=False) -> Optional[np.ndarray]:
     """ Merges the masks of the given Nodes into one. Masks are combined by an OR operation.
 
-    >>> c1 = Node(0, 'name', 10, 10, 4, 1, mask=numpy.ones((1, 4), dtype='uint8'))
-    >>> c2 = Node(1, 'name', 11, 10, 6, 1, mask=numpy.ones((1, 6), dtype='uint8'))
-    >>> c3 = Node(2, 'name', 9, 14,  2, 4, mask=numpy.ones((4, 2), dtype='uint8'))
+    >>> c1 = Node(0, 'name', 10, 10, 4, 1, mask=np.ones((1, 4), dtype='uint8'))
+    >>> c2 = Node(1, 'name', 11, 10, 6, 1, mask=np.ones((1, 6), dtype='uint8'))
+    >>> c3 = Node(2, 'name', 9, 14,  2, 4, mask=np.ones((4, 2), dtype='uint8'))
     >>> nodes = [c1, c2, c3]
     >>> m1 = compute_unifying_mask(nodes)
     >>> m1.shape
@@ -1221,11 +1215,11 @@ def compute_unifying_mask(nodes: List[Node], intersection=False) -> Optional[num
     top, left, bottom, right = compute_unifying_bounding_box(nodes)
     height = bottom - top
     width = right - left
-    output_mask = numpy.zeros((height, width), dtype=nodes[0].mask.dtype)
+    output_mask = np.zeros((height, width), dtype=nodes[0].mask.dtype) # type: ignore (checked above)
     for node in nodes:
         ct, cl, cb, cr = node.top - top, node.left - left, height - (
                 bottom - node.bottom), width - (right - node.right)
-        output_mask[ct:cb, cl:cr] += node.mask
+        output_mask[ct:cb, cl:cr] += node.mask # type: ignore (checked above)
 
     if intersection:
         output_mask[output_mask < len(nodes)] = 0
@@ -1235,15 +1229,15 @@ def compute_unifying_mask(nodes: List[Node], intersection=False) -> Optional[num
     return output_mask
 
 
-def merge_inlinks_and_outlinks_to_nodes_outside_of_this_list(nodes: List[Node]) \
-        -> Tuple[List[int], List[int]]:
+def merge_inlinks_and_outlinks_to_nodes_outside_of_this_list(
+        nodes: list[Node]) -> tuple[list[int], list[int]]:
     """Collect all inlinks and outlinks of the given set of Nodes
     to Nodes outside of this set. The rationale for this is that
     these given ``nodes`` will be merged into one, so relationships
     within the set would become loops and disappear.
 
     (Note that this is not sufficient to update the relationships upon
-    a merge, because the affected Nodess *outside* the given set
+    a merge, because the affected Nodes *outside* the given set
     will need to have their inlinks/outlinks redirected to the new object.)
 
     :returns: A tuple of lists: ``(inlinks, outlinks)``
@@ -1260,7 +1254,7 @@ def merge_inlinks_and_outlinks_to_nodes_outside_of_this_list(nodes: List[Node]) 
     return inlinks, outlinks
 
 
-def merge_node_lists_from_multiple_documents(node_lists: List[List[Node]]) -> List[Node]:
+def merge_node_lists_from_multiple_documents(node_lists: list[list[Node]]) -> list[Node]:
     """Combines the Node lists from different documents
     into one list, so that inlink/outlink references still work.
     This is useful only if you want to merge two documents
@@ -1310,7 +1304,7 @@ def link_nodes(from_node: Node, to_node: Node, check_that_nodes_have_the_same_do
             raise ValueError('Cannot link two Nodes that are')
         else:
             logging.warning('Attempting to link Nodes from two different'
-                            ' docments. From: {0}, to: {1}'
+                            ' documents. From: {0}, to: {1}'
                             ''.format(from_node.document, to_node.document))
 
     if (to_node.id not in from_node.outlinks) and (from_node.id in to_node.inlinks):
@@ -1322,9 +1316,9 @@ def link_nodes(from_node: Node, to_node: Node, check_that_nodes_have_the_same_do
     to_node.inlinks.append(from_node.id)
 
 
-def bounding_box_intersection(first_bounding_box: Tuple[int, int, int, int],
-                              second_bounding_box: Tuple[int, int, int, int]) -> Optional[
-    Tuple[int, int, int, int]]:
+def bounding_box_intersection(
+        first_bounding_box: tuple[int, int, int, int],
+        second_bounding_box: tuple[int, int, int, int]) -> Optional[tuple[int, int, int, int]]:
     """Returns the t, l, b, r coordinates of the sub-bounding box
     of bbox_this that is also inside bbox_other.
     If the bounding boxes do not overlap, returns None."""
@@ -1337,18 +1331,21 @@ def bounding_box_intersection(first_bounding_box: Tuple[int, int, int, int],
     out_right = min(r, tr)
 
     if (out_top < out_bottom) and (out_left < out_right):
-        return out_top - tt, \
-               out_left - tl, \
-               out_bottom - tt, \
-               out_right - tl
+        return (
+            out_top - tt,
+            out_left - tl,
+            out_bottom - tt,
+            out_right - tl
+        )
     else:
         return None
 
 
-def bounding_box_dice_coefficient(first_bounding_box: Tuple[int, int, int, int],
-                                  second_bounding_box: Tuple[int, int, int, int],
-                                  vertical: bool = False,
-                                  horizontal: bool = False) -> float:
+def bounding_box_dice_coefficient(
+        first_bounding_box: tuple[int, int, int, int],
+        second_bounding_box: tuple[int, int, int, int],
+        vertical: bool = False,
+        horizontal: bool = False) -> float:
     """Compute the Dice coefficient (intersection over union)
     for the given two bounding boxes.
 
@@ -1389,8 +1386,8 @@ def bounding_box_dice_coefficient(first_bounding_box: Tuple[int, int, int, int],
             return (i_horizontal * i_vertical) / (u_horizontal * u_vertical)
 
 
-def draw_nodes_on_empty_canvas(nodes: List[Node], margin: int = 10) -> Tuple[
-    numpy.ndarray, Tuple[int, int]]:
+def draw_nodes_on_empty_canvas(
+        nodes: list[Node], margin: int = 10) -> tuple[np.ndarray, tuple[int, int]]:
     """Draws all the given Nodes onto a zero background.
     The size of the canvas adapts to the Nodes, with the    given margin.
 
@@ -1400,13 +1397,15 @@ def draw_nodes_on_empty_canvas(nodes: List[Node], margin: int = 10) -> Tuple[
     # margin is used to avoid the stafflines touching the edges,
     # which could perhaps break some assumptions down the line.
     top, left, bottom, right = compute_unifying_bounding_box(nodes)
-    top_with_margin, left_with_margin, bottom_with_margin, right_with_margin = \
-        max(0, top - margin), max(0, left - margin), bottom + margin, right + margin
+    top_with_margin, left_with_margin, bottom_with_margin, right_with_margin = (
+        max(0, top - margin), max(0, left - margin), bottom + margin, right + margin)
 
-    canvas = numpy.zeros(
+    canvas = np.zeros(
         (bottom_with_margin - top_with_margin, right_with_margin - left_with_margin))
 
     for node in nodes:
+        if node.mask is None:
+            raise ValueError()
         canvas[node.top - top_with_margin:node.bottom - top_with_margin,
         node.left - left_with_margin:node.right - left_with_margin] = node.mask * 1
 

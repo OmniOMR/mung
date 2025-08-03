@@ -246,8 +246,7 @@ def read_nodes_from_file(filename: str | Path) -> list[Node]:
         filename = Path(filename)
     
     if not filename.exists():
-        print("Could not find {0} on disk. Absolute path: {1}".format(filename, filename.absolute()))
-        return None
+        raise ValueError("Could not find {0} on disk. Absolute path: {1}".format(filename, filename.absolute()))
 
     tree = etree.parse(filename)
     root = tree.getroot()
@@ -386,6 +385,9 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
     Checks that all the Nodes come from one document. (Raises
     a ``ValueError`` otherwise.)
 
+    Checks that all Edges are correctly defined - go from
+    a valid node to onother valid note and are defined in both nodes.
+
     :param nodes: A list of :class:`Node` instances.
 
     :returns: ``True`` if graph is valid, ``False`` otherwise.
@@ -412,6 +414,33 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
                                 ' object {0} has outlink to non-existent'
                                 ' object {1}'.format(c, o))
                 is_valid = False
+    logging.basicConfig(level=logging.INFO)
+    mapping = {node.id: node for node in nodes}
+    for node in nodes:
+        to_remove = []
+        for to_node_id in node.outlinks:
+            if node.id not in mapping[to_node_id].inlinks:
+                logging.warning(
+                    f"Missing object {node.id} reference in inlinks of {to_node_id}. "
+                    f"Source {node.id} outlinks: {node.outlinks}; "
+                    f"target {to_node_id} inlinks: {mapping[to_node_id].inlinks}."
+                    )
+                # to_remove.append(to_node_id)
+                is_valid = False
+        for tr in to_remove:
+            node.outlinks.remove(tr)
+        to_remove = []
+        for from_node_id in node.inlinks:
+            if node.id not in mapping[from_node_id].outlinks:
+                logging.warning(
+                    f"Missing object {node.id} reference in outlinks of {from_node_id}. "
+                    f"Source {node.id} inlinks: {node.inlinks}; "
+                    f"target {from_node_id} outlinks: {mapping[from_node_id].outlinks}."
+                    )
+                # to_remove.append(from_node_id)
+                is_valid = False
+        for tr in to_remove:
+            node.inlinks.remove(tr)
 
     return is_valid
 
@@ -522,6 +551,11 @@ def write_nodes_to_string(nodes: list[Node], document: Optional[str] = None, dat
     to a file -- use ``write_nodes_to_file`` if you want that behavior.
 
     """
+    if document is None:
+        document = Node.DEFAULT_DOCUMENT
+    if dataset is None:
+        dataset = Node.DEFAULT_DATASET
+
     # This is the data string, the rest is formalities
     nodes_string = '\n'.join([str(c) for c in nodes])
 

@@ -57,6 +57,9 @@ class ClassNamesConstants(object):
     MULTI_MEASURE_REST = "multiMeasureRest"
     AUGMENTATION_DOT = "augmentationDot"
 
+    DYNAMIC_CRESHENDO = "dynamicCrescendoHairpin"
+    DYNAMIC_DIMINUENDO = "dynamicDiminuendoHairpin"
+
     TUPLE = "tuple"
 
     FLAG_8TH_UP = "flag8thUp"
@@ -70,7 +73,7 @@ class ClassNamesConstants(object):
 
     BEAM = "beam"
 
-    ACCIDENTAL_SHAPR = "accidentalSharp"
+    ACCIDENTAL_SHARP = "accidentalSharp"
     ACCIDENTAL_FLAT = "accidentalFlat"
     ACCIDENTAL_NATURAL = "accidentalNatural"
     ACCIDENTAL_DOUBLE_SHARP = "accidentalDoubleSharp"
@@ -245,7 +248,7 @@ class InferenceEngineConstants(ClassNamesConstants):
     FLAGS_AND_BEAMS = set(list(FLAGS_CLASS_NAMES) + list(BEAM_CLASS_NAMES))
 
     ACCIDENTAL_CLASS_NAMES = {
-        ClassNamesConstants.ACCIDENTAL_SHAPR: 1,
+        ClassNamesConstants.ACCIDENTAL_SHARP: 1,
         ClassNamesConstants.ACCIDENTAL_FLAT: -1,
         ClassNamesConstants.ACCIDENTAL_NATURAL: 0,
         ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP: 2,
@@ -323,7 +326,7 @@ class InferenceEngineConstants(ClassNamesConstants):
     # Wrap around twice for easier indexing.
 
     ACCIDENTAL_CODES = {
-        ClassNamesConstants.ACCIDENTAL_SHAPR: '#',
+        ClassNamesConstants.ACCIDENTAL_SHARP: '#',
         ClassNamesConstants.ACCIDENTAL_FLAT: 'b',
         ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP: 'x',
         ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT: 'bb'

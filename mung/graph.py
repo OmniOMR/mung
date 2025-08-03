@@ -41,9 +41,9 @@ class NotationGraph(object):
 
         :param filename: The path to the file containing the notation graph
         """
-        return NotationGraph(read_nodes_from_file(filename))
+        return cls(read_nodes_from_file(filename))
 
-    def save_to_file(self, file_path: str, document: Optional[str] = None, dataset: Optional[str] = None) -> None:
+    def save_to_file(self, file_path: str | Path, document: Optional[str] = None, dataset: Optional[str] = None) -> None:
         """
         Save the notation graph to a file.
 
@@ -51,6 +51,11 @@ class NotationGraph(object):
         :param document: The document ID.
         :param dataset: The dataset ID.
         """
+        if len(self.__nodes) > 0:
+            if document is None:
+                document = self.__nodes[0].document
+                dataset = self.__nodes[0].dataset
+        
         write_nodes_to_file(self.__nodes, file_path, document, dataset)
 
     def __len__(self):
@@ -63,8 +68,14 @@ class NotationGraph(object):
         else:
             return node_or_id
 
+    def __to_node(self, node_or_id: Node | int) -> Node:
+        if isinstance(node_or_id, int):
+            return self.__id_to_node_mapping[node_or_id]
+        else:
+            return node_or_id
+
     @staticmethod
-    def __to__iterable(node_or_id: Iterable[T] | Any | None) -> list[T] | None:
+    def __to_iterable(node_or_id: Iterable[T] | Any | None) -> list[T] | None:
         if node_or_id is None:
             return None
         if isinstance(node_or_id, (str, bytes)):
@@ -116,7 +127,7 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: The vertices inside the graph that have the given class name.
         """
-        class_filter = self.__to__iterable(class_filter)
+        class_filter = self.__to_iterable(class_filter) # type: ignore
         return [x for x in self.vertices if x.class_name in class_filter]
     
     def collect_data(self, key: Any, class_filter: Optional[Iterable[str] | str]=None, raise_key_error: bool = False) -> dict[int, Any]:
@@ -162,7 +173,7 @@ class NotationGraph(object):
         :return: A list of ``Node`` objects.
         """
         node_id = self.__to_id(node_or_id)
-        class_filter = self.__to__iterable(class_filter)
+        class_filter = self.__to_iterable(class_filter)
 
         if node_id not in self.__id_to_node_mapping:
             raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
@@ -187,7 +198,7 @@ class NotationGraph(object):
         :return: A list of ``Node`` objects.
         """
         node_id = self.__to_id(node_or_id)
-        class_filter = self.__to__iterable(class_filter)
+        class_filter = self.__to_iterable(class_filter)
 
         if node_id not in self.__id_to_node_mapping:
             raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
@@ -212,20 +223,24 @@ class NotationGraph(object):
         :return: A list of ``Node`` objects.
         """
         node_id = self.__to_id(node_or_id)
-        class_filter = self.__to__iterable(class_filter)
+        class_filter = self.__to_iterable(class_filter)
 
         descendant_ids = []
+        visited = set([node_id])
         queue = Queue()
         queue.put(node_id)
+
         while not queue.empty():
             current_node_id = queue.get()
             if current_node_id != node_id:
                 descendant_ids.append(current_node_id)
+
             children = self.children(current_node_id, class_filter=class_filter)
-            children_node_ids = [child.id for child in children]
-            for child_id in children_node_ids:
-                if child_id not in queue:
-                    queue.put(child_id)
+            for child in children:
+                if child.id not in visited:
+                    visited.add(child.id)
+                    queue.put(child.id)
+
         return [self.__id_to_node_mapping[o] for o in descendant_ids]
 
     def ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
@@ -237,7 +252,7 @@ class NotationGraph(object):
         :return: A list of ``Node`` objects.
         """
         node_id = self.__to_id(node_or_id)
-        class_filter = self.__to__iterable(class_filter)
+        class_filter = self.__to_iterable(class_filter)
 
         ancestor_node_ids = []
         queue = Queue()
@@ -337,6 +352,9 @@ class NotationGraph(object):
         A horizontally intersecting subset of the mask of the other symbol
         is used to determine its vertical bounds relevant to the given object.
         """
+        if other.mask is None:
+            raise ValueError("Mask is None")
+        
         if notehead.right <= other.left:
             # No horizontal overlap, notehead to the left
             beam_submask = other.mask[:, :1]
@@ -371,44 +389,48 @@ class NotationGraph(object):
             raise NotationGraphError('Weird relative position of notehead'
                                      ' {0} and other {1}.'.format(notehead.id, other.id))
 
-    def remove_vertex(self, node_id: int):
-        self.remove_edges_for_vertex(node_id)
-        node = self.__id_to_node_mapping[node_id]
+    def remove_vertex(self, node_or_id: Node | int):
+        node = self.__to_node(node_or_id)
+        self.remove_edges_for_vertex(node)
         self.__nodes.remove(node)
-        del self.__id_to_node_mapping[node_id]
+        del self.__id_to_node_mapping[node.id]
 
-    def remove_edge(self, from_id: int, to_id: int, suppress_not_in_list_error: bool = False):
+    def remove_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int, suppress_not_in_list_error: bool = False):
+        from_node = self.__to_node(from_node_or_id)
+        to_node = self.__to_node(to_node_or_id)
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
+
         if from_id not in self.__id_to_node_mapping:
             raise ValueError('Cannot remove edge from id {0}: not in graph!'
-                             ''.format(from_id))
+                             ''.format(from_node_or_id))
         if to_id not in self.__id_to_node_mapping:
             raise ValueError('Cannot remove edge to id {0}: not in graph!'
-                             ''.format(to_id))
-
-        from_node = self.__id_to_node_mapping[from_id]
-        to_node = self.__id_to_node_mapping[to_id]
+                             ''.format(to_node_or_id))
+        
         if suppress_not_in_list_error:
-            if to_id not in from_node.outlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {to_id} not in outlinks of {from_id}")
+            if to_node_or_id not in from_node.outlinks:
+                logging.warning(f"Suppressing \"not in list\" error, {to_node_or_id} not in outlinks of {from_node_or_id}")
                 return
-            if from_id not in to_node.inlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {from_id} not in inlinks of {to_id}")
+            if from_node_or_id not in to_node.inlinks:
+                logging.warning(f"Suppressing \"not in list\" error, {from_node_or_id} not in inlinks of {to_node_or_id}")
                 return
 
-        from_node.outlinks.remove(to_id)
-        to_node.inlinks.remove(from_id)
+        from_node.outlinks.remove(from_id)
+        to_node.inlinks.remove(to_id)
 
-    def remove_edges_for_vertex(self, node_id: int):
-        if node_id not in self.__id_to_node_mapping:
+    def remove_edges_for_vertex(self, node_or_id: Node | int):
+        node = self.__to_node(node_or_id)
+
+        if node.id not in self.__id_to_node_mapping:
             raise ValueError('Cannot remove node with id {0}: not in graph!'
-                             ''.format(node_id))
-        node = self.__id_to_node_mapping[node_id]
+                             ''.format(node.id))
 
         # Remove from inlinks and outlinks:
         for inlink in copy.deepcopy(node.inlinks):
-            self.remove_edge(inlink, node_id)
+            self.remove_edge(inlink, node)
         for outlink in copy.deepcopy(node.outlinks):
-            self.remove_edge(node_id, outlink)
+            self.remove_edge(node, outlink)
 
     def remove_classes(self, class_names: Iterable[str]):
         """Remove all vertices with these class names."""
@@ -457,26 +479,26 @@ class NotationGraph(object):
             node.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(predecessor_id)
 
         # Remove outlinks
-        for descentant_id in descendants:
-            descentant = self.__id_to_node_mapping[descentant_id]
-            if PrecedenceLinksConstants.PrecedenceInlinks not in descentant.data:
+        for descendant_id in descendants:
+            descendant = self.__id_to_node_mapping[descendant_id]
+            if PrecedenceLinksConstants.PrecedenceInlinks not in descendant.data:
                 raise ValueError('Descendant {} of node {} does not have precedence inlinks!'
-                                 ''.format(descentant_id, node.id))
-            if node.id not in descentant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
+                                 ''.format(descendant_id, node.id))
+            if node.id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
                 raise ValueError('Descendant {} of node {} does not have reciprocal inlink!'
-                                 ''.format(descentant_id, node.id))
-            descentant.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(node.id)
-            node.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(descentant_id)
+                                 ''.format(descendant_id, node.id))
+            descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(node.id)
+            node.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(descendant_id)
 
         # Bridge removed element
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
-            for descentant_id in descendants:
-                descentant = self.__id_to_node_mapping[descentant_id]
-                if descentant_id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
-                    predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].append(descentant_id)
-                if predecessor_id not in descentant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
-                    descentant.data[PrecedenceLinksConstants.PrecedenceInlinks].append(predecessor_id)
+            for descendant_id in descendants:
+                descendant = self.__id_to_node_mapping[descendant_id]
+                if descendant_id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
+                    predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].append(descendant_id)
+                if predecessor_id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
+                    descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].append(predecessor_id)
 
     def has_edge(self, from_id: int, to_id: int) -> bool:
         if from_id not in self.__id_to_node_mapping:
@@ -505,9 +527,12 @@ class NotationGraph(object):
             raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
             raise NotationGraphError('Cannot remove edge to id {0}: not in graph!'.format(to_id))
-
-        if to_id in self.__id_to_node_mapping[from_id].outlinks:
-            if from_id in self.__id_to_node_mapping[to_id].inlinks:
+        
+        from_node = self.__id_to_node_mapping[from_id]
+        to_node = self.__id_to_node_mapping[to_id]
+        
+        if to_id in from_node.outlinks:
+            if from_id in to_node.inlinks:
                 logging.info('Adding edge that is already in the graph: {} --> {}'
                              ' -- doing nothing'.format(from_id, to_id))
                 return
@@ -712,7 +737,7 @@ def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     Returns a closure of given ``nodes`` over chords.
     Chord are defined as notehead connected by a stem.
 
-    Cannot deal with multistem noheads.
+    Cannot deal with multistem noteheads.
 
     If nodes belong together to a chord, they are grouped together into a sublist.
     If a node or a symbol is not part of any chord, it is outputted in its own sublist.
@@ -978,7 +1003,7 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
         p_top = resolve_notehead_wrt_staffline(node, stafflines[0])
         p_bottom = resolve_notehead_wrt_staffline(node, stafflines[-1])
         # Notehead actually located on the staff somewhere:
-        # all the LL rels. are false.
+        # all the LL RELs. are false.
         if (p_top != p_bottom) or (p_top == 0) or (p_bottom == 0):
             for ll in lls:
                 misdirected_object_pairs.append([node, ll])
