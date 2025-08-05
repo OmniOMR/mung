@@ -416,8 +416,8 @@ class NotationGraph(object):
                 logging.warning(f"Suppressing \"not in list\" error, {from_node_or_id} not in inlinks of {to_node_or_id}")
                 return
 
-        from_node.outlinks.remove(from_id)
-        to_node.inlinks.remove(to_id)
+        from_node.outlinks.remove(to_id)
+        to_node.inlinks.remove(from_id)
 
     def remove_edges_for_vertex(self, node_or_id: Node | int):
         node = self.__to_node(node_or_id)
