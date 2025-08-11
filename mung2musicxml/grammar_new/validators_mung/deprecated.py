@@ -9,9 +9,16 @@ from ..parts import GrammarNode
 
 class _DeprecatedNames:
     """
-    Stores simple one-to-one mapping for deprecated class names.
+    Stores simple one-to-one mapping for deprecated class names
+    in a format "old name" : "new name".
     """
-    MAPPING = {"notehead-full": "noteheadBlack", "noteheadFull": "noteheadBlack"}
+    MAPPING = {
+        "notehead-full": "noteheadBlack",
+        "noteheadFull": "noteheadBlack",
+        "repeat1Bar": "repeatOneBar",
+        "rest_breve": "restBreve",
+        "rest_longa": "restLonga",
+        }
 
 class DeprecationValidator(object):
     def _simple_rename_template(
