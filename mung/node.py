@@ -2,9 +2,10 @@ import copy
 import itertools
 import logging
 from typing import Optional, Any, Self
-
 import numpy as np
 from math import ceil
+from lxml import etree
+
 
 from mung.utils import compute_connected_components
 from mung.constants import PrecedenceLinksConstants
@@ -384,7 +385,7 @@ class Node(object):
             self.__mask = None
         else:
             # Check dimension
-            t, l, b, r = self.round_bounding_box_to_integer(self.top,
+            t, l, b, r = self.round_bounding_box_to_integer(self.top,  # noqa: E741
                                                             self.left,
                                                             self.bottom,
                                                             self.right)
@@ -492,9 +493,9 @@ class Node(object):
 
         """
         if isinstance(bounding_box_or_node, Node):
-            t, l, b, r = bounding_box_or_node.bounding_box
+            t, l, b, r = bounding_box_or_node.bounding_box  # noqa: E741
         else:
-            t, l, b, r = bounding_box_or_node
+            t, l, b, r = bounding_box_or_node  # noqa: E741
         # Does it overlap vertically? Includes situations where the Node is inside the bounding box.
         # Note that the bottom is +1 (fencepost), so the checks bottom vs. top need to be "less than",
         # not leq. If one object's top would be equal to the other's bottom, they would be touching,
@@ -547,7 +548,7 @@ class Node(object):
         True
 
         """
-        t, l, b, r = bounding_box
+        t, l, b, r = bounding_box  # noqa: E741
 
         out_top = max(t, self.top)
         out_bottom = min(b, self.bottom)
@@ -615,7 +616,7 @@ class Node(object):
                 break
 
         trim_right = -1
-        for l in range(self.__mask.shape[1]):
+        for l in range(self.__mask.shape[1]):  # noqa: E741
             if self.__mask[:, -(l + 1)].sum() != 0:
                 trim_right = l
                 break
@@ -684,35 +685,92 @@ class Node(object):
             PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
         )
 
-    def __str__(self):
+    @classmethod
+    def from_xml(cls, node_el: etree.Element, dataset: Optional[str] = None, document: Optional[str] = None) -> Self:
+        """
+        Construct a Node instance from an lxml <Node> Element.
+        """
+        Keys = DataCoder.Keys
+
+        node_id = int(float(node_el.findtext(Keys.ID)))
+        class_name = node_el.findtext(Keys.CLASS_NAME)
+        top = int(node_el.findtext(Keys.BBox.TOP))
+        left = int(node_el.findtext(Keys.BBox.LEFT))
+        width = int(node_el.findtext(Keys.BBox.WIDTH))
+        height = int(node_el.findtext(Keys.BBox.HEIGHT))
+
+        # Inlinks
+        inlinks_text = node_el.findtext(Keys.INLINKS)
+        inlinks = list(map(int, inlinks_text.split())) if inlinks_text else []
+
+        # Outlinks
+        outlinks_text = node_el.findtext(Keys.OUTLINKS)
+        outlinks = list(map(int, outlinks_text.split())) if outlinks_text else []
+
+        # Data
+        data_dict = None
+        data_el = node_el.find(Keys.DATA)
+        if data_el is not None:
+            data_dict = DataCoder.decode_data_element(data_el)
+        
+        # Mask
+        mask = None
+        mask_el = node_el.find(Keys.MASK)
+        if mask_el is not None and mask_el.text:
+            mask = cls.decode_mask(mask_el.text, shape=(height, width))
+        
+        return cls(
+            id_=node_id,
+            class_name=class_name,
+            top=top,
+            left=left,
+            width=width,
+            height=height,
+            mask=mask,
+            inlinks=inlinks,
+            outlinks=outlinks,
+            dataset=dataset,
+            document=document,
+            data=data_dict
+        )
+
+    def to_xml(self) -> etree.Element:
+        """
+        Encode a Node instance into an lxml <Node> Element.
+        """
+        Keys = DataCoder.Keys
+
+        node_el = etree.Element(Keys.NODE)
+
+        etree.SubElement(node_el, Keys.ID).text = str(self.id)
+        etree.SubElement(node_el, Keys.CLASS_NAME).text = self.class_name
+        etree.SubElement(node_el, Keys.BBox.TOP).text = str(self.top)
+        etree.SubElement(node_el, Keys.BBox.LEFT).text = str(self.left)
+        etree.SubElement(node_el, Keys.BBox.WIDTH).text = str(self.__width)
+        etree.SubElement(node_el, Keys.BBox.HEIGHT).text = str(self.__height)
+
+        etree.SubElement(node_el, Keys.MASK).text = self.encode_mask()
+
+        if self.inlinks:
+            etree.SubElement(node_el, Keys.INLINKS).text = " ".join(map(str, self.inlinks))
+        if self.outlinks:
+            etree.SubElement(node_el, Keys.OUTLINKS).text = " ".join(map(str, self.outlinks))
+
+        data_el = DataCoder.encode_data(self.data)
+        if data_el is not None:
+            node_el.append(data_el)
+
+        return node_el
+
+    def __repr__(self) -> str:
+        root_el = self.to_xml()
+        etree.indent(root_el, space="\t")
+        return etree.tostring(root_el, encoding="utf-8", xml_declaration=True).decode("utf-8")
+
+    def ___str__(self):
         """Format the Node as string representation. See the documentation
         of :module:`mung.io` for details."""
-        lines = []
-        lines.append('<Node>')
-        lines.append('\t<Id>{0}</Id>'.format(self.id))
-        lines.append('\t<ClassName>{0}</ClassName>'.format(
-            self.class_name))  # TODO change this if relevant for final XML notation
-        lines.append('\t<Top>{0}</Top>'.format(self.top))
-        lines.append('\t<Left>{0}</Left>'.format(self.left))
-        lines.append('\t<Width>{0}</Width>'.format(self.__width))
-        lines.append('\t<Height>{0}</Height>'.format(self.__height))
-
-        mask_string = self.encode_mask()
-        lines.append('\t<Mask>{0}</Mask>'.format(mask_string))
-
-        if len(self.inlinks) > 0:
-            inlinks_string = ' '.join(list(map(str, self.inlinks)))
-            lines.append('\t<Inlinks>{0}</Inlinks>'.format(inlinks_string))
-        if len(self.outlinks) > 0:
-            outlinks_string = ' '.join(list(map(str, self.outlinks)))
-            lines.append('\t<Outlinks>{0}</Outlinks>'.format(outlinks_string))
-
-        data_string = self.encode_data()
-        if data_string is not None:
-            lines.append('\t<Data>\n{0}\n\t</Data>'.format(data_string))
-
-        lines.append('</Node>')
-        return '\n'.join(lines)
+        return repr(self)
 
     def encode_mask(self, mode: str = 'rle') -> str:
         """Encode a binary array ``mask`` as a string, compliant
@@ -724,38 +782,7 @@ class Node(object):
         elif mode == 'bitmap':
             return self.encode_mask_bitmap(self.mask)
         raise ValueError('Invalid mode')
-
-    def encode_data(self) -> Optional[str]:
-        if self.data is None:
-            return None
-        if len(self.data) == 0:
-            return None
-
-        lines = []
-        for k, v in list(self.data.items()):
-            vtype = 'str'
-            vval = v
-            if isinstance(v, int):
-                vtype = 'int'
-                vval = str(v)
-            elif isinstance(v, float):
-                vtype = 'float'
-                vval = str(v)
-            elif isinstance(v, list):
-                vtype = 'list[str]'
-                if len(v) > 0:
-                    if isinstance(v[0], int):
-                        vtype = 'list[int]'
-                    elif isinstance(v[0], float):
-                        vtype = 'list[float]'
-                vval = ' '.join([str(vv) for vv in v])
-
-            line = '\t\t<DataItem key="{0}" type="{1}">{2}</DataItem>' \
-                   ''.format(k, vtype, vval)
-            lines.append(line)
-
-        return '\n'.join(lines)
-
+    
     def data_display_text(self) -> str:
         if self.data is None:
             return '[No data]'
@@ -1045,7 +1072,7 @@ class Node(object):
             raise ValueError("Mask intersection is None")
 
         gt_pasted_mask = mask_intersection * 1
-        t, l, b, r = compute_unifying_bounding_box([self, other_node])
+        t, l, b, r = compute_unifying_bounding_box([self, other_node])  # noqa: E741
         h, w = b - t, r - l
         ct, cl, cb, cr = (self.top - t,
                           self.left - l,
@@ -1055,7 +1082,7 @@ class Node(object):
         gt_pasted_mask[gt_pasted_mask != 0] = 1
 
         pred_pasted_mask = mask_intersection * 1
-        t, l, b, r = other_node.bounding_box
+        t, l, b, r = other_node.bounding_box  # noqa: E741
         h, w = b - t, r - l
         ct, cl, cb, cr = (other_node.top - t,
                           other_node.left - l,
@@ -1328,7 +1355,7 @@ def bounding_box_intersection(
     """Returns the t, l, b, r coordinates of the sub-bounding box
     of bbox_this that is also inside bbox_other.
     If the bounding boxes do not overlap, returns None."""
-    t, l, b, r = second_bounding_box
+    t, l, b, r = second_bounding_box  # noqa: E741
     tt, tl, tb, tr = first_bounding_box
 
     out_top = max(t, tt)
@@ -1418,3 +1445,109 @@ def draw_nodes_on_empty_canvas(
     canvas[canvas != 0] = 1
 
     return canvas, (top_with_margin, left_with_margin)
+
+
+class DataCoder:
+    """
+    Class responsible for encoding and decoding <Data> XML elements
+    of MuNG Node into Python dicts.
+
+    Also holds constants that are used as element keys inside the XML.
+    """
+
+    TYPE_MAP = {
+        'int': int,
+        'float': float,
+        'str': str,
+        'list[int]': lambda s: list(map(int, s.split())) if s else [],
+        'list[float]': lambda s: list(map(float, s.split())) if s else [],
+        'list[str]': lambda s: s.split() if s else []
+    }
+
+    DEFAULT_NONLIST_TYPE: str = "str"
+    DEFAULT_LIST_TYPE: str = "list[str]"
+
+    class Keys:
+        NODE: str = "Node"
+        CROP_OBJECT: str = "CropObject"
+
+        ID: str = "Id"
+        CLASS_NAME: str = "ClassName"
+        MASK: str = "Mask"
+
+        OUTLINKS: str = "Outlinks"
+        INLINKS: str = "Inlinks"
+
+        DATA: str = "Data"
+        DATA_ITEM: str = "DataItem"
+
+        class BBox:
+            TOP: str = "Top"
+            LEFT: str = "Left"
+            WIDTH: str = "Width"
+            HEIGHT: str = "Height"
+
+        class DataItems:
+            KEY: str = "key"
+            TYPE: str = "type"
+            
+        class MetaData:
+            DATASET: str = "dataset"
+            DOCUMENT: str = "document"
+            DEFAULT: str = "Unknown"
+    
+    @staticmethod
+    def decode_data_element(data_el: etree.Element) -> dict[str, Any]:
+        Keys = DataCoder.Keys
+
+        data_dict = {}
+        for item_el in data_el.findall(Keys.DATA_ITEM):
+            key = item_el.get(Keys.DataItems.KEY)
+            value_type = item_el.get(Keys.DataItems.TYPE, DataCoder.DEFAULT_NONLIST_TYPE)
+            value_text = item_el.text or ""
+
+            decoder = DataCoder.TYPE_MAP.get(value_type, str)
+            try:
+                value = decoder(value_text)
+            except Exception:
+                # fallback to raw text if decoding fails
+                value = value_text
+
+            data_dict[key] = value
+
+        return data_dict
+
+    @staticmethod
+    def encode_data(data: dict[str, Any]) -> Optional[etree.Element]:
+        Keys = DataCoder.Keys
+
+        if not data:
+            return None
+
+        def get_type_and_value(val) -> tuple[str, str]:
+            if isinstance(val, list):
+                if not val:
+                    # Empty list, assume list[str]
+                    return DataCoder.DEFAULT_LIST_TYPE, ""
+                # Get type of first element
+                first_type = type(val[0])
+                # Verify all elements have the same type as the first
+                if all(isinstance(x, first_type) for x in val):
+                    type_name = first_type.__name__
+                    return f"list[{type_name}]", " ".join(map(str, val))
+                else:
+                    # Mixed types fallback, encode as list[str]
+                    return DataCoder.DEFAULT_LIST_TYPE, " ".join(map(str, val))
+            else:
+                val_type_name = type(val).__name__
+                return val_type_name, str(val)
+
+        data_el = etree.Element(Keys.DATA)
+
+        for k, v in data.items():
+            vtype, vval = get_type_and_value(v)
+            item_el = etree.SubElement(data_el, Keys.DATA_ITEM, key=str(k), type=vtype)
+            item_el.text = vval
+
+        return data_el
+

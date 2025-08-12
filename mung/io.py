@@ -208,7 +208,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from mung.node import Node
+from mung.node import Node, DataCoder
 from mung.node_class import NodeClass
 
 
@@ -253,94 +253,19 @@ def read_nodes_from_file(filename: str | Path) -> list[Node]:
     logging.debug('XML parsed.')
     nodes = []
 
-    dataset = root.attrib.get('dataset', 'Unknown')
-    document = root.attrib.get('document', 'Unknown')
-    node_tag = 'Node' if list(root.iter('Node')) else 'CropObject'
+    Keys = DataCoder.Keys
 
-    for i, node in enumerate(root.iter(node_tag)):
+    dataset = root.attrib.get(Keys.MetaData.DATASET, Keys.MetaData.DEFAULT)
+    document = root.attrib.get(Keys.MetaData.DOCUMENT, Keys.MetaData.DEFAULT)
+    node_tag = Keys.NODE if list(root.iter(Keys.NODE)) else Keys.CROP_OBJECT
+
+    for i, node_el in enumerate(root.iter(node_tag)):
         ######################################################
         logging.debug('Parsing Node {0}'.format(i))
 
-        node_id = int(float(node.findall('Id')[0].text))
-        class_name = node.findall('ClassName')[0].text
-        top = int(node.findall('Top')[0].text)
-        left = int(node.findall('Left')[0].text)
-        width = int(node.findall('Width')[0].text)
-        height = int(node.findall('Height')[0].text)
-
-        #################################
-        # Parsing the graph structure (Can deal with missing Inlinks/Outlinks)
-        inlinks = []
-        i_s = node.findall('Inlinks')
-        if len(i_s) > 0:
-            i_s_text = node.findall('Inlinks')[0].text
-            if i_s_text is not None:  # Zero-length links
-                inlinks = list(map(int, i_s_text.split(' ')))
-
-        outlinks = []
-        o_s = node.findall('Outlinks')
-        if len(o_s) > 0:
-            o_s_text = node.findall('Outlinks')[0].text
-            if o_s_text is not None:
-                outlinks = list(map(int, o_s_text.split(' ')))
-
-        #################################
-        data = node.findall('Data')
-        data_dict = None
-        if len(data) > 0:
-            data = data[0]
-            data_dict = {}
-            for data_item in data.findall('DataItem'):
-                key = data_item.get('key')
-                value_type = data_item.get('type')
-                value = data_item.text
-
-                # logging.debug('Creating data entry: key={0}, type={1},'
-                #              ' value={2}'.format(key, value_type, value))
-
-                if value_type == 'int':
-                    value = int(value)
-                elif value_type == 'float':
-                    value = float(value)
-                elif value_type.startswith('list'):
-                    if value is None:
-                        value = []
-                    else:
-                        vt_factory = str
-                        if value_type.endswith('[int]'):
-                            vt_factory = int
-                        elif value_type.endswith('[float]'):
-                            vt_factory = float
-                        value = list(map(vt_factory, value.split()))
-
-                data_dict[key] = value
-
-        #################################
-        # Create the object.
-        new_node = Node(id_=node_id,
-                        class_name=class_name,
-                        top=top,
-                        left=left,
-                        width=width,
-                        height=height,
-                        inlinks=inlinks,
-                        outlinks=outlinks,
-                        dataset=dataset,
-                        document=document,
-                        data=data_dict)
-
-        #################################
-        # Add mask.
-        # We do this only after the Node has been created,
-        # to make sure that the width & height used to reshape
-        # the flattened mask reflects what is in the Node.
-        mask = None
-        mask_elements = node.findall('Mask')
-        if len(mask_elements) > 0:
-            mask = Node.decode_mask(mask_elements[0].text, shape=(new_node.height, new_node.width))
-        new_node.set_mask(mask)
+        new_node = Node.from_xml(node_el, dataset=dataset, document=document)
         nodes.append(new_node)
-
+    
     logging.debug('Nodes loaded.')
 
     if not validate_nodes_graph_structure(nodes):
@@ -556,18 +481,26 @@ def write_nodes_to_string(nodes: list[Node], document: Optional[str] = None, dat
         document = Node.DEFAULT_DOCUMENT
     if dataset is None:
         dataset = Node.DEFAULT_DATASET
+    
+    # Root element with namespace for xsi
+    root_el = etree.Element(
+        "Nodes",
+        nsmap={"xsi": "http://www.w3.org/2001/XMLSchema-instance"},
+        dataset=dataset,
+        document=document
+    )
 
-    # This is the data string, the rest is formalities
-    nodes_string = '\n'.join([str(c) for c in nodes])
+    root_el.set(
+        "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
+        "CVC-MUSCIMA_Schema.xsd"
+    )
 
-    lines = list()
-    lines.append('<?xml version="1.0" encoding="utf-8"?>')
-    lines.append('<Nodes dataset="{0}" document="{1}"'
-                 ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-                 ' xsi:noNamespaceSchemaLocation="CVC-MUSCIMA_Schema.xsd">'.format(dataset, document))
-    lines.append(nodes_string)
-    lines.append('</Nodes>')
-    return '\n'.join(lines)
+    for node in nodes:
+        root_el.append(node.to_xml())
+
+    etree.indent(root_el, space="\t")
+    return etree.tostring(root_el, encoding="utf-8", xml_declaration=True).decode("utf-8")
+
 
 # For compatibility reasons, keep the old name, even though write_nodes_to_file matches read_nodes_from_file better
 export_node_list = write_nodes_to_file
