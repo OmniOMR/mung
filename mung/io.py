@@ -386,7 +386,7 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
     a ``ValueError`` otherwise.)
 
     Checks that all Edges are correctly defined - go from
-    a valid node to onother valid note and are defined in both nodes.
+    a valid node to another valid note and are defined in both nodes.
 
     :param nodes: A list of :class:`Node` instances.
 
@@ -414,10 +414,17 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
                                 ' object {0} has outlink to non-existent'
                                 ' object {1}'.format(c, o))
                 is_valid = False
-    logging.basicConfig(level=logging.INFO)
+
+    for node in nodes:
+        if len(node.outlinks) != len(set(node.outlinks)):
+            logging.warning(f"Duplicate in outlinks of {node.id}, {node.outlinks}")
+            is_valid = False
+        if len(node.inlinks) != len(set(node.inlinks)):
+            logging.warning(f"Duplicate in inlinks of {node.id}, {node.inlinks}")
+            is_valid = False
+    
     mapping = {node.id: node for node in nodes}
     for node in nodes:
-        to_remove = []
         for to_node_id in node.outlinks:
             if node.id not in mapping[to_node_id].inlinks:
                 logging.warning(
@@ -425,11 +432,8 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
                     f"Source {node.id} outlinks: {node.outlinks}; "
                     f"target {to_node_id} inlinks: {mapping[to_node_id].inlinks}."
                     )
-                # to_remove.append(to_node_id)
                 is_valid = False
-        for tr in to_remove:
-            node.outlinks.remove(tr)
-        to_remove = []
+
         for from_node_id in node.inlinks:
             if node.id not in mapping[from_node_id].outlinks:
                 logging.warning(
@@ -437,10 +441,7 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
                     f"Source {node.id} inlinks: {node.inlinks}; "
                     f"target {from_node_id} outlinks: {mapping[from_node_id].outlinks}."
                     )
-                # to_remove.append(from_node_id)
                 is_valid = False
-        for tr in to_remove:
-            node.inlinks.remove(tr)
 
     return is_valid
 

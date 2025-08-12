@@ -5,6 +5,7 @@ from enum import Enum
 from fractions import Fraction
 from typing import Optional
 
+WESTERN_NOTATION_STAFFLINE_COUNT = 5
 
 class PrecedenceLinksConstants(object):
     """
@@ -50,10 +51,10 @@ class ClassNamesConstants(object):
     REST_32ND = "rest32nd"
     REST_64TH = "rest64th"
 
-    REST_BREVE = "rest_breve"
-    REST_LONGA = "rest_longa"
+    REST_BREVE = "restBreve"
+    REST_LONGA = "restLonga"
 
-    REPEAT_ONE_BAR = "repeat1Bar"
+    REPEAT_ONE_BAR = "repeatOneBar"
     MULTI_MEASURE_REST = "multiMeasureRest"
     AUGMENTATION_DOT = "augmentationDot"
 
@@ -407,3 +408,9 @@ class InferenceEngineConstants(ClassNamesConstants):
         output.update(self.NONGRACE_NOTEHEAD_CLASS_NAMES)
         output.update(self.REST_CLASS_NAMES)
         return output
+
+
+class OnsetDataConstants(Enum):
+    ONSET_BEATS = "onset_beats"
+    DURATION_BEATS = "duration_beats"
+    DURATION_BEATS_WO_M = "duration_beats_wo_m"

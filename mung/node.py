@@ -504,6 +504,14 @@ class Node(object):
                 return True
         return False
 
+    @staticmethod
+    def horizontal_overlap(first: "Node", second: "Node") -> int:
+        return max(0, min(first.right, second.right) - max(first.left, second.left))
+
+    @staticmethod
+    def vertical_overlap(first: "Node", second: "Node") -> int:
+        return max(0, min(first.bottom, second.bottom) - max(first.top, second.top))
+    
     def contains(self, bounding_box_or_node: tuple[int, int, int, int] | Self) -> bool:
         """Check if this Node entirely contains the other bounding
         box (or, the other node's bounding box)."""
@@ -710,9 +718,7 @@ class Node(object):
         """Encode a binary array ``mask`` as a string, compliant
         with the Node format specification in :mod:`mung.io`.
         """
-        if self.mask is None:
-            raise ValueError("Mask is None")
-        
+
         if mode == 'rle':
             return self.encode_mask_rle(self.mask)
         elif mode == 'bitmap':
@@ -762,7 +768,7 @@ class Node(object):
         return '\n'.join(lines)
 
     @staticmethod
-    def encode_mask_bitmap(mask: np.ndarray) -> str:
+    def encode_mask_bitmap(mask: np.ndarray | None) -> str:
         """Encodes the mask array in a compact form. Returns 'None' if mask
         is None. If the mask is not None, uses the following algorithm:
 
@@ -779,7 +785,7 @@ class Node(object):
         return output
 
     @staticmethod
-    def encode_mask_rle(mask: np.ndarray) -> str:
+    def encode_mask_rle(mask: np.ndarray | None) -> str:
         """Encodes the mask array in Run-Length Encoding. Instead of
         having the bitmap ``0 0 1 1 1 0 0 0 1 1``, the RLE encodes
         the mask as ``0:2 1:3 0:3 1:2``. This is much more compact.
