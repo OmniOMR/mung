@@ -2,6 +2,8 @@
 # PRECEDENCE DEPRULES #
 #######################
 
-notehead* rest* repeatOneBar multiMeasureRest | notehead* rest* repeatOneBar multiMeasureRest
+noteheadFull noteheadHalf noteheadWhole rest* repeatOneBar multiMeasureRest | noteheadFull noteheadHalf noteheadWhole rest* repeatOneBar multiMeasureRest
+
+notehead*Small | notehead*Small
 
 lyricsText | lyricsText

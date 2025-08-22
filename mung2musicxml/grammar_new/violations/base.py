@@ -4,6 +4,7 @@ from mung import NotationGraph
 from ..parts import GrammarEdge, GrammarNode
 from ..corrections import GrammarCorrection
 
+
 class GrammarViolation(ABC):
     @property
     @abstractmethod

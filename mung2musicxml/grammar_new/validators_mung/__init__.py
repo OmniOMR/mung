@@ -1,1 +1,2 @@
 from .deprecated import DeprecationValidator
+from .chord_components import ChordComponentValidator
