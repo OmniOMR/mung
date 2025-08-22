@@ -4,6 +4,7 @@ from mung import Node
 
 from ..symbol import Symbol
 
+
 @dataclass(frozen=True, eq=True)
 class GrammarNode:
     """

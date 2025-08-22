@@ -7,7 +7,6 @@ from ..parts import (
     Cardinality
 )
 from ..symbol import Symbol
-
 from ..constants import LinkDirection, GrammarConstants
 from ..violations import GrammarViolation, InvalidLinkCountViolation
 

@@ -3,6 +3,7 @@ from .base import GrammarRule
 from .side_group import _RuleSideGroup, _RuleSideGroupType
 from ..constants import LinkDirection, GrammarConstants
 
+
 class RuleFactory(object):
     def _raise_unsupported_combination(self):
         raise ValueError("Unsupported RuleType combination.")
