@@ -3,21 +3,14 @@ from pathlib import Path
 from ...logger import logger
 
 
-PRECEDENCE_GRAMMAR_DEPRULES_TEXT: str = ""
-SYNTAX_GRAMMAR_DEPRULES_TEXT: str = ""
-GRAMMAR_ALPHABET: list[str] = []
+def _load_grammar_part(data_file_name: str, name: str) -> str:
+    local_dir = Path(__file__).parent
+    data_file = local_dir / data_file_name
+    with open(data_file, "r", encoding="utf8") as f:
+        return f.read()
+    logger.info(f"Loaded {name} from {data_file}")
 
-_data_file = Path(__file__).with_name("precedence.deprules")
-with _data_file.open("r", encoding="utf-8") as f:
-    PRECEDENCE_GRAMMAR_DEPRULES_TEXT = f.read()
-logger.info(f"Loaded Precedence Deprules from {_data_file}")
 
-_data_file = Path(__file__).with_name("syntax.deprules")
-with _data_file.open("r", encoding="utf-8") as f:
-    SYNTAX_GRAMMAR_DEPRULES_TEXT = f.read()
-logger.info(f"Loaded Syntax Deprules from {_data_file}")
-
-_data_file = Path(__file__).with_name("alphabet.txt")
-with _data_file.open("r", encoding="utf-8") as f:
-    GRAMMAR_ALPHABET = f.read().split("\n")
-logger.info(f"Loaded Alphabet from {_data_file}")
+PRECEDENCE_GRAMMAR_DEPRULES_TEXT: str = _load_grammar_part("precedence.deprules", "Precedence Deprules")
+SYNTAX_GRAMMAR_DEPRULES_TEXT: str = _load_grammar_part("syntax.deprules", "Syntax Deprules")
+GRAMMAR_ALPHABET: list[str] = _load_grammar_part("alphabet.txt", "Alphabet").split("\n")
