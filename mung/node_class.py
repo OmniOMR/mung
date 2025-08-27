@@ -45,7 +45,7 @@ which is incidentally the real NodeClass list used
 for annotating MUSCIMA++.
 
 """
-import logging
+from .logger import logger
 
 
 class NodeClass(object):
@@ -63,7 +63,7 @@ class NodeClass(object):
         self.group_name = group_name
         # Parse the string into a RGB spec.
         r, g, b = hex2rgb(color)
-        logging.debug('NodeClass {0}: color {1}'.format(name, (r, g, b)))
+        logger.debug('NodeClass {0}: color {1}'.format(name, (r, g, b)))
         self.color = (r, g, b)
 
     def __str__(self):
@@ -99,7 +99,7 @@ def parse_hex(hstr):
 
     """
     out = 0
-    for i, l in enumerate(reversed(hstr)):
+    for i, l in enumerate(reversed(hstr)):  # noqa: E741
         out += (16 ** i) * _hex_tr[l]
     return out
 

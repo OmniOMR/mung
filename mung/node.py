@@ -1,14 +1,14 @@
 import copy
 import itertools
-import logging
 from typing import Optional, Any, Self
 import numpy as np
 from math import ceil
 from lxml import etree
 
 
-from mung.utils import compute_connected_components
-from mung.constants import PrecedenceLinksConstants
+from .utils import compute_connected_components
+from .constants import PrecedenceLinksConstants
+from .logger import logger
 
 
 class Node(object):
@@ -394,7 +394,7 @@ class Node(object):
                                  ' to integer shape {1} of Node.'
                                  ''.format(mask.shape, (b - t, r - l)))
             if str(mask.dtype) != 'uint8':
-                logging.debug('Node.set_mask(): Supplied non-integer mask'
+                logger.debug('Node.set_mask(): Supplied non-integer mask'
                               ' with dtype={0}'.format(mask.dtype))
 
             self.__mask = mask.astype('uint8')
@@ -446,14 +446,14 @@ class Node(object):
         of the given color and transparency. Might help visualization.
         """
         color = np.array(rgb)
-        logging.debug('Rendering object {0}, class_name {1}, t/b/l/r: {2}'
+        logger.debug('Rendering object {0}, class_name {1}, t/b/l/r: {2}'
                       ''.format(self.id, self.class_name,
                                 (self.top, self.bottom, self.left, self.right)))
-        # logging.debug('Shape: {0}'.format((self.height, self.width, 3)))
+        # logger.debug('Shape: {0}'.format((self.height, self.width, 3)))
         mask = np.ones((self.__height, self.__width, 3)) * color
         crop = image[self.top:self.bottom, self.left:self.right]
-        # logging.debug('Mask done, creating crop')
-        logging.debug('Shape: {0}. Got crop. Crop shape: {1}, img shape: {2}'
+        # logger.debug('Mask done, creating crop')
+        logger.debug('Shape: {0}. Got crop. Crop shape: {1}, img shape: {2}'
                       ''.format((self.__height, self.__width, 3), crop.shape, image.shape))
         mix = (crop + alpha * mask) / (1 + alpha)
 
@@ -621,7 +621,7 @@ class Node(object):
                 trim_right = l
                 break
 
-        logging.debug('Node.crop: Trimming top={0}, left={1},'
+        logger.debug('Node.crop: Trimming top={0}, left={1},'
                       'bottom={2}, right={3}'
                       ''.format(trim_top, trim_left, trim_bottom, trim_right))
 
@@ -634,7 +634,7 @@ class Node(object):
 
         new_mask = self.__mask[rel_t:rel_b, rel_l:rel_r] * 1
 
-        logging.debug('Node.crop: Old mask shape {0}, new mask shape {1}'
+        logger.debug('Node.crop: Old mask shape {0}, new mask shape {1}'
                       ''.format(self.__mask.shape, new_mask.shape))
 
         # new bounding box, relative to image -- used to compute the Node's position and size
@@ -870,7 +870,7 @@ class Node(object):
         try:
             values = list(map(float, mask_string.split()))
         except ValueError:
-            logging.info(
+            logger.info(
                 'Node.decode_mask_bitmap() Cannot decode mask values:\n{0}'.format(mask_string))
             raise
         mask = np.array(values).reshape(shape)
@@ -911,7 +911,7 @@ class Node(object):
         The ``class_name`` of the ``other`` is ignored.
         """
         if self.document != other.document:
-            logging.warning(
+            logger.warning(
                 "Trying to join Node from different documents, which is forbidden. Skipping join.")
             return
         if self.mask is None or other.mask is None:
@@ -1038,7 +1038,7 @@ class Node(object):
         Their minimum vertical and horizontal distances are each taken
         separately, and the euclidean norm is computed from them."""
         if self.document != node.document:
-            logging.warning('Cannot compute distances between Nodes'
+            logger.warning('Cannot compute distances between Nodes'
                             ' from different documents! ({0} vs. {1})'
                             ''.format(self.document, node.document))
 
@@ -1124,7 +1124,7 @@ def split_node_by_its_connected_components(node: Node, next_node_id: int) -> lis
     canvas[1:-1, 1:-1] = node.mask
     number_of_connected_components, labels, bounding_boxes = compute_connected_components(canvas)
 
-    logging.info('Node.split(): {0} connected components, bounding boxes: {1}'
+    logger.info('Node.split(): {0} connected components, bounding boxes: {1}'
                  .format(number_of_connected_components, bounding_boxes))
 
     if len(bounding_boxes) == 1:
@@ -1198,7 +1198,7 @@ def compute_unifying_bounding_box(nodes: list[Node]) -> tuple[int, int, int, int
 
     it, il, ib, ir = int(top), int(left), int(bottom), int(right)
     if (it != top) or (il != left) or (ib != bottom) or (ir != right):
-        logging.warning('Merged bounding box does not consist of integers!'
+        logger.warning('Merged bounding box does not consist of integers!'
                         ' {0}'.format((top, left, bottom, right)))
 
     return it, il, ib, ir
@@ -1336,12 +1336,12 @@ def link_nodes(from_node: Node, to_node: Node, check_that_nodes_have_the_same_do
         if check_that_nodes_have_the_same_document:
             raise ValueError('Cannot link two Nodes that are')
         else:
-            logging.warning('Attempting to link Nodes from two different'
+            logger.warning('Attempting to link Nodes from two different'
                             ' documents. From: {0}, to: {1}'
                             ''.format(from_node.document, to_node.document))
 
     if (to_node.id not in from_node.outlinks) and (from_node.id in to_node.inlinks):
-        logging.warning('Malformed object graph in document {0}:'
+        logger.warning('Malformed object graph in document {0}:'
                         ' Relationship {1} --> {2} already exists as inlink,'
                         ' but not as outlink!.'
                         ''.format(from_node.document, from_node.id, to_node.id))

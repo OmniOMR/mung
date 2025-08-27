@@ -3,37 +3,36 @@ Mostly it is support for going from detected staffline fragments
 to full staff objects and relationships; this machinery is called
 e.g. by pressing "shift+s" in MUSCIMarker."""
 import collections
-import logging
 import pprint
 
 import numpy
 from skimage.filters import gaussian
 from skimage.segmentation import watershed
-from typing import List, Tuple
 
-from mung.graph import NotationGraph, find_noteheads_on_staff_linked_to_leger_line
-from mung.constants import InferenceEngineConstants
-from mung.node import Node, draw_nodes_on_empty_canvas, link_nodes
-from mung.utils import compute_connected_components
+from .graph import NotationGraph, find_noteheads_on_staff_linked_to_leger_line
+from .constants import InferenceEngineConstants
+from .node import Node, draw_nodes_on_empty_canvas, link_nodes
+from .utils import compute_connected_components
+from .logger import logger
 
 _CONST = InferenceEngineConstants()
 
 
-def __has_parent_staff(node: Node, nodes: List[Node]) -> bool:
+def __has_parent_staff(node: Node, nodes: list[Node]) -> bool:
     id_to_node_mapping = {c.id: c for c in nodes}
     staff_inlinks = [id_to_node_mapping[i] for i in node.inlinks
                      if id_to_node_mapping[i].class_name == _CONST.STAFF]
     return len(staff_inlinks) > 0
 
 
-def __has_child_staffspace(staff: Node, nodes: List[Node]) -> bool:
+def __has_child_staffspace(staff: Node, nodes: list[Node]) -> bool:
     id_to_node_mapping = {c.id: c for c in nodes}
     staffline_outlinks = [id_to_node_mapping[i] for i in staff.outlinks
                           if id_to_node_mapping[i].class_name == _CONST.STAFFSPACE]
     return len(staffline_outlinks) > 0
 
 
-def __has_neighbor_staffspace(staffline: Node, nodes: List[Node]) -> bool:
+def __has_neighbor_staffspace(staffline: Node, nodes: list[Node]) -> bool:
     id_to_node_mapping = {c.id: c for c in nodes}
     # Find parent staff
     if not __has_parent_staff(staffline, nodes):
@@ -47,7 +46,7 @@ def __has_neighbor_staffspace(staffline: Node, nodes: List[Node]) -> bool:
     return __has_child_staffspace(staff, nodes)
 
 
-def merge_staffline_segments(nodes: List[Node], margin: int = 10) -> List[Node]:
+def merge_staffline_segments(nodes: list[Node], margin: int = 10) -> list[Node]:
     """Given a list of Nodes that contain some staffline
     objects, generates a new list where the stafflines
     are merged based on their horizontal projections.
@@ -70,7 +69,7 @@ def merge_staffline_segments(nodes: List[Node], margin: int = 10) -> List[Node]:
                            if (c.class_name == _CONST.STAFFLINE) and
                            not __has_parent_staff(c, nodes)]
     if len(old_staffline_nodes) == 0:
-        logging.info('merge_staffline_segments: nothing new to do!')
+        logger.info('merge_staffline_segments: nothing new to do!')
         return nodes
 
     canvas, (_t, _l) = draw_nodes_on_empty_canvas(old_staffline_nodes)
@@ -105,7 +104,7 @@ def merge_staffline_segments(nodes: List[Node], margin: int = 10) -> List[Node]:
             if os.overlaps(ns):
                 old2new_staffline_id_map[os.id] = ns
 
-    logging.info('Re-linking from the old staffline objects to new ones.')
+    logger.info('Re-linking from the old staffline objects to new ones.')
     for c in non_staffline_nodes:
         new_outlinks = []
         for o in c.outlinks:
@@ -120,8 +119,9 @@ def merge_staffline_segments(nodes: List[Node], margin: int = 10) -> List[Node]:
     return output
 
 
-def staffline_bboxes_and_masks_from_horizontal_merge(mask: numpy.ndarray) -> \
-        Tuple[List[Tuple[int, int, int, int]], List[numpy.ndarray]]:
+def staffline_bboxes_and_masks_from_horizontal_merge(
+        mask: numpy.ndarray
+        ) -> tuple[list[tuple[int, int, int, int]], list[numpy.ndarray]]:
     """Returns a list of staff_line bboxes and masks
      computed from the input mask, with
     each set of connected components in the mask that has at least
@@ -129,11 +129,11 @@ def staffline_bboxes_and_masks_from_horizontal_merge(mask: numpy.ndarray) -> \
     the same label. Intended for finding staffline masks from individual
     components of the stafflines (for this purpose, you have to assume
     that the stafflines are straight)."""
-    logging.info('Getting staffline connected components.')
+    logger.info('Getting staffline connected components.')
 
     cc, labels, bboxes = compute_connected_components(mask)
 
-    logging.info('Getting staffline component vertical projections')
+    logger.info('Getting staffline component vertical projections')
     #  - Use vertical dimension of CCs to determine which ones belong together
     #    to form stafflines. (Criterion: row overlap.)
     n_rows, n_cols = mask.shape
@@ -151,7 +151,7 @@ def staffline_bboxes_and_masks_from_horizontal_merge(mask: numpy.ndarray) -> \
         for row in range(t, b):
             intervals[row].append(label)
 
-    logging.warning('Grouping staffline connected components into stafflines.')
+    logger.warning('Grouping staffline connected components into stafflines.')
     # For each staffline, we collect the CCs that it is made of. We assume stafflines
     # are separated from each other by at least one empty row.
     staffline_components = []
@@ -179,11 +179,11 @@ def staffline_bboxes_and_masks_from_horizontal_merge(mask: numpy.ndarray) -> \
                 # staffline continues.
                 _current_staffline_components += r_labels
 
-    logging.info('No. of stafflines, with component groups: {0}'
+    logger.info('No. of stafflines, with component groups: {0}'
                  ''.format(len(staffline_components)))
 
     # Now: merge the staffline components into one bbox/mask.
-    logging.info('Merging staffline components into staffline bboxes and masks.')
+    logger.info('Merging staffline components into staffline bboxes and masks.')
     staffline_bboxes = []
     staffline_masks = []
     for sc in sorted(staffline_components,
@@ -201,16 +201,17 @@ def staffline_bboxes_and_masks_from_horizontal_merge(mask: numpy.ndarray) -> \
 
     # Check if n. of stafflines is divisible by 5
     n_stafflines = len(staffline_bboxes)
-    logging.warning('\tTotal stafflines: {0}'.format(n_stafflines))
+    logger.warning('\tTotal stafflines: {0}'.format(n_stafflines))
     if n_stafflines % 5 != 0:
         raise ValueError('Number of stafflines is not divisible by 5!')
 
     return staffline_bboxes, staffline_masks
 
 
-def staff_bboxes_and_masks_from_staffline_bboxes_and_image(staffline_bboxes, mask) -> \
-        Tuple[List[Tuple[int, int, int, int]], List[numpy.ndarray]]:
-    logging.warning('Creating staff bboxes and masks.')
+def staff_bboxes_and_masks_from_staffline_bboxes_and_image(
+        staffline_bboxes, mask
+        ) -> tuple[list[tuple[int, int, int, int]], list[numpy.ndarray]]:
+    logger.warning('Creating staff bboxes and masks.')
 
     #  - Go top-down and group the stafflines by five to get staves.
     #    (The staffline bboxes are already sorted top-down.)
@@ -227,12 +228,12 @@ def staff_bboxes_and_masks_from_staffline_bboxes_and_image(staffline_bboxes, mas
         staff_bboxes.append((_st, _sl, _sb, _sr))
         staff_masks.append(mask[_st:_sb, _sl:_sr])
 
-    logging.warning('Total staffs: {0}'.format(len(staff_bboxes)))
+    logger.warning('Total staffs: {0}'.format(len(staff_bboxes)))
 
     return staff_bboxes, staff_masks
 
 
-def staffline_surroundings_mask(staffline_node: Node) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def staffline_surroundings_mask(staffline_node: Node) -> tuple[numpy.ndarray, numpy.ndarray]:
     """Find the parts of the staffline's bounding box which lie
     above or below the actual staffline.
 
@@ -259,7 +260,7 @@ def staffline_surroundings_mask(staffline_node: Node) -> Tuple[numpy.ndarray, nu
     return bmask, tmask
 
 
-def build_staff_nodes(nodes: List[Node]) -> List[Node]:
+def build_staff_nodes(nodes: list[Node]) -> list[Node]:
     """Derives staff objects from staffline objects.
 
     Assumes each staff has 5 stafflines.
@@ -274,7 +275,7 @@ def build_staff_nodes(nodes: List[Node]) -> List[Node]:
     staffline_bboxes = [c.bounding_box for c in stafflines]
     canvas, (_t, _l) = draw_nodes_on_empty_canvas(stafflines)
 
-    logging.warning('Creating staff bboxes and masks.')
+    logger.warning('Creating staff bboxes and masks.')
 
     #  - Go top-down and group the stafflines by five to get staves.
     #    (The staffline bboxes are already sorted top-down.)
@@ -291,7 +292,7 @@ def build_staff_nodes(nodes: List[Node]) -> List[Node]:
         staff_bboxes.append((_st, _sl, _sb, _sr))
         staff_masks.append(canvas[_st - _t:_sb - _t, _sl - _l:_sr - _l])
 
-    logging.info('Creating staff Nodes')
+    logger.info('Creating staff Nodes')
     next_node_id = max([c.id for c in nodes]) + 1
     dataset = nodes[0].dataset
     document = nodes[0].document
@@ -317,7 +318,7 @@ def build_staff_nodes(nodes: List[Node]) -> List[Node]:
     return staffs
 
 
-def build_staffspace_nodes(nodes: List[Node]) -> List[Node]:
+def build_staffspace_nodes(nodes: list[Node]) -> list[Node]:
     """Creates the staffspace objects based on stafflines
     and staffs. There is a staffspace between each two stafflines,
     one on the top side of each staff, and one on the bottom
@@ -385,10 +386,10 @@ def build_staffspace_nodes(nodes: List[Node]) -> List[Node]:
             # of the top staffline is above the bottom of the bottom
             # staffline. This may not hold in very weird situations,
             # but it's good for now.
-            logging.debug(s1.bounding_box, s1.mask.shape)
-            logging.debug(s2.bounding_box, s2.mask.shape)
-            logging.debug(canvas.shape)
-            logging.debug('l={0}, dl1={1}, dl2={2}, r={3}, dr1={4}, dr2={5}'
+            logger.debug(s1.bounding_box, s1.mask.shape)
+            logger.debug(s2.bounding_box, s2.mask.shape)
+            logger.debug(canvas.shape)
+            logger.debug('l={0}, dl1={1}, dl2={2}, r={3}, dr1={4}, dr2={5}'
                           ''.format(l, dl1, dl2, r, dr1, dr2))
             # canvas[:s1.height, :] += s1.mask[:, dl1:s1.width-dr1]
             # canvas[-s2.height:, :] += s2.mask[:, dl2:s2.width-dr2]
@@ -411,7 +412,7 @@ def build_staffspace_nodes(nodes: List[Node]) -> List[Node]:
                                      canvas.shape[0], s2.width - dr2
             s2_h, s2_w = s2_b - s2_t, s2_r - s2_l
 
-            logging.debug(s1_t, s1_l, s1_b, s1_r, (s1_h, s1_w))
+            logger.debug(s1_t, s1_l, s1_b, s1_r, (s1_h, s1_w))
 
             # We now take the intersection of s1_below and s2_above.
             # If there is empty space in the middle, we fill it in.
@@ -500,7 +501,7 @@ def build_staffspace_nodes(nodes: List[Node]) -> List[Node]:
     return staff_spaces
 
 
-def add_staff_relationships(nodes: List[Node],
+def add_staff_relationships(nodes: list[Node],
                             notehead_staffspace_threshold: float = 0.2,
                             reprocess_noteheads_inside_staff_with_lls: bool = True):
     """Adds the relationships from various symbols to staff objects:
@@ -538,7 +539,7 @@ def add_staff_relationships(nodes: List[Node],
     ##########################################################################
     if reprocess_noteheads_inside_staff_with_lls:
         ll_noteheads_on_staff = find_noteheads_on_staff_linked_to_leger_line(nodes)
-        logging.info('Reprocessing noteheads that are inside a staff, but have links'
+        logger.info('Reprocessing noteheads that are inside a staff, but have links'
                      ' to leger lines. Found {0} such noteheads.'
                      ''.format(len(ll_noteheads_on_staff)))
         for n in ll_noteheads_on_staff:
@@ -548,7 +549,7 @@ def add_staff_relationships(nodes: List[Node],
                 graph.remove_edge(n.id, ll.id)
 
     ##########################################################################
-    logging.info('Find the staff-related symbols')
+    logger.info('Find the staff-related symbols')
     staffs = [c for c in nodes if c.class_name == _CONST.STAFF]
 
     staff_related_symbols = collections.defaultdict(list)
@@ -567,7 +568,7 @@ def add_staff_relationships(nodes: List[Node],
                 rest_symbols[node.class_name].append(node)
 
     ##########################################################################
-    logging.info('Adding staff relationships')
+    logger.info('Adding staff relationships')
     #  - Which direction do the relationships lead in?
     #    Need to define this.
     #
@@ -589,7 +590,7 @@ def add_staff_relationships(nodes: List[Node],
                     link_nodes(node, s, check_that_nodes_have_the_same_document=False)
 
     ##########################################################################
-    logging.info('Adding rest --> staff relationships.')
+    logger.info('Adding rest --> staff relationships.')
     for class_name, cs in list(rest_symbols.items()):
         for node in cs:
             closest_staff = min([s for s in staffs],
@@ -598,7 +599,7 @@ def add_staff_relationships(nodes: List[Node],
             link_nodes(node, closest_staff, check_that_nodes_have_the_same_document=False)
 
     ##########################################################################
-    logging.info('Adding notehead relationships.')
+    logger.info('Adding notehead relationships.')
 
     # NOTE:
     # This part should NOT rely on staffspace masks in any way!
@@ -614,9 +615,9 @@ def add_staff_relationships(nodes: List[Node],
     staves = [c for c in nodes if c.class_name == _CONST.STAFF]
     staves = sorted(staves, key=lambda c: c.top)
 
-    logging.info('Stafflines: {0}'.format(len(stafflines)))
-    logging.info('Staffspaces: {0}'.format(len(staffspaces)))
-    logging.info('Staves: {0}'.format(len(staves)))
+    logger.info('Stafflines: {0}'.format(len(stafflines)))
+    logger.info('Staffspaces: {0}'.format(len(staffspaces)))
+    logger.info('Staves: {0}'.format(len(staves)))
 
     # Indexing data structures.
     #
@@ -642,14 +643,14 @@ def add_staff_relationships(nodes: List[Node],
             _staff_per_ss_sl[_sl.id] = _staff
             _ss_sl_idx_wrt_staff[_sl.id] = i
             _staff_and_idx2sl[_staff.id][i] = _sl
-            logging.debug('Staff {0}: stafflines {1}'.format(_staff.id,
+            logger.debug('Staff {0}: stafflines {1}'.format(_staff.id,
                                                              _staff_and_idx2sl[_staff.id]))
         for i, _ss in enumerate(_s_staffspaces):
             _staff_per_ss_sl[_ss.id] = _staff
             _ss_sl_idx_wrt_staff[_ss.id] = i
             _staff_and_idx2ss[_staff.id][i] = _ss
 
-    logging.debug(pprint.pformat(dict(_staff_and_idx2ss)))
+    logger.debug(pprint.pformat(dict(_staff_and_idx2ss)))
 
     for class_name, cs in list(notehead_symbols.items()):
         for node in cs:
@@ -682,7 +683,7 @@ def add_staff_relationships(nodes: List[Node],
                 distance_of_closest_staff = (ll_max_dist.top + ll_max_dist.bottom) / 2 \
                                             - (staff_min_dist.top + staff_min_dist.bottom) / 2
                 if numpy.abs(distance_of_closest_staff) > (50 + 0.5 * staff_min_dist.height):
-                    logging.debug('Trying to join notehead with leger line to staff,'
+                    logger.debug('Trying to join notehead with leger line to staff,'
                                   ' but the distance is larger than 50. Notehead: {0},'
                                   ' leger line: {1}, staff: {2}, distance: {3}'
                                   ''.format(node.uid, ll_max_dist.uid, staff_min_dist.id,
@@ -711,7 +712,7 @@ def add_staff_relationships(nodes: List[Node],
                     overlapped_staffline_idxs.append(i)
 
             if node.id < 10:
-                logging.info('Notehead {0} ({1}): overlaps {2} stafflines'.format(node.uid, node.bounding_box,
+                logger.info('Notehead {0} ({1}): overlaps {2} stafflines'.format(node.uid, node.bounding_box,
                                                                                   len(overlapped_stafflines)))
 
             if len(overlapped_stafflines) == 1:
@@ -719,7 +720,7 @@ def add_staff_relationships(nodes: List[Node],
                 dtop = s.top - ct
                 dbottom = cb - s.bottom
 
-                logging.info('Notehead {0}, staffline {1}: ratio {2:.2f}'
+                logger.info('Notehead {0}, staffline {1}: ratio {2:.2f}'
                              ''.format(node.id, s.id, min(dtop, dbottom) / max(dtop, dbottom)))
                 if min(dtop, dbottom) / max(dtop, dbottom) < ON_STAFFLINE_RATIO_TRHESHOLD:
                     # Staffspace?
@@ -770,7 +771,7 @@ def add_staff_relationships(nodes: List[Node],
                         overlapped_staffspaces[_ss_i] = s.bottom - max(node.top, s.top)
 
                 if len(overlapped_staffspaces) == 0:
-                    logging.warning('Notehead {0}: no overlapped staffline object, no leger line!'
+                    logger.warning('Notehead {0}: no overlapped staffline object, no leger line!'
                                     ' Expecting it will be attached to leger line and staff later on.'
                                     ''.format(node.uid))
                     continue
@@ -801,7 +802,7 @@ def add_staff_relationships(nodes: List[Node],
                 link_nodes(node, _c_staff, check_that_nodes_have_the_same_document=False)
 
             elif len(overlapped_stafflines) > 2:
-                logging.warning('Really weird notehead overlapping more than 2 stafflines:'
+                logger.warning('Really weird notehead overlapping more than 2 stafflines:'
                                 ' {0} (permissive: linking to middle staffline)'.format(node.uid))
                 # use the middle staffline -- this will be an error anyway,
                 # but we want to export some MIDI more or less no matter what

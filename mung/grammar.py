@@ -24,10 +24,10 @@ to the specification.
 """
 import codecs
 import collections
-import logging
 import pprint
-from typing import Tuple, List, Set, Dict
 import os
+
+from .logger import logger
 
 
 class DependencyGrammarParseError(ValueError):
@@ -248,7 +248,7 @@ class DependencyGrammar(object):
 
     _MAX_CARDINALITY = 10000
 
-    def __init__(self, grammar_filename: str, alphabet: Set[str]):
+    def __init__(self, grammar_filename: str, alphabet: set[str]):
         """Initialize the Grammar: fill in alphabet and parse rules.
 
         :param grammar_filename: Path to a file that contains deprules
@@ -258,28 +258,28 @@ class DependencyGrammar(object):
             are used in the *.deprules file.
         """
         self.alphabet = set(alphabet)
-        # logging.info('DependencyGrammar: got alphabet:\n{0}'
+        # logger.info('DependencyGrammar: got alphabet:\n{0}'
         #              ''.format(pprint.pformat(self.alphabet)))
-        self.rules = []  # type: List[Tuple[str, str]]
-        self.inlink_cardinalities = {}  # type: Dict[str, Dict[str, Tuple[int, int]]]
-        self.outlink_cardinalities = {}  # type: Dict[str, Dict[str, Tuple[int, int]]]
-        self.inlink_aggregated_cardinalities = {}  # type: Dict[str, Tuple[int, int]]
-        self.outlink_aggregated_cardinalities = {}  # type: Dict[str, Tuple[int, int]]
+        self.rules: list[tuple[str, str]] = []
+        self.inlink_cardinalities: dict[str, dict[str, tuple[int, int]]] = {}
+        self.outlink_cardinalities: dict[str, dict[str, tuple[int, int]]] = {}
+        self.inlink_aggregated_cardinalities: dict[str, tuple[int, int]] = {}
+        self.outlink_aggregated_cardinalities: dict[str, tuple[int, int]]= {}
 
-        rules, inlink_cardinalities, outlink_cardinalities, inlink_aggregated_cardinalitites, \
-            outlink_aggregated_cardinalitites = self.parse_dependency_grammar_rules(grammar_filename)
+        (rules, inlink_cardinalities, outlink_cardinalities,
+         inlink_aggregated_cardinalitites, outlink_aggregated_cardinalitites) = self.parse_dependency_grammar_rules(grammar_filename)
 
         if self.__validate_rules(rules):
             self.rules = rules
-            logging.info('DependencyGrammar: Imported {0} rules'
+            logger.info('DependencyGrammar: Imported {0} rules'
                          ''.format(len(self.rules)))
             self.inlink_cardinalities = inlink_cardinalities
             self.outlink_cardinalities = outlink_cardinalities
             self.inlink_aggregated_cardinalities = inlink_aggregated_cardinalitites
             self.outlink_aggregated_cardinalities = outlink_aggregated_cardinalitites
-            logging.debug('DependencyGrammar: Inlink aggregated cardinalities: {0}'
+            logger.debug('DependencyGrammar: Inlink aggregated cardinalities: {0}'
                           ''.format(pprint.pformat(inlink_aggregated_cardinalitites)))
-            logging.debug('DependencyGrammar: Outlink aggregated cardinalities: {0}'
+            logger.debug('DependencyGrammar: Outlink aggregated cardinalities: {0}'
                           ''.format(pprint.pformat(outlink_aggregated_cardinalitites)))
         else:
             raise DependencyGrammarParseError(
@@ -291,7 +291,7 @@ class DependencyGrammar(object):
         with this grammar."""
         return (head_name, child_name) in self.rules
 
-    def validate_graph(self, vertices: Dict[int, str], edges: List[Tuple[int, int]]):
+    def validate_graph(self, vertices: dict[int, str], edges: list[tuple[int, int]]):
         """Checks whether the given graph complies with the grammar.
 
         :param vertices: A dict with any keys and values corresponding
@@ -305,9 +305,12 @@ class DependencyGrammar(object):
         v, i, o, _, _, _ = self.find_invalid_in_graph(vertices=vertices, edges=edges)
         return len(v) == 0
 
-    def find_invalid_in_graph(self, vertices: Dict[int, str], edges: List[Tuple[int, int]]) \
-            -> Tuple[List[int], List[Tuple[int, int]], List[Tuple[int, int]], Dict[int, str], Dict[
-                Tuple[int, int], str], Dict[Tuple[int, int], str]]:
+    def find_invalid_in_graph(
+            self, vertices: dict[int, str], edges: list[tuple[int, int]]
+            ) -> tuple[
+                list[int], list[tuple[int, int]], list[tuple[int, int]],
+                dict[int, str], dict[tuple[int, int], str], dict[tuple[int, int], str]
+                ]:
         """Finds vertices and edges where the given object graph does
         not comply with the grammar.
 
@@ -349,15 +352,15 @@ class DependencyGrammar(object):
             that do not comply with the grammar as well as three dictionaries with reasons
             for each list respectively.
         """
-        logging.info('DependencyGrammar: looking for errors.')
+        logger.info('DependencyGrammar: looking for errors.')
 
-        wrong_vertices = []  # type: List[int]
-        wrong_inlinks = []  # type: List[Tuple[int,int]]
-        wrong_outlinks = []  # type: List[Tuple[int,int]]
+        wrong_vertices: list[int] = []
+        wrong_inlinks: list[tuple[int, int]]= []
+        wrong_outlinks: list[tuple[int, int]] = []
 
-        reasons_incorrect_vertices = {}  # type: Dict[int, str]
-        reasons_incorrect_inlinks = {}  # type: Dict[Tuple[int,int], str]
-        reasons_incorrect_outlinks = {}  # type: Dict[Tuple[int,int], str]
+        reasons_incorrect_vertices: dict[int, str] = {}
+        reasons_incorrect_inlinks: dict[tuple[int, int], str]= {}
+        reasons_incorrect_outlinks: dict[tuple[int, int], str] = {}
 
         # Check that vertices have labels that are in the alphabet
         for v, class_name in list(vertices.items()):
@@ -370,7 +373,7 @@ class DependencyGrammar(object):
         for from_id, to_id in edges:
             from_class_name, to_class_name = str(vertices[from_id]), str(vertices[to_id])
             if (from_class_name, to_class_name) not in self.rules:
-                logging.debug('Wrong edge: {0} --> {1}, rules:\n{2}'
+                logger.debug('Wrong edge: {0} --> {1}, rules:\n{2}'
                               ''.format(from_class_name, to_class_name, pprint.pformat(self.rules)))
 
                 wrong_inlinks.append((from_id, to_id))
@@ -416,7 +419,7 @@ class DependencyGrammar(object):
         # the edges are marked as wrong (because any of them is the extra
         # edge, and it's easiest to just delete them and start parsing
         # again).
-        logging.info('DependencyGrammar: checking outlink aggregate cardinalities'
+        logger.info('DependencyGrammar: checking outlink aggregate cardinalities'
                      '\n{0}'.format(pprint.pformat(outlinks)))
         for from_id in outlinks:
             from_class_name = vertices[from_id]
@@ -424,7 +427,7 @@ class DependencyGrammar(object):
                 # Given vertex has no aggregate cardinality restrictions
                 continue
             cmin, cmax = self.outlink_aggregated_cardinalities[from_class_name]
-            logging.info('DependencyGrammar: checking outlink cardinality'
+            logger.info('DependencyGrammar: checking outlink cardinality'
                          ' rule fulfilled for vertex {0} ({1}): should be'
                          ' within {2} -- {3}'.format(from_id, vertices[from_id], cmin, cmax))
             if not (cmin <= len(outlinks[from_id]) <= cmax):
@@ -450,9 +453,12 @@ class DependencyGrammar(object):
 
         return wrong_vertices, wrong_inlinks, wrong_outlinks, reasons_incorrect_vertices, reasons_incorrect_inlinks, reasons_incorrect_outlinks
 
-    def parse_dependency_grammar_rules(self, filename: str) -> \
-            Tuple[List[Tuple[str, str]], Dict[str, Dict[str, Tuple[int, int]]], Dict[str, Dict[str, Tuple[int, int]]],
-            Dict[str, Tuple[int, int]], Dict[str, Tuple[int, int]]]:
+    def parse_dependency_grammar_rules(
+            self, filename: str
+            ) -> tuple[
+                list[tuple[str, str]], dict[str, dict[str, tuple[int, int]]], dict[str, dict[str, tuple[int, int]]],
+                dict[str, tuple[int, int]], dict[str, tuple[int, int]]
+            ]:
         """Returns the rules stored in the given rule file.
 
         A dependency grammar rule file contains grammar lines,
@@ -518,14 +524,17 @@ class DependencyGrammar(object):
                 outlink_aggregated_cardinalities.update(out_agg_card)
 
         if len(_invalid_lines) > 0:
-            logging.warning('DependencyGrammar.parse_rules(): Invalid lines'
+            logger.warning('DependencyGrammar.parse_rules(): Invalid lines'
                             ' {0}'.format(pprint.pformat(_invalid_lines)))
 
         return rules, inlink_cardinalities, outlink_cardinalities, inlink_aggregated_cardinalities, outlink_aggregated_cardinalities
 
-    def parse_dependency_grammar_line(self, line: str) -> \
-            Tuple[List[Tuple[str, str]], Dict[str, Dict[str, Tuple[int, int]]], Dict[
-                str, Dict[str, Tuple[int, int]]], Dict[str, Tuple[int, int]], Dict[str, Tuple[int, int]]]:
+    def parse_dependency_grammar_line(
+            self, line: str
+            ) -> tuple[
+                list[tuple[str, str]], dict[str, dict[str, tuple[int, int]]],
+                dict[str, dict[str, tuple[int, int]]], dict[str, tuple[int, int]], dict[str, tuple[int, int]]
+                ]:
         """Parse one dependency grammar line. See DependencyGrammar
         I/O documentation for the full format description of valid
         grammar lines.
@@ -577,13 +586,13 @@ class DependencyGrammar(object):
         if '|' not in line:
             return _no_rule_line_output
 
-        # logging.info('DependencyGrammar: parsing rule line:\n\t\t{0}'
+        # logger.info('DependencyGrammar: parsing rule line:\n\t\t{0}'
         #              ''.format(line.rstrip('\n')))
         lhs, rhs = line.strip().split('|', 1)
         lhs_tokens = lhs.strip().split()
         rhs_tokens = rhs.strip().split()
 
-        # logging.info('DependencyGrammar: tokens lhs={0}, rhs={1}'
+        # logger.info('DependencyGrammar: tokens lhs={0}, rhs={1}'
         #             ''.format(lhs_tokens, rhs_tokens))
 
         # Normal rule line? Aggregate cardinality line?
@@ -593,7 +602,7 @@ class DependencyGrammar(object):
         if len(rhs) == 0:
             _line_type = 'aggregate_outlinks'
 
-        logging.debug('Line {0}: type {1}, lhs={2}, rhs={3}'.format(line, _line_type, lhs, rhs))
+        logger.debug('Line {0}: type {1}, lhs={2}, rhs={3}'.format(line, _line_type, lhs, rhs))
 
         if _line_type == 'aggregate_inlinks':
             rhs_tokens = rhs.strip().split()
@@ -601,7 +610,7 @@ class DependencyGrammar(object):
                 token, rhs_cmin, rhs_cmax = self.parse_token(rt)
                 for t in self.__matching_names(token):
                     in_agg_cards[t] = (rhs_cmin, rhs_cmax)
-            logging.debug('DependencyGrammar: found inlinks: {0}'
+            logger.debug('DependencyGrammar: found inlinks: {0}'
                           ''.format(pprint.pformat(in_agg_cards)))
             return rules, out_cards, in_cards, in_agg_cards, out_agg_cards
 
@@ -611,7 +620,7 @@ class DependencyGrammar(object):
                 token, lhs_cmin, lhs_cmax = self.parse_token(lt.strip())
                 for t in self.__matching_names(token):
                     out_agg_cards[t] = (lhs_cmin, lhs_cmax)
-            logging.debug('DependencyGrammar: found outlinks: {0}'
+            logger.debug('DependencyGrammar: found outlinks: {0}'
                           ''.format(pprint.pformat(out_agg_cards)))
             return rules, out_cards, in_cards, in_agg_cards, out_agg_cards
 
@@ -655,7 +664,7 @@ class DependencyGrammar(object):
 
         return rules, in_cards, out_cards, in_agg_cards, out_agg_cards
 
-    def parse_token(self, token: str) -> Tuple[str, int, int]:
+    def parse_token(self, token: str) -> tuple[str, int, int]:
         """Parse one ``*.deprules`` file token. See class documentation for
         examples.
 
@@ -679,7 +688,7 @@ class DependencyGrammar(object):
                     cmax = int(cmax_string)
         return token, cmin, cmax
 
-    def __matching_names(self, token: str) -> List[str]:
+    def __matching_names(self, token: str) -> list[str]:
         """Returns the list of alphabet symbols that match the given
         name (regex, currently can process one '*' wildcard).
 
@@ -705,7 +714,7 @@ class DependencyGrammar(object):
 
         return matching_names
 
-    def __validate_rules(self, rules: List[Tuple[str, str]]) -> bool:
+    def __validate_rules(self, rules: list[tuple[str, str]]) -> bool:
         """Check that all the rules are valid under the current alphabet."""
         missing_heads = set()
         missing_children = set()
@@ -716,7 +725,7 @@ class DependencyGrammar(object):
                 missing_children.add(ch)
 
         if (len(missing_heads) + len(missing_children)) > 0:
-            logging.warning('DependencyGrammar.validate_rules: missing heads '
+            logger.warning('DependencyGrammar.validate_rules: missing heads '
                             '{0}, children {1}'
                             ''.format(missing_heads, missing_children))
             return False

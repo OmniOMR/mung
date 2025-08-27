@@ -15,7 +15,7 @@ for retrieving the dataset files. If they are not set, you will
 have to supply the roots to the respective functions that manipulate
 these layers of MUSCIMA++.
 """
-import logging
+from .logger import logger
 import os
 from typing import Optional
 
@@ -25,7 +25,7 @@ def _get_cvc_muscima_root() -> Optional[str]:
         cvc_muscima_root = os.environ['CVC_MUSCIMA_ROOT']
         return cvc_muscima_root
     else:
-        logging.info('muscima.dataset: environmental variable CVC_MUSCIMA_ROOT not defined.')
+        logger.info('muscima.dataset: environmental variable CVC_MUSCIMA_ROOT not defined.')
         return None
 
 
@@ -40,7 +40,7 @@ def _get_mff_muscima_root() -> Optional[str]:
         muscima_plusplus_root = os.environ['MUSCIMA_PLUSPLUS_ROOT']
         return muscima_plusplus_root
     else:
-        logging.info('muscima.dataset: environmental variable MUSCIMA_PLUSPLUS_ROOT not defined.')
+        logger.info('muscima.dataset: environmental variable MUSCIMA_PLUSPLUS_ROOT not defined.')
         return None
 
 
@@ -86,7 +86,7 @@ class CvcMuscimaDataset(object):
                              ' any useful purpose: either set the CVC_MUSCIMA_ROOT'
                              ' environmental variable, or supply the root manually.')
         if not os.path.isdir(root):
-            logging.warning('Instantiating CVC-MUSCIMA dataset wrapper without'
+            logger.warning('Instantiating CVC-MUSCIMA dataset wrapper without'
                             ' a valid root: the path {0} does not lead to'
                             ' a directory.'.format(root))
 
@@ -119,7 +119,7 @@ class CvcMuscimaDataset(object):
                                 self.__mode2dir(mode),
                                 self.__number2page_file(page))
         if not os.path.isfile(filename):
-            logging.warning('The requested file {0} should be available,'
+            logger.warning('The requested file {0} should be available,'
                             ' but does not seem to be there. Are you sure'
                             ' the CVC-MUSCIMA root is set correctly? ({1})'
                             ''.format(filename, self.root))
@@ -150,6 +150,7 @@ class CvcMuscimaDataset(object):
             return 'symbol'
         elif mode == 'staff_only':
             return 'gt'
+        raise ValueError()
 
     def validate(self, fail_early: bool = True):
         """Checks whether the instantiated CVC_MUSCIMA instance really
@@ -171,11 +172,11 @@ class CvcMuscimaDataset(object):
                         f = self.imfile(page=p, writer=w, distortion=d, mode=m)
                         if not os.path.isfile(f):
                             if fail_early:
-                                logging.warning('Missing file: {0}'.format(f))
+                                logger.warning('Missing file: {0}'.format(f))
                                 return False
                             _missing.append(f)
         if len(_missing) > 0:
-            logging.warning('Missing files in CVC_MUSCIMA instance with root {0}:'
+            logger.warning('Missing files in CVC_MUSCIMA instance with root {0}:'
                             '\n{1}'.format(self.root, '\n'.join(_missing)))
             return False
         return True

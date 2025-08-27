@@ -1,15 +1,15 @@
 """This module implements an abstraction over a notation graph, and
 functions for manipulating notation graphs."""
 import copy
-import logging
 from pathlib import Path
 from queue import Queue
-
 from typing import Iterable, Optional, Self, Any, TypeVar
 
-from mung.node import Node
-from mung.constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
-from mung.io import read_nodes_from_file, write_nodes_to_file
+from .node import Node
+from .constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
+from .io import read_nodes_from_file, write_nodes_to_file
+from .logger import logger
+
 
 T = TypeVar("T")
 
@@ -152,7 +152,7 @@ class NotationGraph(object):
                 if raise_key_error:
                     raise KeyError(message)
                 else:
-                    logging.info(message)
+                    logger.info(message)
             else:
                 output[node.id] = node.data[key]
         
@@ -376,7 +376,7 @@ class NotationGraph(object):
         if (notehead.top <= other_submask_top <= notehead.bottom) \
                 or (other_submask_bottom <= notehead.top <= other_submask_bottom):
             if compare_on_intersect:
-                logging.warning('Notehead {0} intersecting other. Returning false.'.format(notehead.id))
+                logger.warning('Notehead {0} intersecting other. Returning false.'.format(notehead.id))
                 return False
 
         if notehead.bottom < other_submask_top:
@@ -410,10 +410,10 @@ class NotationGraph(object):
         
         if suppress_not_in_list_error:
             if to_node_or_id not in from_node.outlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {to_node_or_id} not in outlinks of {from_node_or_id}")
+                logger.warning(f"Suppressing \"not in list\" error, {to_node_or_id} not in outlinks of {from_node_or_id}")
                 return
             if from_node_or_id not in to_node.inlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {from_node_or_id} not in inlinks of {to_node_or_id}")
+                logger.warning(f"Suppressing \"not in list\" error, {from_node_or_id} not in inlinks of {to_node_or_id}")
                 return
 
         from_node.outlinks.remove(to_id)
@@ -502,9 +502,9 @@ class NotationGraph(object):
 
     def has_edge(self, from_id: int, to_id: int) -> bool:
         if from_id not in self.__id_to_node_mapping:
-            logging.warning('Asking for object {}, which is not in graph.'.format(from_id))
+            logger.warning('Asking for object {}, which is not in graph.'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
-            logging.warning('Asking for object {}, which is not in graph.'.format(to_id))
+            logger.warning('Asking for object {}, which is not in graph.'.format(to_id))
 
         if to_id in self.__id_to_node_mapping[from_id].outlinks:
             if from_id in self.__id_to_node_mapping[to_id].inlinks:
@@ -533,7 +533,7 @@ class NotationGraph(object):
         
         if to_id in from_node.outlinks:
             if from_id in to_node.inlinks:
-                logging.info('Adding edge that is already in the graph: {} --> {}'
+                logger.info('Adding edge that is already in the graph: {} --> {}'
                              ' -- doing nothing'.format(from_id, to_id))
                 return
             else:
@@ -552,7 +552,6 @@ class NotationGraph(object):
         """
         Add a *precedence* edge between the MuNGOs with ids ``from --> to``.
         If the edge is already in the graph, warns and does nothing.
-        TODO: Does not check if given nodes can have precedence links - but it should.
         """
         if from_id not in self.__id_to_node_mapping:
             raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
@@ -564,7 +563,7 @@ class NotationGraph(object):
 
         if to_id in from_node.precedence_outlinks:
             if from_id in to_node.precedence_inlinks:
-                logging.info('Adding edge that is already in the graph: {} --> {}'
+                logger.info('Adding edge that is already in the graph: {} --> {}'
                              ' -- doing nothing'.format(from_id, to_id))
                 return
             else:
@@ -592,10 +591,10 @@ class NotationGraph(object):
         to_node = self.__id_to_node_mapping[to_id]
         if suppress_not_in_list_error:
             if to_id not in from_node.precedence_outlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {to_id} not in outlinks of {from_id}")
+                logger.warning(f"Suppressing \"not in list\" error, {to_id} not in outlinks of {from_id}")
                 return
             if from_id not in to_node.precedence_inlinks:
-                logging.warning(f"Suppressing \"not in list\" error, {from_id} not in inlinks of {to_id}")
+                logger.warning(f"Suppressing \"not in list\" error, {from_id} not in inlinks of {to_id}")
                 return
 
         from_node.precedence_outlinks.remove(to_id)
@@ -640,7 +639,7 @@ def group_staffs_into_systems(nodes: list[Node],
                           if ((graph[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
                               (graph[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
     if len(empty_staffs) > 0:
-        logging.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
+        logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
@@ -758,7 +757,7 @@ def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
             else:
                 chord_mapping[stems[0].id].append(node)
         else:
-            logging.debug("Cannot deal with multistem noteheads.")
+            logger.debug("Cannot deal with multistem noteheads.")
             closure.append([node])
     
     for chord in chord_mapping.values():
@@ -850,17 +849,17 @@ def find_beams_incoherent_with_stems(nodes: list[Node]) -> list[list[Node]]:
         # Is the stem above the notehead, or not?
         # This is not trivial because of chords.
         is_stem_above = graph.is_stem_direction_above(notehead, stem)
-        logging.info('IncoherentBeams: stem of {0} is above'.format(notehead.id))
+        logger.info('IncoherentBeams: stem of {0} is above'.format(notehead.id))
 
         for beam in beams:
             try:
                 is_beam_above = graph.is_symbol_above_notehead(notehead, beam)
             except NotationGraphError:
-                logging.warning('IncoherentBeams: something is wrong in beam-notehead pair'
+                logger.warning('IncoherentBeams: something is wrong in beam-notehead pair'
                                 ' {0}, {1}'.format(beam.id, notehead.id))
                 continue
 
-            logging.info('IncoherentBeams: beam {0} of {1} is above'.format(beam.id, notehead.id))
+            logger.info('IncoherentBeams: beam {0} of {1} is above'.format(beam.id, notehead.id))
             if is_stem_above != is_beam_above:
                 incoherent_pairs.append([notehead, beam])
 
@@ -990,7 +989,7 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
 
         staffs = graph.children(node, [_CONST.STAFF])
         if not staffs:
-            logging.warning('Notehead {0} not connected to any staff!'.format(node.id))
+            logger.warning('Notehead {0} not connected to any staff!'.format(node.id))
             continue
         staff = staffs[0]
 
@@ -1059,14 +1058,14 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
             continue
 
         if len(staff) == 0:
-            logging.warning('Notehead {0} not connected to any staff!'
+            logger.warning('Notehead {0} not connected to any staff!'
                             ' Unable to resolve ll/staffline.'.format(node.id))
             continue
 
         # Multiple LLs: must check direction
         # Multiple stafflines: ???
         if len(stafflines) > 1:
-            logging.warning('Notehead {0} is connected to multiple staffline'
+            logger.warning('Notehead {0} is connected to multiple staffline'
                             ' objects!'.format(node.id))
 
 
@@ -1086,20 +1085,20 @@ def group_by_measure(nodes: list[Node]):
         is ordered left-to-right.
     """
     graph = NotationGraph(nodes)
-    logging.debug('Find measure separators.')
+    logger.debug('Find measure separators.')
 
     measure_separators = [node for node in nodes if node.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES]
 
     if len(measure_separators) == 0:
         return nodes
 
-    logging.debug('Order measure separators by precedence.')
+    logger.debug('Order measure separators by precedence.')
     # Systems
     # measure seps. by system
     measure_separators = sorted(measure_separators, key=lambda m: m.left)
 
-    logging.debug('Denote measure areas: bounding boxes and masks.')
-    logging.debug('Assign objects to measures, based on overlap.')
+    logger.debug('Denote measure areas: bounding boxes and masks.')
+    logger.debug('Assign objects to measures, based on overlap.')
 
     raise NotImplementedError()
 
@@ -1208,7 +1207,7 @@ def resolve_notehead_wrt_staffline(notehead: Node, staffline_or_leger_line: Node
             output_position = -1
 
         else:
-            logging.warning('Strange notehead {0} vs. leger line {1}'
+            logger.warning('Strange notehead {0} vs. leger line {1}'
                             ' situation: bbox notehead {2}, LL {3}.'
                             ' Note that the output position is unusable;'
                             ' pleasre re-do this attachment manually.'

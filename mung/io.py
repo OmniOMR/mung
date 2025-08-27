@@ -200,7 +200,6 @@ primitives: notehead plus stem plus flags...), and the grammar
 file is a reference for doing that.
 
 """
-import logging
 from typing import Optional
 
 import collections
@@ -208,8 +207,9 @@ from pathlib import Path
 
 from lxml import etree
 
-from mung.node import Node, DataCoder
-from mung.node_class import NodeClass
+from .node import Node, DataCoder
+from .node_class import NodeClass
+from .logger import logger
 
 
 def read_nodes_from_file(filename: str | Path) -> list[Node]:
@@ -250,7 +250,7 @@ def read_nodes_from_file(filename: str | Path) -> list[Node]:
 
     tree = etree.parse(filename)
     root = tree.getroot()
-    logging.debug('XML parsed.')
+    logger.debug('XML parsed.')
     nodes = []
 
     Keys = DataCoder.Keys
@@ -261,12 +261,12 @@ def read_nodes_from_file(filename: str | Path) -> list[Node]:
 
     for i, node_el in enumerate(root.iter(node_tag)):
         ######################################################
-        logging.debug('Parsing Node {0}'.format(i))
+        logger.debug('Parsing Node {0}'.format(i))
 
         new_node = Node.from_xml(node_el, dataset=dataset, document=document)
         nodes.append(new_node)
     
-    logging.debug('Nodes loaded.')
+    logger.debug('Nodes loaded.')
 
     if not validate_nodes_graph_structure(nodes):
         raise ValueError('Invalid Node graph structure! Check warnings'
@@ -297,7 +297,7 @@ def validate_nodes_graph_structure(nodes: list[Node]) -> bool:
     for doc, document_nodes in list(nodes_by_document.items()):
         document_is_valid = validate_document_graph_structure(document_nodes)
         if not document_is_valid:
-            logging.warning('Document {0} has invalid Node graph!'.format(doc))
+            logger.warning('Document {0} has invalid Node graph!'.format(doc))
             is_valid = False
     return is_valid
 
@@ -327,7 +327,7 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
         inlinks = c.inlinks
         for i in inlinks:
             if i not in node_ids:
-                logging.warning('Invalid graph structure in NodeList:'
+                logger.warning('Invalid graph structure in NodeList:'
                                 ' object {0} has inlink from non-existent'
                                 ' object {1}'.format(c, i))
                 is_valid = False
@@ -335,24 +335,24 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
         outlinks = c.outlinks
         for o in outlinks:
             if o not in node_ids:
-                logging.warning('Invalid graph structure in NodeList:'
+                logger.warning('Invalid graph structure in NodeList:'
                                 ' object {0} has outlink to non-existent'
                                 ' object {1}'.format(c, o))
                 is_valid = False
 
     for node in nodes:
         if len(node.outlinks) != len(set(node.outlinks)):
-            logging.warning(f"Duplicate in outlinks of {node.id}, {node.outlinks}")
+            logger.warning(f"Duplicate in outlinks of {node.id}, {node.outlinks}")
             is_valid = False
         if len(node.inlinks) != len(set(node.inlinks)):
-            logging.warning(f"Duplicate in inlinks of {node.id}, {node.inlinks}")
+            logger.warning(f"Duplicate in inlinks of {node.id}, {node.inlinks}")
             is_valid = False
     
     mapping = {node.id: node for node in nodes}
     for node in nodes:
         for to_node_id in node.outlinks:
             if node.id not in mapping[to_node_id].inlinks:
-                logging.warning(
+                logger.warning(
                     f"Missing object {node.id} reference in inlinks of {to_node_id}. "
                     f"Source {node.id} outlinks: {node.outlinks}; "
                     f"target {to_node_id} inlinks: {mapping[to_node_id].inlinks}."
@@ -361,7 +361,7 @@ def validate_document_graph_structure(nodes: list[Node]) -> bool:
 
         for from_node_id in node.inlinks:
             if node.id not in mapping[from_node_id].outlinks:
-                logging.warning(
+                logger.warning(
                     f"Missing object {node.id} reference in outlinks of {from_node_id}. "
                     f"Source {node.id} inlinks: {node.inlinks}; "
                     f"target {from_node_id} outlinks: {mapping[from_node_id].outlinks}."
@@ -393,7 +393,7 @@ def validate_nodes_graph_structure_precedence(nodes: list[Node]) -> bool:
     for doc, document_nodes in list(nodes_by_document.items()):
         document_is_valid = validate_document_graph_structure_precedence(document_nodes)
         if not document_is_valid:
-            logging.warning('Document {0} has invalid Node graph!'.format(doc))
+            logger.warning('Document {0} has invalid Node graph!'.format(doc))
             is_valid = False
     return is_valid
 
@@ -420,7 +420,7 @@ def validate_document_graph_structure_precedence(nodes: list[Node]) -> bool:
         inlinks = c.precedence_inlinks
         for i in inlinks:
             if i not in node_ids:
-                logging.warning('Invalid graph structure in NodeList:'
+                logger.warning('Invalid graph structure in NodeList:'
                                 ' object {0} has inlink from non-existent'
                                 ' object {1}'.format(c, i))
                 is_valid = False
@@ -428,7 +428,7 @@ def validate_document_graph_structure_precedence(nodes: list[Node]) -> bool:
         outlinks = c.precedence_outlinks
         for o in outlinks:
             if o not in node_ids:
-                logging.warning('Invalid graph structure in NodeList:'
+                logger.warning('Invalid graph structure in NodeList:'
                                 ' object {0} has outlink to non-existent'
                                 ' object {1}'.format(c, o))
                 is_valid = False
