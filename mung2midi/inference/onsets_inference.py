@@ -1,7 +1,6 @@
 import collections
 import copy
 import inspect
-import logging
 import operator
 import warnings
 from fractions import Fraction
@@ -12,6 +11,7 @@ from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphEr
 from mung.node import bounding_box_dice_coefficient, Node
 from .precedence_graph_node import PrecedenceGraphNode
 from dataclasses import dataclass
+from ..logger import logger
 
 @dataclass(frozen=True)
 class BaseOnsetsInferenceStrategy(object):
@@ -107,12 +107,12 @@ class OnsetsInferenceEngine(object):
             self._CONST.FLAGS_AND_BEAMS)
 
         if notehead.class_name in self._CONST.GRACE_NOTEHEAD_CLASS_NAMES:
-            logging.warning('Notehead {0}: Grace notes get zero duration!'
+            logger.warning('Notehead {0}: Grace notes get zero duration!'
                             ''.format(notehead.id))
             beat = [Fraction(0)]
 
         elif len(stems) > 1:
-            logging.warning('Inferring duration for multi-stem notehead: {0}'
+            logger.warning('Inferring duration for multi-stem notehead: {0}'
                             ''.format(notehead.id))
             beat = self.process_multistem_notehead(notehead)
             if len(beat) > 1:
@@ -145,7 +145,7 @@ class OnsetsInferenceEngine(object):
             beat = [b * duration_modifier for b in beat]
 
         if len(beat) > 1:
-            logging.warning('Notehead {0}: more than 1 duration: {1}, choosing first'
+            logger.warning('Notehead {0}: more than 1 duration: {1}, choosing first'
                             ''.format(notehead.id, beat))
         return beat[0]
 
@@ -182,9 +182,9 @@ class OnsetsInferenceEngine(object):
             numerals = self.children(tuple_, InferenceEngineConstants.NUMERALS)
 
             if len(numerals) == 0:
-                logging.warning(f"Tuple {tuple_.id} has no numerals!")
+                logger.warning(f"Tuple {tuple_.id} has no numerals!")
             elif len(numerals) > 3:
-                logging.warning(f"Tuple {tuple_.id} has more than 3 numerals!")
+                logger.warning(f"Tuple {tuple_.id} has more than 3 numerals!")
 
             tuple_number = self.interpret_numerals(sorted(numerals, key=lambda x: x.left))
 
@@ -216,14 +216,14 @@ class OnsetsInferenceEngine(object):
                 # or 8 / 7 (7 32nds in a beat).
                 # In the same vein, we cannot resolve higher
                 # tuples unless we establish precedence/simultaneity.
-                logging.warning('Cannot really deal with higher tuples than 6.')
+                logger.warning('Cannot really deal with higher tuples than 6.')
                 # For MUSCIMA++ specifically, we can cheat: there is only one
                 # septuple, which consists of 7 x 32rd in 1 beat, so they
                 # get 8 / 7.
-                logging.warning('MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.')
+                logger.warning('MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.')
                 duration_modifier = Fraction(8, 7)
             elif tuple_number == 10:
-                logging.warning('MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.')
+                logger.warning('MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.')
                 duration_modifier = Fraction(4, 5)
             else:
                 raise NotImplementedError(f"Notehead {notehead.id}: Cannot deal with tuple number {tuple_number}")
@@ -278,7 +278,7 @@ class OnsetsInferenceEngine(object):
             beat = [base_rest_duration]
 
         if len(beat) > 1:
-            logging.warning('Rest {0}: more than 1 duration: {1}, choosing first'
+            logger.warning('Rest {0}: more than 1 duration: {1}, choosing first'
                             ''.format(rest.id, beat))
         return beat[0]
 
@@ -296,32 +296,32 @@ class OnsetsInferenceEngine(object):
         staffs = self.__graph.children(node, class_filter=[self._CONST.STAFF])
 
         if len(staffs) == 0:
-            logging.warning('Interpreting object {0} as measure-lasting, but'
+            logger.warning('Interpreting object {0} as measure-lasting, but'
                             ' it is not attached to any staff! Returning default: 4'
                             ''.format(node.id))
             return Fraction(4)
 
         if len(staffs) > 1:
-            logging.warning('Interpreting object {0} as measure-lasting, but'
+            logger.warning('Interpreting object {0} as measure-lasting, but'
                             ' it is connected to more than 1 staff: {1}'
                             ' Returning default: 4'
                             ''.format(node.id, [s.id for s in staffs]))
             return Fraction(4)
 
-        logging.info('Found staffs: {0}'.format([s.id for s in staffs]))
+        logger.info('Found staffs: {0}'.format([s.id for s in staffs]))
 
         staff = staffs[0]
         time_signatures = self.__graph.ancestors(staff, class_filter=self._CONST.TIME_SIGNATURES)
 
-        logging.info('Time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.info('Time signatures: {0}'.format([t.id for t in time_signatures]))
 
         applicable_time_signatures = sorted([t for t in time_signatures
                                              if t.left < node.left],
                                             key=operator.attrgetter('left'))
-        logging.info('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.info('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
 
         if len(applicable_time_signatures) == 0:
-            logging.warning('Interpreting object {0} as measure-lasting, but'
+            logger.warning('Interpreting object {0} as measure-lasting, but'
                             ' there is no applicable time signature. Returnig'
                             ' default: 4'.format(node.id))
             return Fraction(4)
@@ -440,12 +440,12 @@ class OnsetsInferenceEngine(object):
                                             use_fallback_measure_separators=True)
 
         if len(systems) == 1:
-            logging.info('Single-system score, no staff chaining needed.')
+            logger.info('Single-system score, no staff chaining needed.')
             source_nodes = [n for n in list(p_nodes.values()) if len(n.inlinks) == 0]
             return source_nodes
 
         if not self.strategy.link_sinks_to_sources_at_ends_and_starts_of_systems:
-            logging.info("Strategy to not connect sinks and sources applied")
+            logger.info("Strategy to not connect sinks and sources applied")
             source_nodes = [n for n in list(p_nodes.values()) if len(n.inlinks) == 0]
             return source_nodes
 
@@ -476,7 +476,7 @@ class OnsetsInferenceEngine(object):
                 try:
                     staff = self.children(node.obj, [InferenceEngineConstants.STAFF])[0]
                 except IndexError:
-                    logging.error('Object {0} is a sink node in the precedence graph, but has no staff!'
+                    logger.error('Object {0} is a sink node in the precedence graph, but has no staff!'
                                   ''.format(node.obj.id))
                     raise
                 sink_nodes2staff[node.obj.id] = staff.id
@@ -837,7 +837,7 @@ class OnsetsInferenceEngine(object):
 
                 measure_to_time_signature[i] = t1
 
-        logging.debug('Checking that every measure has a time signature assigned.')
+        logger.debug('Checking that every measure has a time signature assigned.')
         for i, (msep1, msep2) in enumerate(measures):
             if measure_to_time_signature[i] is None:
                 raise ValueError('Measure without time signature: {0}, between'
@@ -1159,8 +1159,8 @@ class OnsetsInferenceEngine(object):
                 class_name_filter=self._CONST.TIME_SIGNATURE_MEMBERS),
             key=lambda x: x.top)
 
-        logging.info('Interpreting time signature {0}'.format(time_signature.id))
-        logging.info('... Members {0}'.format([m.class_name for m in members]))
+        logger.info('Interpreting time signature {0}'.format(time_signature.id))
+        logger.info('... Members {0}'.format([m.class_name for m in members]))
 
         # Whole-time mark? Alla breve?
         if len(members) == 0:
@@ -1176,12 +1176,12 @@ class OnsetsInferenceEngine(object):
                 is_alla_breve = True
 
         if is_whole or is_alla_breve:
-            logging.info('Time signature {0}: whole or alla breve, returning 4.0'
+            logger.info('Time signature {0}: whole or alla breve, returning 4.0'
                          ''.format(time_signature.id))
             return Fraction(4)
 
         # Process numerals
-        logging.info('... Found numeric time signature, determining whether'
+        logger.info('... Found numeric time signature, determining whether'
                      ' it is fractional.')
 
         # Does the time signature have a fraction-like format?
@@ -1189,23 +1189,23 @@ class OnsetsInferenceEngine(object):
         has_letter_other = (len([m for m in members if m.class_name == self._CONST.LETTER_OTHER]) > 0)
         #  - Does it have a separator slash?
         if has_letter_other:
-            logging.info('... Has fraction slash')
+            logger.info('... Has fraction slash')
             is_fraction_like = True
         #  - Does it have less than 2 members?
         elif len(members) < 2:
-            logging.info('... Just one member')
+            logger.info('... Just one member')
             is_fraction_like = False
         #  - If it has 2 or more members, determine minimal IoU and compare
         #    against FRACTIONAL_VERTICAL_IOU_THRESHOLD. If the minimal IoU
         #    is under the threshold, then consider the numerals far apart
         #    vertically so that they constitute a fraction.
         else:
-            logging.info('... Must check for min. vertical overlap')
+            logger.info('... Must check for min. vertical overlap')
             vertical_overlaps = []
             for _i_m, m1 in enumerate(members[:-1]):
                 for m2 in members[_i_m:]:
                     vertical_overlaps.append(bounding_box_dice_coefficient(m1.bounding_box, m2.bounding_box))
-            logging.info('... Vertical overlaps found: {0}'.format(vertical_overlaps))
+            logger.info('... Vertical overlaps found: {0}'.format(vertical_overlaps))
             if min(vertical_overlaps) < fractional_vertical_iou_threshold:
                 is_fraction_like = True
             else:
@@ -1214,18 +1214,18 @@ class OnsetsInferenceEngine(object):
         numerals = sorted(self.children(time_signature, self._CONST.NUMERALS),
                           key=lambda x: x.top)
         if not is_fraction_like:
-            logging.info('... Non-fractional numeric time sig.')
+            logger.info('... Non-fractional numeric time sig.')
             # Read numeral left to right, this is the beat count
             if len(numerals) == 0:
                 raise NotationGraphError('Time signature has no numerals, but is'
                                          ' not fraction-like! {0}'
                                          ''.format(time_signature.id))
             beats = OnsetsInferenceEngine.interpret_numerals(numerals)
-            logging.info('... Beats: {0}'.format(beats))
+            logger.info('... Beats: {0}'.format(beats))
             return Fraction(beats)
 
         else:
-            logging.info('... Fractional time sig.')
+            logger.info('... Fractional time sig.')
             # Split into numerator and denominator
             #  - Sort numerals top to bottom
             #  - Find largest gap
@@ -1241,7 +1241,7 @@ class OnsetsInferenceEngine(object):
             beat_units = OnsetsInferenceEngine.interpret_numerals(denominator)
 
             beats = Fraction(beat_count * 4, beat_units)
-            logging.info('...signature : {0} / {1}, beats: {2}'
+            logger.info('...signature : {0} / {1}, beats: {2}'
                          ''.format(beat_count, beat_units, beats))
 
             return beats
@@ -1281,8 +1281,8 @@ class OnsetsInferenceEngine(object):
 
         onsets = {}
 
-        logging.debug('Size of initial queue: {0}'.format(len(queue)))
-        logging.debug('Initial queue: {0}'.format([(q.obj.id, q.onset) for q in queue]))
+        logger.debug('Size of initial queue: {0}'.format(len(queue)))
+        logger.debug('Initial queue: {0}'.format([(q.obj.id, q.onset) for q in queue]))
 
         # We will only be appending to the queue, so the
         # start of the queue is defined simply by the index.
@@ -1290,22 +1290,22 @@ class OnsetsInferenceEngine(object):
         delayed_prec_nodes = dict()
         while (len(queue) - qstart) > 0:
             # if len(queue) > 2 * n_prec_nodes:
-            #     logging.warning('Safety valve triggered: queue growing endlessly!')
+            #     logger.warning('Safety valve triggered: queue growing endlessly!')
             #     break
 
             q = queue[qstart]
-            logging.debug('Current @{0}: {1}'.format(qstart, q.obj.id))
-            logging.debug('Will add @{0}: {1}'.format(qstart, q.outlinks))
+            logger.debug('Current @{0}: {1}'.format(qstart, q.obj.id))
+            logger.debug('Will add @{0}: {1}'.format(qstart, q.outlinks))
 
             qstart += 1
             for post_q in q.outlinks:
                 if post_q not in queue:
                     queue.append(post_q)
 
-            logging.debug('Queue state: {0}'
+            logger.debug('Queue state: {0}'
                           ''.format([ppq.obj.id for ppq in queue[qstart:]]))
 
-            logging.debug('  {0} has onset: {1}'.format(q.node_id, q.onset))
+            logger.debug('  {0} has onset: {1}'.format(q.node_id, q.onset))
             if q.onset is not None:
                 if q.onset > 0:
                     break
@@ -1317,12 +1317,12 @@ class OnsetsInferenceEngine(object):
             # If the node did not yet get all its ancestors processed,
             # send it down the queue.
             if None in prec_onsets:
-                logging.debug('Found node with predecessor that has no onset yet; delaying processing: {0}'
+                logger.debug('Found node with predecessor that has no onset yet; delaying processing: {0}'
                                 ''.format(q.obj.id))
                 queue.append(q)
                 if q in delayed_prec_nodes:
-                    logging.warning('This node has already been delayed once! Breaking.')
-                    logging.warning('Queue state: {0}'
+                    logger.warning('This node has already been delayed once! Breaking.')
+                    logger.warning('Queue state: {0}'
                                     ''.format([ppq.obj.id for ppq in queue[qstart:]]))
                     break
                 else:
@@ -1331,13 +1331,13 @@ class OnsetsInferenceEngine(object):
 
             prec_durations = [pq.duration for pq in prec_qs]
 
-            logging.debug('    Prec_onsets @{0}: {1}'.format(qstart - 1, prec_onsets))
-            logging.debug('    Prec_durations @{0}: {1}'.format(qstart - 1, prec_durations))
+            logger.debug('    Prec_onsets @{0}: {1}'.format(qstart - 1, prec_onsets))
+            logger.debug('    Prec_durations @{0}: {1}'.format(qstart - 1, prec_durations))
 
             onset_proposals = [o + d for o, d in zip(prec_onsets, prec_durations)]
             if min(onset_proposals) != max(onset_proposals):
                 if self.strategy.permissive_desynchronization:
-                    logging.warning('Object {0}: onsets not synchronized from'
+                    logger.warning('Object {0}: onsets not synchronized from'
                                     ' predecessors: {1}'.format(q.obj.id,
                                                                 onset_proposals))
                     onset = max(onset_proposals)
@@ -1371,7 +1371,7 @@ class OnsetsInferenceEngine(object):
 
     def __warning_or_error(self, message):
         if self.strategy.permissive:
-            logging.warning(message)
+            logger.warning(message)
         else:
             raise ValueError(message)
 
@@ -1384,7 +1384,7 @@ class OnsetsInferenceEngine(object):
 
         :returns: the modified durations and onsets.
         """
-        logging.info('Processing ties...')
+        logger.info('Processing ties...')
         g = NotationGraph(nodes=nodes)
 
         def __get_tie_notes(_tie, graph):
@@ -1432,7 +1432,7 @@ class OnsetsInferenceEngine(object):
 
             l, r = tie_notes
             if l.id == n.id:
-                logging.info('Note {0} is left in tie {1}'
+                logger.info('Note {0} is left in tie {1}'
                              ''.format(l.id, tie.id))
                 new_durations[l.id] += new_durations[r.id]
                 del new_onsets[r.id]

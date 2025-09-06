@@ -1,5 +1,4 @@
 import collections
-import logging
 import os
 import traceback
 import uuid
@@ -10,7 +9,7 @@ from mung.io import read_nodes_from_file
 
 from mung.node import Node
 from mung2midi.inference import PitchInferenceEngine, OnsetsInferenceEngine
-
+from .logger import logger
 
 def midi_matrix_to_pdo(midi_matrix, framerate=20, tempo=120):
     """Builds the pitch, duration and onset dicts from a given MIDI
@@ -85,7 +84,7 @@ def midi_matrix_to_pdo(midi_matrix, framerate=20, tempo=120):
         durations[event_idx] = duration_beats
         onsets[event_idx] = onset_beats
 
-    logging.debug('{} note events, last onset: beat {} (seconds: {})'
+    logger.debug('{} note events, last onset: beat {} (seconds: {})'
                   ''.format(len(notes), notes[-1][0], notes[-1][0] * tempo / 60.))
 
     return pitches, durations, onsets
@@ -147,11 +146,11 @@ def convert_mung_to_midi(nodes: list[Node],
     node_id_to_node_mapping = {node.id: node for node in nodes}
 
     try:
-        logging.info('Running pitch inference.')
+        logger.info('Running pitch inference.')
         pitches, pitch_names = pitch_inference_engine.infer_pitches(nodes, with_names=True)
     except Exception as e:
-        logging.warning('Model: Pitch inference failed!')
-        logging.exception(traceback.format_exc(e))
+        logger.warning('Model: Pitch inference failed!')
+        logger.exception(traceback.format_exc(e))
         return
 
     if retain_pitches:
@@ -163,11 +162,11 @@ def convert_mung_to_midi(nodes: list[Node],
             c.data['pitch_octave'] = pitch_octave
 
     try:
-        logging.info('Running durations inference.')
+        logger.info('Running durations inference.')
         durations = time_inference_engine.durations(nodes)
     except Exception as e:
-        logging.warning('Model: Duration inference failed!')
-        logging.exception(traceback.format_exc(e))
+        logger.warning('Model: Duration inference failed!')
+        logger.exception(traceback.format_exc(e))
         return
 
     if retain_durations:
@@ -176,11 +175,11 @@ def convert_mung_to_midi(nodes: list[Node],
             c.data['duration_beats'] = durations[objid]
 
     try:
-        logging.info('Running onsets inference.')
+        logger.info('Running onsets inference.')
         onsets = time_inference_engine.onsets(nodes)
     except Exception as e:
-        logging.warning('Model: Onset inference failed!')
-        logging.exception(traceback.format_exc(e))
+        logger.warning('Model: Onset inference failed!')
+        logger.exception(traceback.format_exc(e))
         return
 
     if retain_onsets:
@@ -250,7 +249,7 @@ def play_midi_file(midi: MIDIFile,
     with open(tmp_midi_path, 'wb') as hdl:
         midi.writeFile(hdl)
     if not os.path.isfile(tmp_midi_path):
-        logging.warning('Could not write MIDI data to temp file {0}!'.format(tmp_midi_path))
+        logger.warning('Could not write MIDI data to temp file {0}!'.format(tmp_midi_path))
         return
 
     play_midi_file_from_disk(tmp_midi_path, soundfont)

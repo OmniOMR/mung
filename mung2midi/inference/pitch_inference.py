@@ -1,11 +1,12 @@
 import collections
 import copy
-import logging
 from typing import Optional
 
 from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
+from ..logger import logger
+
 
 _CONST = InferenceEngineConstants()
 
@@ -244,7 +245,7 @@ class PitchInferenceEngineState(object):
         # Inline accidentals override key accidentals.
         if delta in self.inline_accidentals:
             if self.inline_accidentals[delta] == 'natural':
-                logging.info('Natural at delta = {0}'.format(delta))
+                logger.info('Natural at delta = {0}'.format(delta))
                 pitch_mod = 0
             elif self.inline_accidentals[delta] == 'sharp':
                 pitch_mod = 1
@@ -281,7 +282,7 @@ class PitchInferenceEngineState(object):
         pitch = step_pitch + accidental_pitch
 
         if self.current_clef_delta_shift != 0:
-            logging.info('PitchInferenceState: Applied clef-based delta {0},'
+            logger.info('PitchInferenceState: Applied clef-based delta {0},'
                          ' resulting delta was {1}, pitch {2}'
                          ''.format(self.current_clef_delta_shift,
                                    delta, pitch))
@@ -494,7 +495,7 @@ class PitchInferenceEngine(object):
 
         for q in queue:
             q: Node
-            logging.info('process_staff(): processing object {0}-{1}'
+            logger.info('process_staff(): processing object {0}-{1}'
                          ''.format(q.class_name, q.id))
             if q.class_name in _CONST.CLEF_CLASS_NAMES:
                 self.process_clef(q)
@@ -511,9 +512,9 @@ class PitchInferenceEngine(object):
 
                 ### DEBUG
                 if q.id in [131, 83, 89, 94]:
-                    logging.info('PitchInferenceEngine: Processing notehead {0}'
+                    logger.info('PitchInferenceEngine: Processing notehead {0}'
                                  ''.format(q.id))
-                    logging.info('{0}'.format(self.pitch_state))
+                    logger.info('{0}'.format(self.pitch_state))
 
                 # b = self.beats(q)
                 # self.durations_beats[q.id] = b
@@ -541,7 +542,7 @@ class PitchInferenceEngine(object):
                 raise ValueError('Tie {0}: joining together more than 2'
                                  ' noteheads!'.format(t.id))
             if len(tied_noteheads) < 2:
-                logging.warning('Tie {0}: only one notehead. Staff break?'
+                logger.warning('Tie {0}: only one notehead. Staff break?'
                                 ''.format(t.id))
                 break
 
@@ -569,9 +570,9 @@ class PitchInferenceEngine(object):
 
         # ### DEBUG
         # if notehead.id == 200:
-        #     logging.info('Notehead {0}: delta {1}'.format(notehead.unique_id, delta))
-        #     logging.info('\tdelta_step: {0}'.format(delta % 7))
-        #     logging.info('\tdelta_step pitch sum: {0}'
+        #     logger.info('Notehead {0}: delta {1}'.format(notehead.unique_id, delta))
+        #     logger.info('\tdelta_step: {0}'.format(delta % 7))
+        #     logger.info('\tdelta_step pitch sum: {0}'
         #                  ''.format(sum(self.pitch_state._current_delta_steps[:(delta % 7)+1])))
 
         # Processing inline accidentals
@@ -608,12 +609,12 @@ class PitchInferenceEngine(object):
 
         ### DEBUG
         if notehead.id in [131, 83, 89, 94]:
-            logging.info('PitchInferenceEngine: results of pitch processing'
+            logger.info('PitchInferenceEngine: results of pitch processing'
                          ' for notehead {0}'.format(notehead.id))
-            logging.info('\tties: {0}'.format(ties))
-            logging.info('\taccidentals: {0}'.format(accidentals))
-            logging.info('\tdelta: {0}'.format(delta))
-            logging.info('\tpitch: {0}'.format(p))
+            logger.info('\tties: {0}'.format(ties))
+            logger.info('\taccidentals: {0}'.format(accidentals))
+            logger.info('\tdelta: {0}'.format(delta))
+            logger.info('\tpitch: {0}'.format(p))
 
         if with_name is True:
             pn = self.pitch_state.pitch_name(delta)
@@ -692,12 +693,12 @@ class PitchInferenceEngine(object):
                         # change back to on-LL.
                         if (dtop > dbottom) and not is_above_staff:
                             on_leger_line = True
-                            logging.debug('Notehead in LL space with wrong orientation '
+                            logger.debug('Notehead in LL space with wrong orientation '
                                           'w.r.t. staff:'
                                           ' {0}'.format(notehead.id))
                         if (dbottom > dtop) and is_above_staff:
                             on_leger_line = True
-                            logging.debug('Notehead in LL space with wrong orientation '
+                            logger.debug('Notehead in LL space with wrong orientation '
                                           'w.r.t. staff:'
                                           ' {0}'.format(notehead.id))
 
@@ -775,13 +776,13 @@ class PitchInferenceEngine(object):
         # Check for staffline children
         stafflines = self.__children(clef, class_names=_CONST.STAFFLINE_CLASS_NAMES)
         if len(stafflines) == 0:
-            logging.info('Clef {0} not connected to any staffline, assuming default'
+            logger.info('Clef {0} not connected to any staffline, assuming default'
                          ' position'.format(clef.id))
             self.pitch_state.init_base_pitch(clef=clef)
         else:
             # Compute clef staffline delta from middle staffline.
             delta = self.staffline_delta(clef)
-            logging.info('Clef {0}: computed staffline delta {1}'
+            logger.info('Clef {0}: computed staffline delta {1}'
                          ''.format(clef.id, delta))
             self.pitch_state.init_base_pitch(clef=clef, delta=delta)
 
@@ -802,19 +803,19 @@ class PitchInferenceEngine(object):
 
         # Collect staves.
         self.staves = graph.filter_vertices(InferenceEngineConstants.STAFF)
-        logging.info('We have {0} staves.'.format(len(self.staves)))
+        logger.info('We have {0} staves.'.format(len(self.staves)))
 
         # Collect clefs and key signatures per staff.
         self.clefs = graph.filter_vertices(_CONST.CLEF_CLASS_NAMES)
         if ignore_nonstaff:
             self.clefs = [c for c in self.clefs if graph.has_children(c, [InferenceEngineConstants.STAFF])]
-        logging.info(f"We have {len(self.clefs)} clefs.")
+        logger.info(f"We have {len(self.clefs)} clefs.")
 
         self.key_signatures = graph.filter_vertices(InferenceEngineConstants.KEY_SIGNATURE)
         if ignore_nonstaff:
             self.key_signatures = [c for c in self.key_signatures
                                    if graph.has_children(c, [InferenceEngineConstants.STAFF])]
-        logging.info(f"We have {len(self.key_signatures)} key signatures.")
+        logger.info(f"We have {len(self.key_signatures)} key signatures.")
 
         self.clef_to_staff_map = {}
         # There may be more than one clef per staff.
@@ -827,7 +828,7 @@ class PitchInferenceEngine(object):
                 self.clef_to_staff_map[c.id] = s
                 self.staff_to_clef_map[s.id].append(c)
             else:
-                logging.warning('Clef {0} has no staff attached! Will not be'
+                logger.warning('Clef {0} has no staff attached! Will not be'
                                 ' part of pitch inference.'.format(c.id))
             continue
 
@@ -841,7 +842,7 @@ class PitchInferenceEngine(object):
                 self.key_to_staff_map[k.id] = s
                 self.staff_to_key_map[s.id].append(k)
             else:
-                logging.warning('Key signature {0} has no staff attached! Will not be'
+                logger.warning('Key signature {0} has no staff attached! Will not be'
                                 ' part of pitch inference.'.format(k.id))
                 continue
 
@@ -850,7 +851,7 @@ class PitchInferenceEngine(object):
         if ignore_nonstaff:
             self.measure_separators = [c for c in self.measure_separators
                                        if graph.has_children(c, [InferenceEngineConstants.STAFF])]
-        logging.info(f"We have {len(self.measure_separators)} measure separators.")
+        logger.info(f"We have {len(self.measure_separators)} measure separators.")
 
         self.staff_to_msep_map = collections.defaultdict(list)
         for m in self.measure_separators:
@@ -866,7 +867,7 @@ class PitchInferenceEngine(object):
         if ignore_nonstaff:
             self.noteheads = [c for c in self.noteheads
                               if graph.has_children(c, [InferenceEngineConstants.STAFF])]
-        logging.info(f"We have {len(self.noteheads)} noteheads.")
+        logger.info(f"We have {len(self.noteheads)} noteheads.")
 
         self.staff_to_noteheads_map = collections.defaultdict(list)
         for n in self.noteheads:
@@ -896,6 +897,6 @@ class PitchInferenceEngine(object):
 
     def __warning_or_error(self, message):
         if self.strategy.permissive:
-            logging.warning(message)
+            logger.warning(message)
         else:
             raise ValueError(message)
