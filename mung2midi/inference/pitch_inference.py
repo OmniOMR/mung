@@ -1,8 +1,7 @@
 import collections
 import copy
 import logging
-import operator
-from typing import List, Dict, Tuple, Optional
+from typing import Optional
 
 from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
@@ -73,29 +72,29 @@ class PitchInferenceEngineState(object):
 
     def __init__(self):
 
-        self.base_pitch = None  # type: int
+        self.base_pitch: int = None
         '''The MIDI code corresponding to the middle staffline,
         without modification by key or inline accidentals.'''
 
-        self.base_pitch_step = None  # type: int
+        self.base_pitch_step: int = None
         '''The name of the base pitch: C, D, E, etc.'''
 
-        self.base_pitch_octave = None  # type: int
+        self.base_pitch_octave: int = None
         '''The octave where the pitch resides. C4 = c', the middle C.'''
 
-        self.current_clef = None  # type:Node
+        self.current_clef: Node = None
         '''Holds the clef Node that is currently valid.'''
 
-        self.current_delta_steps = None  # type: List[int]
+        self.current_delta_steps: list[int] = None
         '''Holds for each staffline delta step (i.e. staffline delta mod 7)
         the MIDI pitch codes.'''
 
-        self.current_clef_delta_shift = 0  # type: int
+        self.current_clef_delta_shift: int = 0
         '''If the clef is in a non-standard position, this number is added
         to the pitch computation delta.'''
 
-        self.key_accidentals = {}  # type: Dict[int,str]
-        self.inline_accidentals = {}  # type: Dict[int,str]
+        self.key_accidentals: dict[int, str] = {}
+        self.inline_accidentals: dict[int, str] = {}
 
     def reset(self):
         self.base_pitch = None
@@ -120,13 +119,13 @@ class PitchInferenceEngineState(object):
         lines.append('\tinline_accidentals: {0}'.format(self.inline_accidentals))
         return '\n'.join(lines)
 
-    def init_base_pitch(self, clef: Node = None, delta: int = 0):
+    def init_base_pitch(self, clef: Optional[Node] = None, delta: int = 0):
         """Initializes the base pitch while taking into account
         the displacement of the clef from its initial position."""
         self.init_base_pitch_default_staffline(clef)
         self.current_clef_delta_shift = -1 * delta
 
-    def init_base_pitch_default_staffline(self, clef: Node = None):
+    def init_base_pitch_default_staffline(self, clef: Optional[Node] = None):
         """Based solely on the clef class name and assuming
         default stafflines, initialize the base pitch.
         By default, initializes as though given a gClef."""
@@ -289,7 +288,7 @@ class PitchInferenceEngineState(object):
 
         return pitch
 
-    def pitch_name(self, delta: int) -> Tuple[str, int]:
+    def pitch_name(self, delta: int) -> tuple[str, int]:
         """Given a staffline delta, returns the name of the corrensponding pitch."""
         delta += self.current_clef_delta_shift
 
@@ -360,8 +359,11 @@ class PitchInferenceEngine(object):
 
     """
 
-    def __init__(self, strategy=PitchInferenceStrategy()):
+    def __init__(self, strategy: Optional[PitchInferenceStrategy] = None):
         # Static temp data from which the pitches are inferred
+        if strategy is None:
+            strategy = PitchInferenceStrategy()
+        
         self.id_to_node_mapping = {}
 
         self.strategy = strategy
@@ -398,7 +400,7 @@ class PitchInferenceEngine(object):
     def reset(self):
         self.__init__()
 
-    def infer_pitches(self, nodes: List[Node], with_names=False):
+    def infer_pitches(self, nodes: list[Node], with_names=False):
         """The main workhorse for pitch inference.
         Gets a list of Nodes and for each notehead-type
         symbol, outputs a MIDI code corresponding to the pitch
@@ -491,6 +493,7 @@ class PitchInferenceEngine(object):
             key=lambda x: x.left)
 
         for q in queue:
+            q: Node
             logging.info('process_staff(): processing object {0}-{1}'
                          ''.format(q.class_name, q.id))
             if q.class_name in _CONST.CLEF_CLASS_NAMES:
@@ -634,7 +637,7 @@ class PitchInferenceEngine(object):
 
             # Processing leger lines:
             #  - count leger lines
-            lls = self.__children(notehead, _CONST.LEGER_LINE)
+            lls = self.__children(notehead, [_CONST.LEGER_LINE])
             n_lls = len(lls)
             if n_lls == 0:
                 raise ValueError('Notehead with no staffline or staffspace,'
@@ -772,8 +775,8 @@ class PitchInferenceEngine(object):
         # Check for staffline children
         stafflines = self.__children(clef, class_names=_CONST.STAFFLINE_CLASS_NAMES)
         if len(stafflines) == 0:
-            logging.info('Clef not connected to any staffline, assuming default'
-                         ' position: {0}'.format(clef.id))
+            logging.info('Clef {0} not connected to any staffline, assuming default'
+                         ' position'.format(clef.id))
             self.pitch_state.init_base_pitch(clef=clef)
         else:
             # Compute clef staffline delta from middle staffline.
@@ -782,7 +785,7 @@ class PitchInferenceEngine(object):
                          ''.format(clef.id, delta))
             self.pitch_state.init_base_pitch(clef=clef, delta=delta)
 
-    def _collect_symbols_for_pitch_inference(self, nodes: List[Node],
+    def _collect_symbols_for_pitch_inference(self, nodes: list[Node],
                                              ignore_nonstaff=True):
         """
         Extract all symbols from the document relevant for pitch
@@ -870,21 +873,21 @@ class PitchInferenceEngine(object):
             s = self.__children(n, [InferenceEngineConstants.STAFF])[0]
             self.staff_to_noteheads_map[s.id].append(n)
 
-    def __children(self, c: Node, class_names: List[str]) -> List[Node]:
+    def __children(self, c: Node, class_names: list[str]) -> list[Node]:
         """
         Retrieve the children of the given Node ``c`` that have class in ``class_names``.
         """
         return [self.id_to_node_mapping[o] for o in c.outlinks
                 if self.id_to_node_mapping[o].class_name in class_names]
 
-    def __has_children(self, c: Node, class_names: List[str]) -> List[Node]:
+    def __has_children(self, c: Node, class_names: list[str]) -> list[Node]:
         """
         Returns true if the given node has a least one child that has the class name in ``class_names``.
         """
         return [self.id_to_node_mapping[o] for o in c.outlinks
                 if self.id_to_node_mapping[o].class_name in class_names]
 
-    def __parents(self, c: Node, class_names: List[str]) -> List[Node]:
+    def __parents(self, c: Node, class_names: list[str]) -> list[Node]:
         """
         Retrieve the parents of the given Node ``c`` that have class in ``class_names``.
         """
