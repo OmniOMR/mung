@@ -6,6 +6,7 @@ from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
 from ..logger import logger
+from .clefs_impl import get_clef_data_from_node
 
 
 _CONST = InferenceEngineConstants()
@@ -120,11 +121,35 @@ class PitchInferenceEngineState(object):
         lines.append('\tinline_accidentals: {0}'.format(self.inline_accidentals))
         return '\n'.join(lines)
 
-    def init_base_pitch(self, clef: Optional[Node] = None, delta: int = 0):
+    def init_base_pitch(self, clef: Optional[Node] = None, delta: Optional[int] = None):
         """Initializes the base pitch while taking into account
         the displacement of the clef from its initial position."""
+        if clef is None and delta is not None:
+            raise ValueError("Cannot specify delta and not specify clef")
+        
         self.init_base_pitch_default_staffline(clef)
-        self.current_clef_delta_shift = -1 * delta
+        if delta is not None:
+            assert clef is not None
+            # If some delta is given (clef is connected to some staffline),
+            # subtracts the expected staffline delta.
+            #
+            # Example:
+            # For a G Clef the expected is staffline delta is -2
+            # (the curl of the clef passes through the second staffline from bottom)
+            # so when the computed delta in some piece of music is -2,
+            # the resulting shift is -2 - (-2) = 0.
+            # When, if the staffline's curl is on the first staff
+            # (French violin) the shift is actually -4 - (-2) = -2. 
+            logger.info(f"Clef {clef.id} is snapped to a staffline, computed delta: {delta}")
+            clef_data = get_clef_data_from_node(clef)
+            self.current_clef_delta_shift = clef_data.default_staffline_delta - delta
+            # Just log that the shift is unexpected.
+            if not clef_data.is_common_delta(delta):
+                logger.warning(f"Computed delta {delta} is not in common deltas "
+                               f"for {clef_data.name}: {clef_data.common_staffline_deltas}"
+                               )
+        else:
+            self.current_clef_delta_shift = 0
 
     def init_base_pitch_default_staffline(self, clef: Optional[Node] = None):
         """Based solely on the clef class name and assuming
@@ -136,24 +161,11 @@ class PitchInferenceEngineState(object):
         # (mostly cClefs, like page 03, but there is no reason
         #  to limit this to cClefs).
 
-        if (clef is None) or (clef.class_name == _CONST.G_CLEF):
-            new_base_pitch = 71
-            new_delta_steps = [0, 1, 2, 2, 1, 2, 2, 2]
-            new_base_pitch_step = 6  # Index into pitch steps.
-            new_base_pitch_octave = 4
-        elif clef.class_name == _CONST.F_CLEF:
-            new_base_pitch = 50
-            new_delta_steps = [0, 2, 1, 2, 2, 2, 1, 2]
-            new_base_pitch_step = 1
-            new_base_pitch_octave = 3
-        elif clef.class_name == _CONST.C_CLEF:
-            new_base_pitch = 60
-            new_delta_steps = [0, 2, 2, 1, 2, 2, 2, 1]
-            new_base_pitch_step = 0
-            new_base_pitch_octave = 4
-        else:
-            raise ValueError('Unrecognized clef class_name: {0}'
-                             ''.format(clef.class_name))
+        clef_data = get_clef_data_from_node(clef)
+        new_base_pitch = clef_data.base_pitch
+        new_delta_steps = clef_data.delta_steps
+        new_base_pitch_step = clef_data.base_pitch_step
+        new_base_pitch_octave = clef_data.base_pitch_octave
 
         # Shift the key and inline accidental deltas
         # according to the change.
