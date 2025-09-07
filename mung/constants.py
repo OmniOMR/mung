@@ -32,6 +32,7 @@ class ClassNamesConstants(object):
     STEM = "stem"
 
     TIE_CLASS_NAME = "tie"
+    SLUR_CLASS_NAME = "slur"
 
     G_CLEF = "gClef"
     C_CLEF = "cClef"
