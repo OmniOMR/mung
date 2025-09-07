@@ -62,6 +62,18 @@ keySignature{1,} | ANYOF(accidental*)
 # Time signatures
 timeSignature{,1} | timeSigDivider{1}
 timeSignature | timeSigCutCommon{1} timeSigCommon{1}
+timeSignature | EXACTLYONE(timeSigCommon numeral0)
+timeSignature | EXACTLYONE(timeSigCommon numeral1)
+timeSignature | EXACTLYONE(timeSigCommon numeral2)
+timeSignature | EXACTLYONE(timeSigCommon numeral3)
+timeSignature | EXACTLYONE(timeSigCommon numeral4)
+timeSignature | EXACTLYONE(timeSigCommon numeral5)
+timeSignature | EXACTLYONE(timeSigCommon numeral6)
+timeSignature | EXACTLYONE(timeSigCommon numeral7)
+timeSignature | EXACTLYONE(timeSigCommon numeral8)
+timeSignature | EXACTLYONE(timeSigCommon numeral9)
+timeSignature | EXACTLYONE(timeSigCommon timeSigDivider)
+timeSignature | EXACTLYONE(timeSigCommon timeSigCutCommon)
 
 *Clef{,1} | staffLine
 measureSeparator{1,} | ANYOF(barline barlineHeavy repeat) # confirm that repeat belongs here, add rule one MS on one repeat

@@ -11,7 +11,13 @@ T = TypeVar("T")
 
 
 class ChordComponentValidator:
-    _CLASSES_TO_CHECK = [*InferenceEngineConstants.FLAGS_AND_BEAMS, ClassNamesConstants.TUPLE]
+    _CLASSES_TO_CHECK = [
+        *InferenceEngineConstants.FLAGS_AND_BEAMS,
+        ClassNamesConstants.TUPLE,
+        ClassNamesConstants.DYNAMIC_CRESHENDO,
+        ClassNamesConstants.DYNAMIC_DIMINUENDO,
+        ClassNamesConstants.SLUR_CLASS_NAME
+        ]
 
     def __init__(self) -> None:
         pass

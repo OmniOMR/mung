@@ -4,3 +4,4 @@ from .invalid_link_count import InvalidLinkCountViolation
 from .name_deprecated import ClassNameDeprecatedViolation
 from .symbol_not_in_alphabet import SymbolNotInAlphabetViolation
 from .invalid_set import InvalidSetViolation
+from .missing_relation import MissingRelationViolation

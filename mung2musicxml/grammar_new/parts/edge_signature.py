@@ -14,7 +14,7 @@ class EdgeSignature:
     to_symbol: Symbol
     
     @classmethod
-    def from_str(cls, str_: str, delim: str = "->") -> Self:
+    def from_string(cls, str_: str, delim: str = "->") -> Self:
         from_name, to_name = str_.split(delim)
         from_name, to_name = Symbol(from_name.strip()), Symbol(to_name.strip())
         return cls(from_name, to_name)
