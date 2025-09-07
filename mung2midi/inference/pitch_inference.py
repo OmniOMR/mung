@@ -5,6 +5,7 @@ from typing import Optional
 from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
+from mung.constants import ClassNamesConstants
 from ..logger import logger
 from .clefs_impl import get_clef_data_from_node
 
@@ -226,10 +227,9 @@ class PitchInferenceEngineState(object):
             raise ValueError("Incorrect clef node set as current_clef {0}.".format(self.current_clef))
 
         for d in deltas_sharp[:number_of_sharps]:
-            new_key_accidentals[d] = 'sharp'
+            new_key_accidentals[d] = ClassNamesConstants.ACCIDENTAL_SHARP
         for d in deltas_flat[:number_of_flats]:
-            new_key_accidentals[d] = 'flat'
-
+            new_key_accidentals[d] = ClassNamesConstants.ACCIDENTAL_FLAT
         self.key_accidentals = new_key_accidentals
 
     def set_inline_accidental(self, delta: int, accidental: Node):
@@ -245,28 +245,50 @@ class PitchInferenceEngineState(object):
 
         step_delta = delta % 7
         if step_delta in self.key_accidentals:
-            if self.key_accidentals[step_delta] == 'sharp':
-                pitch_mod = 1
-            elif self.key_accidentals[step_delta] == 'double_sharp':
-                pitch_mod = 2
-            elif self.key_accidentals[step_delta] == 'flat':
-                pitch_mod = -1
-            elif self.key_accidentals[step_delta] == 'double_flat':
-                pitch_mod = -2
+            match self.key_accidentals[step_delta]:
+                case ClassNamesConstants.ACCIDENTAL_SHARP:
+                    pitch_mod = 1
+                case ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP:
+                    pitch_mod = 2
+                case ClassNamesConstants.ACCIDENTAL_FLAT:
+                    pitch_mod = -1
+                case ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT:
+                    pitch_mod = -2
+                case _:
+                    raise ValueError(f"Unknown pitch mode {self.key_accidentals} for step delta {step_delta}")
 
         # Inline accidentals override key accidentals.
+        #
+        # Previous version *overwrote* the pitch_mod with new value,
+        # but there can be step_delta as well as inline_accidental.
+        # (Note already "flat" from key signature, can be "flatted"
+        # again using an accidental flat, etc.)
+        # So the actual range of accidentals is actually [-3, 3]. (Or maybe more?)
         if delta in self.inline_accidentals:
-            if self.inline_accidentals[delta] == 'natural':
-                logger.info('Natural at delta = {0}'.format(delta))
-                pitch_mod = 0
-            elif self.inline_accidentals[delta] == 'sharp':
-                pitch_mod = 1
-            elif self.inline_accidentals[delta] == 'double_sharp':
-                pitch_mod = 2
-            elif self.inline_accidentals[delta] == 'flat':
-                pitch_mod = -1
-            elif self.inline_accidentals[delta] == 'double_flat':
-                pitch_mod = -2
+            match self.inline_accidentals[delta]:
+                case ClassNamesConstants.ACCIDENTAL_NATURAL:
+                    logger.info('Natural at delta = {0}'.format(delta))
+                    pitch_mod += 0
+                case ClassNamesConstants.ACCIDENTAL_SHARP:
+                    pitch_mod += 1
+                case ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP:
+                    pitch_mod += 2
+                case ClassNamesConstants.ACCIDENTAL_FLAT:
+                    pitch_mod += -1
+                case ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT:
+                    pitch_mod += -2
+                case _:
+                    raise ValueError(f"Unknown pitch mode {self.inline_accidentals} for delta {delta}")
+        
+        if (step_delta in self.key_accidentals
+            and delta in self.inline_accidentals
+            and self.key_accidentals[step_delta] != ClassNamesConstants.ACCIDENTAL_NATURAL
+            and self.inline_accidentals[delta] != ClassNamesConstants.ACCIDENTAL_NATURAL):
+            logger.warning(
+                "Special case, both inline and key accidentals are not zero: "
+                f"inline: {self.inline_accidentals[delta]}, key: {self.key_accidentals[step_delta]}"
+            )
+
         return pitch_mod
 
     def pitch(self, delta: int) -> int:
@@ -302,7 +324,7 @@ class PitchInferenceEngineState(object):
         return pitch
 
     def pitch_name(self, delta: int) -> tuple[str, int]:
-        """Given a staffline delta, returns the name of the corrensponding pitch."""
+        """Given a staffline delta, returns the name of the corresponding pitch."""
         delta += self.current_clef_delta_shift
 
         output_step = _CONST.PITCH_STEPS[(self.base_pitch_step + delta) % 7]
@@ -310,14 +332,19 @@ class PitchInferenceEngineState(object):
 
         output_mod = ''
         accidental = self.accidental(delta)
-        if accidental == 1:
-            output_mod = _CONST.ACCIDENTAL_CODES['sharp']
-        elif accidental == 2:
-            output_mod = _CONST.ACCIDENTAL_CODES['double_sharp']
-        elif accidental == -1:
-            output_mod = _CONST.ACCIDENTAL_CODES['flat']
-        elif accidental == 2:
-            output_mod = _CONST.ACCIDENTAL_CODES['double_flat']
+        match accidental:
+            case 1:
+                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_SHARP]
+            case 2:
+                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP]
+            case -1:
+                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_FLAT]
+            case -2:
+                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT]
+            case 0:
+                pass
+            case _:
+                raise ValueError(f"Unsupported accidental value: {accidental}")
 
         return output_step + output_mod, output_octave
 
@@ -507,8 +534,8 @@ class PitchInferenceEngine(object):
 
         for q in queue:
             q: Node
-            logger.info('process_staff(): processing object {0}-{1}'
-                         ''.format(q.class_name, q.id))
+            logger.info(f"Processing staff object {q.class_name} {q.id}")
+
             if q.class_name in _CONST.CLEF_CLASS_NAMES:
                 self.process_clef(q)
             elif q.class_name in _CONST.KEY_SIGNATURE:
@@ -516,17 +543,17 @@ class PitchInferenceEngine(object):
             elif q.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES:
                 self.process_measure_separator(q)
             elif q.class_name in _CONST.NOTEHEAD_CLASS_NAMES:
-                p, pn = self.process_notehead(q, with_name=True)
+                p, pn = self.process_notehead(q, with_name=True) # type: ignore
                 self.pitches[q.id] = p
                 self.pitches_per_staff[staff.id][q.id] = p
                 self.pitch_names[q.id] = pn
                 self.pitch_names_per_staff[staff.id][q.id] = pn
 
                 ### DEBUG
-                if q.id in [131, 83, 89, 94]:
-                    logger.info('PitchInferenceEngine: Processing notehead {0}'
-                                 ''.format(q.id))
-                    logger.info('{0}'.format(self.pitch_state))
+                # if q.id in [131, 83, 89, 94]:
+                #     logger.info('PitchInferenceEngine: Processing notehead {0}'
+                #                  ''.format(q.id))
+                #     logger.info('{0}'.format(self.pitch_state))
 
                 # b = self.beats(q)
                 # self.durations_beats[q.id] = b
@@ -534,7 +561,7 @@ class PitchInferenceEngine(object):
 
         return self.pitches_per_staff[staff.id]
 
-    def process_notehead(self, notehead, with_name=False):
+    def process_notehead(self, notehead: Node, with_name=False):
         """This is the main workhorse of the pitch inference engine.
 
         :param notehead: The notehead-class Node for which we
@@ -592,14 +619,15 @@ class PitchInferenceEngine(object):
         accidentals = self.__children(notehead, _CONST.ACCIDENTAL_CLASS_NAMES)
 
         if len(accidentals) > 0:
+            logger.debug(f"Found {len(accidentals)} accidental for {notehead.class_name} {notehead.id}")
 
             # Sanity checks
             if len(accidentals) > 2:
                 self.__warning_or_error('More than two accidentals attached to notehead'
                                         ' {0}'.format(notehead.id))
             elif len(accidentals) == 2:
-                naturals = [a for a in accidentals if a.class_name == 'natural']
-                non_naturals = [a for a in accidentals if a.class_name != 'natural']
+                naturals = [a for a in accidentals if a.class_name == ClassNamesConstants.ACCIDENTAL_NATURAL]
+                non_naturals = [a for a in accidentals if a.class_name != ClassNamesConstants.ACCIDENTAL_NATURAL]
                 if len(naturals) == 0:
                     self.__warning_or_error('More than one non-natural accidental'
                                             ' attached to notehead {0}'
@@ -620,13 +648,13 @@ class PitchInferenceEngine(object):
         p = self.pitch_state.pitch(delta)
 
         ### DEBUG
-        if notehead.id in [131, 83, 89, 94]:
-            logger.info('PitchInferenceEngine: results of pitch processing'
-                         ' for notehead {0}'.format(notehead.id))
-            logger.info('\tties: {0}'.format(ties))
-            logger.info('\taccidentals: {0}'.format(accidentals))
-            logger.info('\tdelta: {0}'.format(delta))
-            logger.info('\tpitch: {0}'.format(p))
+        # if notehead.id in [131, 83, 89, 94]:
+        #     logger.info('PitchInferenceEngine: results of pitch processing'
+        #                  ' for notehead {0}'.format(notehead.id))
+        #     logger.info('\tties: {0}'.format(ties))
+        #     logger.info('\taccidentals: {0}'.format(accidentals))
+        #     logger.info('\tdelta: {0}'.format(delta))
+        #     logger.info('\tpitch: {0}'.format(p))
 
         if with_name is True:
             pn = self.pitch_state.pitch_name(delta)
@@ -780,8 +808,8 @@ class PitchInferenceEngine(object):
         self.pitch_state.reset_inline_accidentals()
 
     def process_key_signature(self, key_signature):
-        sharps = self.__children(key_signature, ['sharp'])
-        flats = self.__children(key_signature, ['flat'])
+        sharps = self.__children(key_signature, [ClassNamesConstants.ACCIDENTAL_SHARP])
+        flats = self.__children(key_signature, [ClassNamesConstants.ACCIDENTAL_FLAT])
         self.pitch_state.set_key(len(sharps), len(flats))
 
     def process_clef(self, clef):
