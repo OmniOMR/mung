@@ -134,11 +134,11 @@ class PitchInferenceEngineState(object):
             # subtracts the expected staffline delta.
             #
             # Example:
-            # For a G Clef the expected is staffline delta is -2
+            # For a G Clef the expected staffline delta is -2
             # (the curl of the clef passes through the second staffline from bottom)
-            # so when the computed delta in some piece of music is -2,
-            # the resulting shift is -2 - (-2) = 0.
-            # When, if the staffline's curl is on the first staff
+            # so when the computed delta of a G clef is -2,
+            # the resulting pitch shift is -2 - (-2) = 0.
+            # When the staffline's curl is on the first staff
             # (French violin) the shift is actually -4 - (-2) = -2. 
             logger.info(f"Clef {clef.id} is snapped to a staffline, computed delta: {delta}")
             clef_data = get_clef_data_from_node(clef)
