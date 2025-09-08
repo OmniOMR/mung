@@ -258,37 +258,24 @@ class PitchInferenceEngineState(object):
                     raise ValueError(f"Unknown pitch mode {self.key_accidentals} for step delta {step_delta}")
 
         # Inline accidentals override key accidentals.
-        #
-        # Previous version *overwrote* the pitch_mod with new value,
-        # but there can be step_delta as well as inline_accidental.
-        # (Note already "flat" from key signature, can be "flatted"
-        # again using an accidental flat, etc.)
-        # So the actual range of accidentals is actually [-3, 3]. (Or maybe more?)
         if delta in self.inline_accidentals:
             match self.inline_accidentals[delta]:
                 case ClassNamesConstants.ACCIDENTAL_NATURAL:
                     logger.info('Natural at delta = {0}'.format(delta))
-                    pitch_mod += 0
+                    pitch_mod = 0
                 case ClassNamesConstants.ACCIDENTAL_SHARP:
-                    pitch_mod += 1
+                    pitch_mod = 1
                 case ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP:
-                    pitch_mod += 2
+                    pitch_mod = 2
                 case ClassNamesConstants.ACCIDENTAL_FLAT:
-                    pitch_mod += -1
+                    pitch_mod = -1
                 case ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT:
-                    pitch_mod += -2
+                    pitch_mod = -2
                 case _:
                     raise ValueError(f"Unknown pitch mode {self.inline_accidentals} for delta {delta}")
         
-        if (step_delta in self.key_accidentals
-            and delta in self.inline_accidentals
-            and self.key_accidentals[step_delta] != ClassNamesConstants.ACCIDENTAL_NATURAL
-            and self.inline_accidentals[delta] != ClassNamesConstants.ACCIDENTAL_NATURAL):
-            logger.warning(
-                "Special case, both inline and key accidentals are not zero: "
-                f"inline: {self.inline_accidentals[delta]}, key: {self.key_accidentals[step_delta]}"
-            )
-
+        assert isinstance(pitch_mod, int) and -2 <= pitch_mod <= 2
+        
         return pitch_mod
 
     def pitch(self, delta: int) -> int:
@@ -515,7 +502,7 @@ class PitchInferenceEngine(object):
         else:
             return copy.deepcopy(self.pitches)
 
-    def process_staff(self, staff):
+    def process_staff(self, staff: Node):
 
         self.pitches_per_staff[staff.id] = {}
         self.pitch_names_per_staff[staff.id] = {}
