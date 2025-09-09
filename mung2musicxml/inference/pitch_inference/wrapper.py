@@ -1,7 +1,6 @@
 from typing import Optional
 from mung2midi.inference import PitchInferenceEngine, PitchInferenceStrategy, Pitch
 from mung import NotationGraph
-from mung.constants import ClassNamesConstants
 
 
 class PitchDataConstants:
@@ -22,7 +21,7 @@ class PitchInferenceEngineWrapper:
         """
         Infers pitches for all notes inside the graph.
         """
-        _, pitches = self._engine.infer_pitches(graph.vertices, with_pitch_objects=True)
+        _, pitches = self._engine.infer_pitches(graph.vertices, with_pitch_objects = True)
         pitches: dict[int, Pitch]
         if add_data_to_nodes:
             self._add_pitch_data_to_nodes(graph, pitches)
@@ -32,12 +31,3 @@ class PitchInferenceEngineWrapper:
     def _add_pitch_data_to_nodes(graph: NotationGraph, pitch_data: dict[int, Pitch]):
         for _id, pitch in pitch_data.items():
             graph[_id].data[PitchDataConstants.PITCH] = pitch
-    
-    @staticmethod
-    def _check(graph: NotationGraph):
-        pass
-
-    @staticmethod
-    def _check_notehead_assignment(graph: NotationGraph):
-        # for notehead in graph.filter_vertices(ClassNamesConstants.NOTEH)
-        pass
