@@ -1,6 +1,7 @@
 import collections
 import copy
 from typing import Optional
+from dataclasses import dataclass
 
 from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
@@ -13,10 +14,9 @@ from .clefs_impl import get_clef_data_from_node
 
 _CONST = InferenceEngineConstants()
 
-
-class PitchInferenceStrategy(object):
-    def __init__(self):
-        self.permissive = True
+@dataclass(frozen=True)
+class PitchInferenceStrategy:
+    permissive: bool = True
 
 
 class PitchInferenceEngineState(object):
