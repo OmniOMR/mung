@@ -3,7 +3,7 @@ from parameterized import parameterized
 from typing import Optional, Any
 
 from mung.constants import ClassNamesConstants as CNC
-from mung2midi.inference import PitchInferenceEngine
+from mung2musicxml.inference import PitchInferenceEngineWrapper
 from ..utils.dummy_staff import _DummyStaffGenerator
 from ..utils.tone_generator import next_tones
 
@@ -30,7 +30,7 @@ class ClefShifts(TestCase):
     - Clef interpretations when linked to some staffline.
     """
     generator = _DummyStaffGenerator()
-    engine = PitchInferenceEngine()
+    engine = PitchInferenceEngineWrapper()
         
     @parameterized.expand(
         [
@@ -46,7 +46,7 @@ class ClefShifts(TestCase):
         assert clef_delta is None
 
         graph = self.generator(clef_name=clef_name, clef_delta=clef_delta)
-        _, names = self.engine.infer_pitches(graph.vertices, with_names=True)
+        names = self.engine(graph)
         
         self.assertListEqual(transform_names(names), expected_tones)
     
@@ -64,7 +64,7 @@ class ClefShifts(TestCase):
         assert clef_delta is not None
 
         graph = self.generator(clef_name=clef_name, clef_delta=clef_delta)
-        _, names = self.engine.infer_pitches(graph.vertices, with_names=True)
+        names = self.engine(graph)
         
         self.assertListEqual(transform_names(names), expected_tones)
     
@@ -89,7 +89,7 @@ class ClefShifts(TestCase):
         assert clef_delta is not None
 
         graph = self.generator(clef_name=clef_name, clef_delta=clef_delta)
-        _, names = self.engine.infer_pitches(graph.vertices, with_names=True)
+        names = self.engine(graph)
         
         self.assertListEqual(transform_names(names), expected_tones)
     

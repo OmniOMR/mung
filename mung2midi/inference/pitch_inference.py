@@ -584,11 +584,21 @@ class PitchInferenceEngine(object):
             if left_tied_notehead.id != notehead.id:
                 try:
                     p = self.pitches[left_tied_notehead.id]
+                    # if with_name:
+                    #     pn = self.pitch_names[left_tied_notehead.id]
+                    #     return p, pn
+                    # else:
+                    #     return p
+                    
+                    output: list = [p]
+                    pn = self.pitch_names[left_tied_notehead.id]
+                    po = self.pitch_objects[left_tied_notehead.id]
                     if with_name:
-                        pn = self.pitch_names[left_tied_notehead.id]
-                        return p, pn
-                    else:
-                        return p
+                        output.append(pn)
+                    if with_pitch_object:
+                        output.append(po)
+
+                    return tuple(output)
 
                 except KeyError:
                     raise KeyError('Processing tied notehead {0}:'

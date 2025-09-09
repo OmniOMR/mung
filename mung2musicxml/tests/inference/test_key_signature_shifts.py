@@ -2,7 +2,7 @@ from unittest import TestCase, main
 from parameterized import parameterized
 from typing import Any
 
-from mung2midi.inference import PitchInferenceEngine, Pitch
+from mung2musicxml.inference import PitchInferenceEngineWrapper, Pitch
 from ..utils.dummy_staff import _DummyStaffGenerator
 
 
@@ -18,7 +18,7 @@ class KeySignatureShifts(TestCase):
     Tests some standard key signatures.
     """
     generator = _DummyStaffGenerator()
-    engine = PitchInferenceEngine()
+    engine = PitchInferenceEngineWrapper()
 
     @parameterized.expand(
         [
@@ -28,8 +28,8 @@ class KeySignatureShifts(TestCase):
         ]
     )
     def test_dummy(self, name: str, key_signature: int, expected: list[Pitch]):
-        g = self.generator(key_signature=key_signature)
-        _, pitches = self.engine.infer_pitches(g.vertices, with_pitch_objects=True)
+        graph = self.generator(key_signature=key_signature)
+        pitches = self.engine(graph)
         pitches = sort_pitches(pitches)
         
         self.assertListEqual(pitches, expected)
