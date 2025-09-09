@@ -34,7 +34,8 @@ class _DummyStaffGenerator:
     def __call__(
             self, 
             clef_name: Optional[str] = None,
-            clef_delta: Optional[int] = None
+            clef_delta: Optional[int] = None,
+            key_signature: Optional[int] = None
             ) -> NotationGraph:
         graph = self._add_notehead_to_every_dummy_staff_position(
             self._create_dummy_staff(staffline_count=self._staffline_count)
@@ -43,6 +44,9 @@ class _DummyStaffGenerator:
 
         if clef_name is not None:
             graph = self._add_clef(graph, clef_name, clef_delta)
+        
+        if key_signature is not None and key_signature != 0:
+            graph = self._add_key_signature(graph, key_signature)
         
         return graph
 
@@ -128,3 +132,31 @@ class _DummyStaffGenerator:
             new_graph.add_edge(clef_id, self._sorted_staffline_ids(graph)[delta_from_bottom])
         
         return new_graph
+    
+    def _add_key_signature(self, graph: NotationGraph, key_signature: int) -> NotationGraph:
+        assert abs(key_signature) <= 7
+
+        if key_signature == 0:
+            return graph
+        elif key_signature > 0:
+            accidental_type = ClassNamesConstants.ACCIDENTAL_SHARP
+        else:
+            accidental_type = ClassNamesConstants.ACCIDENTAL_FLAT
+
+        _id = graph.next_node_id
+        sig_node = Node(_id, ClassNamesConstants.KEY_SIGNATURE, 0, 0, 0, 0)
+        _id += 1
+        accidentals: list[Node] = []
+        for _ in range(abs(key_signature)):
+            accidentals.append(Node(_id, accidental_type, 0, 0, 0, 0))
+            _id += 1
+        
+        new_graph = NotationGraph(graph.vertices + accidentals + [sig_node])
+
+        new_graph.add_edge(sig_node.id, self._staff_id)
+        for a in accidentals:
+            new_graph.add_edge(sig_node.id, a.id)
+
+        return new_graph
+
+

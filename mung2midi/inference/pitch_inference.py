@@ -6,6 +6,7 @@ from mung.constants import InferenceEngineConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
 from mung.constants import ClassNamesConstants
+from .pitch import Pitch, Octave, Step, Alter
 from ..logger import logger
 from .clefs_impl import get_clef_data_from_node
 
@@ -275,7 +276,7 @@ class PitchInferenceEngineState(object):
                     raise ValueError(f"Unknown pitch mode {self.inline_accidentals} for delta {delta}")
         
         assert isinstance(pitch_mod, int) and -2 <= pitch_mod <= 2
-        
+
         return pitch_mod
 
     def pitch(self, delta: int) -> int:
@@ -310,30 +311,31 @@ class PitchInferenceEngineState(object):
 
         return pitch
 
-    def pitch_name(self, delta: int) -> tuple[str, int]:
+    def pitch_name(self, delta: int) -> Pitch:
         """Given a staffline delta, returns the name of the corresponding pitch."""
         delta += self.current_clef_delta_shift
 
         output_step = _CONST.PITCH_STEPS[(self.base_pitch_step + delta) % 7]
         output_octave = self.base_pitch_octave + ((delta + self.base_pitch_step) // 7)
 
-        output_mod = ''
+        # output_mod = ''
         accidental = self.accidental(delta)
-        match accidental:
-            case 1:
-                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_SHARP]
-            case 2:
-                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP]
-            case -1:
-                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_FLAT]
-            case -2:
-                output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT]
-            case 0:
-                pass
-            case _:
-                raise ValueError(f"Unsupported accidental value: {accidental}")
-
-        return output_step + output_mod, output_octave
+        # match accidental:
+        #     case 1:
+        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_SHARP]
+        #     case 2:
+        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP]
+        #     case -1:
+        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_FLAT]
+        #     case -2:
+        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT]
+        #     case 0:
+        #         pass
+        #     case _:
+        #         raise ValueError(f"Unsupported accidental value: {accidental}")
+        
+        # print(Pitch(Octave(output_octave), Step(output_step), Alter(accidental)))
+        return Pitch(Octave(output_octave), Step(output_step), Alter(accidental))
 
 
 class PitchInferenceEngine(object):
@@ -421,13 +423,15 @@ class PitchInferenceEngine(object):
         self.pitch_names = None
         self.pitch_names_per_staff = None
 
+        self.pitch_objects = None
+
         # self.durations_beats = None
         # self.durations_beats_per_staff = None
 
     def reset(self):
         self.__init__()
 
-    def infer_pitches(self, nodes: list[Node], with_names=False):
+    def infer_pitches(self, nodes: list[Node], with_names=False, with_pitch_objects=False):
         """The main workhorse for pitch inference.
         Gets a list of Nodes and for each notehead-type
         symbol, outputs a MIDI code corresponding to the pitch
@@ -474,10 +478,9 @@ class PitchInferenceEngine(object):
             id --> pitch names (e.g., {123: 'F#3'}).
 
         :returns: A dict of ``id`` to MIDI pitch code, with
-            an entry for each (pitched) notehead. If ``with_names``
-            is given, returns a tuple with the id --> MIDI
-            and id --> pitch name dicts.
-
+            an entry for each (pitched) notehead.
+            If ``with_names`` is given, also returns id to pitch name dict.
+            If ``with_pitch_objects`` is given, also returns id to ``Pitch`` object dict .
         """
         self.id_to_node_mapping = {c.id: c for c in nodes}
 
@@ -490,6 +493,7 @@ class PitchInferenceEngine(object):
         self.pitches = {}
         self.pitch_names_per_staff = {}
         self.pitch_names = {}
+        self.pitch_objects = {}
         # self.durations_beats = {}
         # self.durations_beats_per_staff = {}
 
@@ -497,10 +501,13 @@ class PitchInferenceEngine(object):
             self.process_staff(staff)
             self.pitches.update(self.pitches_per_staff[staff.id])
 
+        output = [copy.deepcopy(self.pitches)]
         if with_names:
-            return copy.deepcopy(self.pitches), copy.deepcopy(self.pitch_names)
-        else:
-            return copy.deepcopy(self.pitches)
+            output.append(copy.deepcopy(self.pitch_names))
+        if with_pitch_objects:
+            output.append(copy.deepcopy(self.pitch_objects))
+        
+        return tuple(output)
 
     def process_staff(self, staff: Node):
 
@@ -530,8 +537,9 @@ class PitchInferenceEngine(object):
             elif q.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES:
                 self.process_measure_separator(q)
             elif q.class_name in _CONST.NOTEHEAD_CLASS_NAMES:
-                p, pn = self.process_notehead(q, with_name=True) # type: ignore
+                p, pn, po = self.process_notehead(q, with_name=True, with_pitch_object=True) # type: ignore
                 self.pitches[q.id] = p
+                self.pitch_objects[q.id] = po
                 self.pitches_per_staff[staff.id][q.id] = p
                 self.pitch_names[q.id] = pn
                 self.pitch_names_per_staff[staff.id][q.id] = pn
@@ -548,7 +556,7 @@ class PitchInferenceEngine(object):
 
         return self.pitches_per_staff[staff.id]
 
-    def process_notehead(self, notehead: Node, with_name=False):
+    def process_notehead(self, notehead: Node, with_name: bool = False, with_pitch_object: bool = False):
         """This is the main workhorse of the pitch inference engine.
 
         :param notehead: The notehead-class Node for which we
@@ -643,11 +651,14 @@ class PitchInferenceEngine(object):
         #     logger.info('\tdelta: {0}'.format(delta))
         #     logger.info('\tpitch: {0}'.format(p))
 
-        if with_name is True:
-            pn = self.pitch_state.pitch_name(delta)
-            return p, pn
-        else:
-            return p
+        output: list = [p]
+        po = self.pitch_state.pitch_name(delta)
+        if with_name:
+            output.append(po.to_tuple_repr())
+        if with_pitch_object:
+            output.append(po)
+
+        return tuple(output)
 
     def staffline_delta(self, notehead: Node):
         """Computes the staffline delta (distance from middle stafflines,

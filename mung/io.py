@@ -470,6 +470,8 @@ def write_nodes_to_file(nodes: list[Node], file_path: str | Path, document: Opti
 
     with file_path.open(mode="w", encoding="utf-8") as output_file:
         output_file.write(output)
+    
+    logger.info(f"Saved to: {file_path.resolve().absolute()}")
 
 
 def write_nodes_to_string(nodes: list[Node], document: Optional[str] = None, dataset: Optional[str] = None) -> str:
