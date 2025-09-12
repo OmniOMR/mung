@@ -6,9 +6,10 @@ import warnings
 from fractions import Fraction
 from typing import Optional, Iterable
 
-from mung.constants import InferenceEngineConstants, ClassNamesConstants, PrecedenceLinksConstants
+from mung.constants import InferenceEngineConstants, ClassNamesConstants, PrecedenceLinksConstants, OnsetDataConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
+from mung.graph import UnionFind
 from .precedence_graph_node import PrecedenceGraphNode
 from dataclasses import dataclass
 from ..logger import logger
@@ -34,7 +35,7 @@ class OnsetsInferenceEngine(object):
         list in a document."""
         if strategy is None:
             strategy = BaseOnsetsInferenceStrategy()
-        self.__strategy = strategy
+        
         # self.id_to_node_mapping = {c.id: c for c in nodes}
         self.strategy = strategy
 
@@ -46,6 +47,23 @@ class OnsetsInferenceEngine(object):
         else:
             self.__graph: NotationGraph = None
 
+    def __call__(self, graph_or_vertices: list[Node] | NotationGraph) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
+        """
+        Computes the onsets and durations for duration-related symbols,
+        stores them inside the ``data`` of each affected notehead.
+
+        :param graph_or_vertices: ``NotationGraph`` instance to process
+        or a list of ``Node``s
+
+        :return: Tuple of onsets, durations, and duration without modifiers
+        """
+        self.initialize_graph(graph_or_vertices)
+        return (
+            self.onsets(self.__graph.vertices),
+            self.durations(self.__graph.vertices),
+            self.durations(self.__graph.vertices, ignore_modifiers=True)
+        )
+
     def durations(self, nodes: list[Node], ignore_modifiers: bool = False) -> dict[int, Fraction]:
         """Returns a dict that contains the durations (in beats)
         of all Nodes that should be associated with a duration.
@@ -54,19 +72,20 @@ class OnsetsInferenceEngine(object):
         :param ignore_modifiers: If set, will ignore duration dots,
             tuples, and other potential duration modifiers when computing
             the durations. Effectively, this gives you classes that
-            correspond to note(head) type: whole (4.0), half (2.0),
-            quarter (1.0), eighth (0.5), etc.
+            correspond to note(head) type: whole ``Fraction(4)``, ``half Fraction(2)``,
+            quarter ``Fraction(1)``, eighth ``Fraction(1, 2)``, etc.
         """
         # Generate & return the durations dictionary.
-        _relevant_clsnames = self._CONST.classes_bearing_duration
+        _relevant_class_names = self._CONST.classes_bearing_duration
         duration_nodes = [c for c in nodes
-                          if c.class_name in _relevant_clsnames]
+                          if c.class_name in _relevant_class_names]
 
-        durations = {c.id: self.beats(c, ignore_modifiers=ignore_modifiers)
-                     for c in duration_nodes}
+        durations = {c.id: beats for c in duration_nodes
+                     if (beats := self.beats(c, ignore_modifiers=ignore_modifiers))
+                     is not None}
         return durations
 
-    def beats(self, node: Node, ignore_modifiers=False):
+    def beats(self, node: Node, ignore_modifiers=False) -> Optional[Fraction]:
         if node.class_name in self._CONST.NOTEHEAD_CLASS_NAMES:
             return self.notehead_beats(node,
                                        ignore_modifiers=ignore_modifiers)
@@ -74,17 +93,21 @@ class OnsetsInferenceEngine(object):
             return self.rest_beats(node,
                                    ignore_modifiers=ignore_modifiers)
         else:
-            raise ValueError('Cannot compute beats for object {0} of class {1};'
-                             ' beats only available for notes and rests.'
-                             ''.format(node.id, node.class_name))
+            self.__warning_or_error(
+                f"Cannot compute beats for object {node.id} of class {node.class_name};"
+                "beats only available for notes and rests: "
+                f"{', '.join(self._CONST.NOTEHEAD_CLASS_NAMES | self._CONST.REST_CLASS_NAMES)}"
+            )
+            return None
 
     def notehead_beats(self, notehead: Node, ignore_modifiers=False) -> Fraction:
         """Retrieves the duration for the given notehead, in beats.
 
         It is possible that the notehead has two stems.
-        In that case, we return all the possible durations:
+        ~~In that case, we return all the possible durations:
         usually at most two, but if there is a duration dot, then
-        there can be up to 4 possibilities.
+        there can be up to 4 possibilities.~~
+        In this case we return the longest possible duration.
 
         Grace notes currently return 0 beats.
 
@@ -93,7 +116,8 @@ class OnsetsInferenceEngine(object):
             modifiers: Duration dots, tuples, and other potential duration
             modifiers when computing the durations. Effectively, this
             gives you classes that correspond to note(head) type:
-            whole (4.0), half (2.0), quarter (1.0), eighth (0.5), etc.
+            whole ``Fraction(4)``, ``half Fraction(2)``,
+            quarter ``Fraction(1)``, eighth ``Fraction(1, 2)``, etc.
         :returns: A single possible durations for the given notehead.
             Mostly its length is just 1; for multi-stem noteheads,
             the output is reduced to just the first one.
@@ -107,23 +131,27 @@ class OnsetsInferenceEngine(object):
             self._CONST.FLAGS_AND_BEAMS)
 
         if notehead.class_name in self._CONST.GRACE_NOTEHEAD_CLASS_NAMES:
-            logger.warning('Notehead {0}: Grace notes get zero duration!'
-                            ''.format(notehead.id))
+            logger.warning(f"Notehead {notehead.id}: Grace notes get zero duration!")
             beat = [Fraction(0)]
 
         elif len(stems) > 1:
-            logger.warning('Inferring duration for multi-stem notehead: {0}'
-                            ''.format(notehead.id))
+            logger.warning(f"Inferring duration for multi-stem notehead: {notehead.id}")
             beat = self.process_multistem_notehead(notehead)
             if len(beat) > 1:
-                self.__warning_or_error('Cannot deal with multi-stem notehead'
-                                        ' where multiple durations apply.')
+                self.__warning_or_error("Cannot deal with multi-stem notehead"
+                                        " where multiple durations apply.")
                 beat = [max(beat)]
 
         elif notehead.class_name == self._CONST.NOTEHEAD_HALF or notehead.class_name == self._CONST.NOTEHEAD_WHOLE:
             if len(flags_and_beams) != 0:
                 raise ValueError(
-                    'Notehead {0} is empty, but has {1} flags and beams!'.format(notehead.id, len(flags_and_beams)))
+                    f"Notehead {notehead.id} is empty, but has {len(flags_and_beams)} flags and beams!"
+                )
+            
+            if len(stems) > 0 and notehead.class_name == ClassNamesConstants.NOTEHEAD_WHOLE:
+                self.__warning_or_error(
+                    f"{notehead.class_name} {notehead.id} should not have {len(stems)} stems."
+                )
 
             if len(stems) == 0:
                 beat = [Fraction(4)]
@@ -132,21 +160,23 @@ class OnsetsInferenceEngine(object):
 
         elif notehead.class_name == self._CONST.NOTEHEAD_FULL:
             if len(stems) == 0:
-                self.__warning_or_error('Full notehead {0} has no stem!'.format(notehead.id))
+                self.__warning_or_error(
+                    f"Full notehead {notehead.id} has no stem!"
+                )
 
             beat = [Fraction(1, 2) ** len(flags_and_beams)]
 
         else:
-            raise ValueError('Notehead {0}: unknown class_name {1}'
-                             ''.format(notehead.id, notehead.class_name))
+            raise ValueError(f"Notehead {notehead.id}: unknown class name {notehead.class_name}")
 
         if not ignore_modifiers:
             duration_modifier = self._compute_duration_modifier(notehead)
             beat = [b * duration_modifier for b in beat]
 
         if len(beat) > 1:
-            logger.warning('Notehead {0}: more than 1 duration: {1}, choosing first'
-                            ''.format(notehead.id, beat))
+            logger.warning(f"Notehead {notehead.id}: computed more than 1 possible duration: "
+                           f"{beat}, choosing first")
+        
         return beat[0]
 
     def _check_graph_init(self):
@@ -159,6 +189,111 @@ class OnsetsInferenceEngine(object):
         else:
             self.__graph: NotationGraph = NotationGraph(nodes_or_graph)
 
+    def _no_numeral_tuple_fallback(self, tuple_: Node) -> int:
+        affected_noteheads = self.__graph.parents(tuple_, class_filter=InferenceEngineConstants().classes_bearing_duration)
+        # noteheads without stems should not appear in a tuple
+        # every notehead should contribute at most one stem
+        stems = [stems for n in affected_noteheads if len(stems := self.__graph.children(n, ClassNamesConstants.STEM)) > 0]
+        logger.debug(f"Found stem groups: {[[x.id for x in xs] for xs in stems]}")
+        groups = UnionFind.merge_groups(stems)
+        logger.debug(f"Merge stem groups: {[[x.id for x in xs] for xs in groups]}")
+        return len(groups)
+
+    def compute_tuple_modifier(self, tuple_: Node) -> Fraction:
+        # Find the number in the tuple.
+        numerals = self.__graph.children(tuple_, InferenceEngineConstants.NUMERALS)
+
+        if len(numerals) == 0:
+            logger.warning(f"Tuple {tuple_.id} has no numerals!")
+        elif len(numerals) > 3:
+            logger.warning(f"Tuple {tuple_.id} has more than 3 numerals!")
+        
+        tuple_number = self.interpret_numerals(sorted(numerals, key=lambda x: x.left))
+
+        # Fallback, the list of numbers was empty or corrupted in some way,
+        # Count noteheads attached to that tuple
+        if tuple_number is None:
+            tuple_number = self._no_numeral_tuple_fallback(tuple_)
+
+        # Last note in tuple should get complementary duration
+        # to sum to a whole. Otherwise, playing brings slight trouble.
+        match tuple_number:
+            case 2:
+                # Duola makes notes *longer*
+                return Fraction(3, 2)
+            case 3:
+                return Fraction(2, 3)
+            case 4:
+                # This one also makes notes longer
+                return Fraction(4, 3)
+            case 5:
+                return Fraction(4, 5)
+            case 6:
+                # Most often done for two consecutive triolas,
+                # e.g. 16ths with a 6-tuple filling one beat
+                return Fraction(2, 3)
+            case 7:
+                # Here we get into trouble, because this one
+                # can be both 4 / 7 (7 16th in a beat)
+                # or 8 / 7 (7 32nds in a beat).
+                # In the same vein, we cannot resolve higher
+                # tuples unless we establish precedence/simultaneity.
+                logger.warning("Cannot really deal with higher tuples than 6.")
+                # For MUSCIMA++ specifically, we can cheat: there is only one
+                # septuple, which consists of 7 x 32rd in 1 beat, so they
+                # get 8 / 7.
+                logger.warning("MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.")
+                return Fraction(8, 7)
+            case 10:
+                logger.warning("MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.")
+                return Fraction(4, 5)
+            case _:
+                raise NotImplementedError(f"Notehead {tuple_.id}: Cannot deal with tuple number {tuple_number}")
+    
+    @staticmethod
+    def _cache_time_modifier_tuple(tuple_: Node, modifier: Fraction) -> None:
+        assert tuple_.class_name == ClassNamesConstants.TUPLE
+        assert modifier > 0
+        logger.debug(f"Caching time modifier for tuple {tuple_.id}, {modifier}")
+        tuple_.data[OnsetDataConstants.TUPLE_TIME_MODIFICATION] = modifier
+    
+    @staticmethod
+    def _try_decache_time_modifier_tuple(tuple_: Node) -> Optional[Fraction]:
+        assert tuple_.class_name == ClassNamesConstants.TUPLE
+        return tuple_.data.get(OnsetDataConstants.TUPLE_TIME_MODIFICATION, None)
+
+    def compute_or_decache_tuple_modifier(self, tuple_: Node, cache: bool = True) -> Fraction:
+        """
+        Tries to decache time modification value from tuple ``Node`` data.
+        If that fails, computes the value:
+        - from numbers assigned to the tuple.
+        - from the number of sub events inside the tuple (estimate).
+
+        If ``cache`` is set, caches the value
+        to the tuple ``Node`` for later usage.
+        """
+        modifier = self._try_decache_time_modifier_tuple(tuple_)
+        if modifier is not None:
+            return modifier
+        modifier = self.compute_tuple_modifier(tuple_)
+        if cache:
+            self._cache_time_modifier_tuple(tuple_, modifier)
+        return modifier
+
+    @staticmethod
+    def _duration_dots_to_modifier(ddots: list[Node]) -> Fraction:
+        """
+        The computation is as follows:
+
+        ``modifier = 1 + 1/2 + 1/4 + 1/8 + 1/16 + ... = sum from 0 to n of 1/(2^n)``
+
+        This can be simplified to:
+
+        ``modifier = 2 - 1/(2^n)``.
+        """
+        assert all(x.class_name == ClassNamesConstants.AUGMENTATION_DOT for x in ddots)
+        return 2 - (Fraction(1,2) ** len(ddots))
+
     def _compute_duration_modifier(self, notehead: Node) -> Fraction:
         """Computes the duration modifier (multiplicative, in beats)
         for the given notehead (or rest) from the tuples and duration dots.
@@ -169,70 +304,22 @@ class OnsetsInferenceEngine(object):
         """
         self._check_graph_init()
 
-        duration_modifier = 1
+        duration_modifier = Fraction(1)
         # Dealing with tuples:
-        tuples = self.children(notehead, [self._CONST.TUPLE])
+        tuples = sorted(self.children(notehead, [self._CONST.TUPLE]), key=lambda x: x.id)
+        # TODO: silently ignore multiple tuples and only choose the first one
+        # or maybe resolve this some other way
         if len(tuples) > 1:
-            raise ValueError('Notehead {0}: Cannot deal with more than one tuple'
-                             ' simultaneously.'.format(notehead.id))
+            self.__warning_or_error(
+                f"Notehead {notehead.id}: Cannot deal with more than one tuple simultaneously.")
+            logger.warning(f"Will apply duration modifiers based on tuple with the lowest id: {tuples[0].id}")
         if len(tuples) == 1:
-            tuple_ = tuples[0]
-
-            # Find the number in the tuple.
-            numerals = self.children(tuple_, InferenceEngineConstants.NUMERALS)
-
-            if len(numerals) == 0:
-                logger.warning(f"Tuple {tuple_.id} has no numerals!")
-            elif len(numerals) > 3:
-                logger.warning(f"Tuple {tuple_.id} has more than 3 numerals!")
-
-            tuple_number = self.interpret_numerals(sorted(numerals, key=lambda x: x.left))
-
-            # Fallback, the list of numbers was empty or corrupted in some way,
-            # Count noteheads attached to that tuple
-            if tuple_number is None:
-                tuple_number = len(self.__parents(tuple_, InferenceEngineConstants.NOTEHEAD_CLASS_NAMES))
-
-            # Last note in tuple should get complementary duration
-            # to sum to a whole. Otherwise, playing brings slight trouble.
-
-            if tuple_number == 2:
-                # Duola makes notes *longer*
-                duration_modifier = Fraction(3, 2)
-            elif tuple_number == 3:
-                duration_modifier = Fraction(2, 3)
-            elif tuple_number == 4:
-                # This one also makes notes longer
-                duration_modifier = Fraction(4, 3)
-            elif tuple_number == 5:
-                duration_modifier = Fraction(4, 5)
-            elif tuple_number == 6:
-                # Most often done for two consecutive triolas,
-                # e.g. 16ths with a 6-tuple filling one beat
-                duration_modifier = Fraction(2, 3)
-            elif tuple_number == 7:
-                # Here we get into trouble, because this one
-                # can be both 4 / 7 (7 16th in a beat)
-                # or 8 / 7 (7 32nds in a beat).
-                # In the same vein, we cannot resolve higher
-                # tuples unless we establish precedence/simultaneity.
-                logger.warning('Cannot really deal with higher tuples than 6.')
-                # For MUSCIMA++ specifically, we can cheat: there is only one
-                # septuple, which consists of 7 x 32rd in 1 beat, so they
-                # get 8 / 7.
-                logger.warning('MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.')
-                duration_modifier = Fraction(8, 7)
-            elif tuple_number == 10:
-                logger.warning('MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.')
-                duration_modifier = Fraction(4, 5)
-            else:
-                raise NotImplementedError(f"Notehead {notehead.id}: Cannot deal with tuple number {tuple_number}")
-
+            duration_modifier = self.compute_or_decache_tuple_modifier(tuples[0])
+        
         # Duration dots
         ddots = self.children(notehead, ClassNamesConstants.AUGMENTATION_DOT)
-        dot_duration_modifier = Fraction(1)
-        for i, d in enumerate(ddots):
-            dot_duration_modifier += Fraction(1, 2) ** (i + 1)
+        dot_duration_modifier = self._duration_dots_to_modifier(ddots)
+        
         duration_modifier *= dot_duration_modifier
 
         return duration_modifier
@@ -349,18 +436,18 @@ class OnsetsInferenceEngine(object):
                                      ''.format(notehead.id))
 
         n_avg_x = notehead.top + (notehead.bottom - notehead.top) / 2.0
-        print('Notehead {0}: avg_x = {1}'.format(notehead.id, n_avg_x))
+        logger.debug('Notehead {0}: avg_x = {1}'.format(notehead.id, n_avg_x))
         f_and_b_above = []
         f_and_b_below = []
         for c in flags_and_beams:
             c_avg_x = c.top + (c.bottom - c.top) / 2.0
-            print('Beam/flag {0}: avg_x = {1}'.format(c.id, c_avg_x))
+            logger.debug('Beam/flag {0}: avg_x = {1}'.format(c.id, c_avg_x))
             if c_avg_x < n_avg_x:
                 f_and_b_above.append(c)
-                print('Appending above')
+                logger.debug('Appending above')
             else:
                 f_and_b_below.append(c)
-                print('Appending below')
+                logger.debug('Appending below')
 
         beat_above = Fraction(1, 2) ** len(f_and_b_above)
         beat_below = Fraction(1, 2) ** len(f_and_b_below)
