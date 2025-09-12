@@ -4,6 +4,7 @@ import copy
 from pathlib import Path
 from queue import Queue
 from typing import Iterable, Optional, Self, Any, TypeVar
+from collections import defaultdict
 
 from .node import Node
 from .constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
@@ -604,6 +605,54 @@ class NotationGraph(object):
 ##############################################################################
 
 
+T = TypeVar("T")
+
+class UnionFind:
+    def __init__(self):
+        self.parent = {}
+
+    def find(self, x: T):
+        # path compression
+        if self.parent.setdefault(x, x) != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, a: T, b: T):
+        ra, rb = self.find(a), self.find(b)
+        if ra != rb:
+            self.parent[rb] = ra
+    
+    @classmethod
+    def merge_groups(cls, groups: list[list[T]]) -> list[list[T]]:
+        """
+        Merges groups based on shared elements.
+
+        Example:
+            >>> UnionFind.merge_groups([["A", "B"], ["B", "C"], ["D", "E"], ["D", "E"]])
+            [["A", "B", "C"], ["D", "E"]]
+        """
+        if len(groups) == 0:
+            return [[]]
+        
+        uf = cls()
+
+        # union elements within each group
+        for group in groups:
+            if not group:
+                continue
+            first = group[0]
+            for elem in group[1:]:
+                uf.union(first, elem)
+
+        # group by root
+        merged = defaultdict(list)
+        for group in groups:
+            for elem in group:
+                merged[uf.find(elem)].append(elem)
+
+        # remove duplicates inside each component
+        return [list(set(members)) for members in merged.values()]
+
 
 def group_staffs_into_systems(nodes: list[Node],
                               use_fallback_measure_separators: bool = True,
@@ -633,17 +682,19 @@ def group_staffs_into_systems(nodes: list[Node],
     graph = NotationGraph(nodes)
     staff_groups = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
     
-    # Do not consider staffs that have no notehead or rest children.
-    empty_staffs = [node for node in graph.filter_vertices(ClassNamesConstants.STAFF)
-                    if (len([inlink for inlink in node.inlinks
-                          if ((graph[inlink].class_name in _CONST.NOTEHEAD_CLASS_NAMES) or
-                              (graph[inlink].class_name in _CONST.REST_CLASS_NAMES))]) == 0)]
+    def is_empty_staff(staff: Node, graph: NotationGraph) -> bool:
+        durables = graph.parents(staff, class_filter=InferenceEngineConstants().classes_bearing_duration)
+        return len(durables) == 0
+
+    empty_staffs = [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
         logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
+    # For simplicity, add non-empty staffs as potential systems.
+    staff_groups += [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if s not in empty_staffs]
+
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
-
     if use_fallback_measure_separators:
         # Collect measure separators, sort them left to right
         measure_separators = graph.filter_vertices(_CONST.MEASURE_SEPARATOR_CLASS_NAMES)
@@ -664,41 +715,16 @@ def group_staffs_into_systems(nodes: list[Node],
         else:
             staff_groups += measure_separators
 
-    if len(staff_groups) != 0:
-        staffs_per_group = {node.id: [graph[i] for i in sorted(node.inlinks)
-                                      if graph[i].class_name == ClassNamesConstants.STAFF] for node in
-                            staff_groups}
-        # Build hierarchy of staff_grouping based on inclusion
-        # between grouped staff sets.
-        outer_staff_groups = []
-        for staff_group in sorted(staff_groups, key=lambda c: c.left):
-            sg_staffs = staffs_per_group[staff_group.id]
-            is_outer = True
-            for other_sg in staff_groups:
-                if staff_group.id == other_sg.id:
-                    continue
-                other_sg_staffs = staffs_per_group[other_sg.id]
-                if len([s for s in sg_staffs
-                        if s not in other_sg_staffs]) == 0:
-                    # If the staff groups are equal (can happen with
-                    # a mixture of measure-separators and staff-groupings),
-                    # only the leftmost should be an outer grouping.
-                    if set(sg_staffs) == set(other_sg_staffs):
-                        if other_sg in outer_staff_groups:
-                            is_outer = False
-                    else:
-                        is_outer = False
-            if is_outer:
-                outer_staff_groups.append(staff_group)
-
-        systems = [[c for c in graph.filter_vertices(ClassNamesConstants.STAFF) if (c.id in staff_group.inlinks)]
-                   for staff_group in
-                   outer_staff_groups]
-    else:
-        # Here we use the empty staff fallback
-        systems = [[c] for c in graph.filter_vertices(ClassNamesConstants.STAFF) if (c not in empty_staffs)]
-
-    return systems
+    if len(staff_groups) == 0:
+        return [[]]
+    
+    staffs_per_group = {node.id: graph.children(node, class_filter=ClassNamesConstants.STAFF) for node in staff_groups}
+    
+    merged = UnionFind.merge_groups(list(staffs_per_group.values()))
+    for group in merged:
+        group.sort(key=lambda x: x.top)
+    merged.sort(key=lambda x: x[0].top)
+    return merged
 
 
 def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
