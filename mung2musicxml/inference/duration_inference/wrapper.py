@@ -5,6 +5,7 @@ from typing import Optional, Self, Any
 from mung2midi.inference import BaseOnsetsInferenceStrategy, OnsetsInferenceEngine
 from mung.graph import group_staffs_into_systems
 from mung.constants import OnsetDataConstants
+from dataclasses import dataclass
 
 from ...logger import logger
 
@@ -297,20 +298,25 @@ class _GraceOnsetInference:
         return _GraceGroupWrapper.compute_multiple(ggw)
 
 
+@dataclass(frozen=True)
+class OnsetsInferenceEngineWrapperStrategy(BaseOnsetsInferenceStrategy):
+    link_sinks_to_sources_at_ends_and_starts_of_systems: bool = False
+    with_grace_notes: bool = True
+
+
 class OnsetInferenceEngineWrapper:
     _CONST = InferenceEngineConstants()
 
-    def __init__(self, strategy: Optional[BaseOnsetsInferenceStrategy] = None):
+    def __init__(self, strategy: Optional[OnsetsInferenceEngineWrapperStrategy] = None):
         if strategy is None:
-            strategy = BaseOnsetsInferenceStrategy()
+            strategy = OnsetsInferenceEngineWrapperStrategy()
         self._strategy = strategy
         self._engine = OnsetsInferenceEngine(self._strategy)
         self._grace_engine = _GraceOnsetInference(self._strategy)
         
     def __call__(
             self,
-            graph: NotationGraph,
-            with_grace: bool = False
+            graph: NotationGraph
         ) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
         """
         Computes the onsets and durations for duration-related symbols,
@@ -349,7 +355,7 @@ class OnsetInferenceEngineWrapper:
         for sysw in sysws:
             sysw.is_synchronized()
 
-        if with_grace:
+        if self._strategy.with_grace_notes:
             g_onsets, g_durations, g_durations_wo_m = self._grace_engine(graph)
             onsets |= g_onsets
             durations |= g_durations

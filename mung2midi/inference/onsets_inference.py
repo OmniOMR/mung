@@ -14,6 +14,7 @@ from .precedence_graph_node import PrecedenceGraphNode
 from dataclasses import dataclass
 from ..logger import logger
 
+
 @dataclass(frozen=True)
 class BaseOnsetsInferenceStrategy(object):
     permissive_desynchronization: bool = True
@@ -1351,7 +1352,7 @@ class OnsetsInferenceEngine(object):
 
         precedence_graph = self._infer_precedence_from_annotations(nodes)
         for node in precedence_graph:
-            node.onset = 0
+            node.onset = Fraction(0)
 
         # Once we have the precedence graph, we need to walk it.
         # It is a DAG, so we simply do a BFS from each source.
