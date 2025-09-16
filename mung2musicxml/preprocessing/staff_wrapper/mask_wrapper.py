@@ -5,16 +5,26 @@ class MaskAverageIndexWrapper:
     def __init__(self, mask: np.ndarray):
         if not self.is_binary_2d_array(mask):
             raise ValueError("Unsupported mask type")
-        self.__mask = mask.astype(np.uint8)
-        self.__counts = self.average_index_of_ones_in_columns(mask)
+        
+        self._height, self._width = mask.shape
+        self._mask = mask.astype(np.uint8)
 
     def __getitem__(self, index: int) -> int:
-        if index < 0:
-            return self.__counts[0]
-        if index >= self.__counts.shape[0]:
-            return self.__counts[-1]
-        return self.__counts[index]
+        """
+        Returns the average 1s row index in given column.
 
+        If the given index is outside of the bounds of the mask,
+        returns the closest value inside the mask.
+
+        Indexing with ``-1`` results in a computation at index ``0`` -
+        the closest index that is in bounds.
+        """
+        if index < 0:
+            return self.average_row_index_of_ones_with_neighbors(0)
+        if index >= self._width:
+            return self.average_row_index_of_ones_with_neighbors(self._width - 1)
+        return self.average_row_index_of_ones_with_neighbors(index)
+    
     @staticmethod
     def is_binary_2d_array(arr: np.ndarray) -> bool:
         return (
@@ -23,24 +33,52 @@ class MaskAverageIndexWrapper:
             and bool(np.isin(arr, [0, 1]).all())
         )
     
-    @staticmethod
-    def average_index_of_ones_in_columns(mask: np.ndarray) -> np.ndarray:
-        assert MaskAverageIndexWrapper.is_binary_2d_array(mask)
+    def average_row_index_of_ones_with_neighbors(self, col_idx: int) -> int:
+        """
+        Return the average row index of 1s in the given column of a binary 2D numpy array.
+        If the column has no 1s, look left and right until 1s are found.
+        If both directions have 1s, average them weighted by distance.
+        If only one direction has 1s (edge is hit on the other one), use that side.
+        If no 1s exist at all, raise an error, illegal mask.
+        """
+        # helper to get mean row index of 1s in a column
+        def mean_in_col(c: int):
+            rows = np.where(self._mask[:, c] == 1)[0]
+            return rows.mean() if rows.size > 0 else None
 
-        rows, _ = mask.shape
-        row_indices = np.arange(rows)[:, ...].reshape(-1, 1)
-        # Count of 1s per column
-        counts = mask.sum(axis=0)
-        
-        # Sum of indices where 1s are
-        weighted = mask * row_indices
-        sums = weighted.sum(axis=0)
+        # check target column first
+        base_mean = mean_in_col(col_idx)
+        if base_mean is not None:
+            return int(base_mean)
 
-        # Avoid division by zero -- set result to -1 where count is 0
-        with np.errstate(divide="ignore", invalid="ignore"):
-            averages = sums / counts
-            averages[counts == 0] = -1
-            averages: np.ndarray
+        left_mean = None
+        right_mean = None
+        left_index = right_index = None #type: ignore
+
+        # search left
+        for index in range(col_idx - 1, 0 - 1, -1):
+            val = mean_in_col(index)
+            if val is not None:
+                left_mean = val
+                left_index = index
+                break
+
+        # search right
+        for index in range(col_idx + 1, self._width):
+            val = mean_in_col(index)
+            if val is not None:
+                right_mean = val
+                right_index = index
+                break
         
-        return averages.astype(int)
-            
+        # combine results
+        if left_mean is not None and right_mean is not None:
+            right_index: int
+            left_index: int
+            return int(left_mean + (right_mean - left_mean) * (col_idx - left_index) / (right_index - left_index))
+        elif left_mean is not None:
+            return int(left_mean)
+        elif right_mean is not None:
+            return int(right_mean)
+        else:
+            raise ValueError("Mask full of zeros is illegal")
