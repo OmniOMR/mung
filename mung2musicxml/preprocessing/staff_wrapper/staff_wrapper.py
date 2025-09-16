@@ -62,7 +62,7 @@ class StaffWrapper:
         return abs(node.middle[0] - self.staff.middle[0])
     
     def get_contained_nodes_bearing_duration(self) -> list[Node]:
-        return self._graph.parents(self.staff, self._CONST.classes_bearing_duration)
+        return self._graph.parents(self.staff, self._CONST.CLASSES_BEARING_DURATIONS)
         
     def get_end_onset(self) -> Fraction:
         """
@@ -279,11 +279,11 @@ class StaffWrapper:
         return merged
 
     def get_sinks(self) -> list[Node]:
-        all_related_symbols = self._graph.parents(self.staff, self._CONST.classes_bearing_duration)
+        all_related_symbols = self._graph.parents(self.staff, self._CONST.CLASSES_BEARING_DURATIONS)
         return [x for x in all_related_symbols if x.is_precedence_sink]
 
     def get_sources(self) -> list[Node]:
-        all_related_symbols = self._graph.parents(self.staff, self._CONST.classes_bearing_duration)
+        all_related_symbols = self._graph.parents(self.staff, self._CONST.CLASSES_BEARING_DURATIONS)
         return [x for x in all_related_symbols if x.is_precedence_source]
     
     def get_sink_closure(self) -> list[list[Node]]:

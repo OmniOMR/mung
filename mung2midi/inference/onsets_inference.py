@@ -77,7 +77,7 @@ class OnsetsInferenceEngine(object):
             quarter ``Fraction(1)``, eighth ``Fraction(1, 2)``, etc.
         """
         # Generate & return the durations dictionary.
-        _relevant_class_names = self._CONST.classes_bearing_duration
+        _relevant_class_names = self._CONST.CLASSES_BEARING_DURATIONS
         duration_nodes = [c for c in nodes
                           if c.class_name in _relevant_class_names]
 
@@ -191,7 +191,7 @@ class OnsetsInferenceEngine(object):
             self.__graph: NotationGraph = NotationGraph(nodes_or_graph)
 
     def _no_numeral_tuple_fallback(self, tuple_: Node) -> int:
-        affected_noteheads = self.__graph.parents(tuple_, class_filter=InferenceEngineConstants().classes_bearing_duration)
+        affected_noteheads = self.__graph.parents(tuple_, class_filter=InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
         # noteheads without stems should not appear in a tuple
         # every notehead should contribute at most one stem
         stems = [stems for n in affected_noteheads if len(stems := self.__graph.children(n, ClassNamesConstants.STEM)) > 0]
@@ -488,7 +488,7 @@ class OnsetsInferenceEngine(object):
         """
         self._check_graph_init()
 
-        _relevant_class_names = self._CONST.classes_bearing_duration
+        _relevant_class_names = self._CONST.CLASSES_BEARING_DURATIONS
         # precedence_nodes = [c for c in nodes
         #                     if c.class_name in _relevant_clsnames]
         precedence_nodes = self.__graph.filter_vertices(_relevant_class_names)
@@ -948,7 +948,7 @@ class OnsetsInferenceEngine(object):
         # and rests; the repeat-measure object that would normally
         # affect duration is handled through measure node durations.
         onset_objs = [c for c in nodes
-                      if c.class_name in self._CONST.classes_bearing_duration]
+                      if c.class_name in self._CONST.CLASSES_BEARING_DURATIONS]
 
         # Assign onset-carrying objects to measures (their left msep).
         # (This is *not* done by assigning outlinks to measure nodes,

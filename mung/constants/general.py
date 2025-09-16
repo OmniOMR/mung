@@ -1,0 +1,2 @@
+WESTERN_NOTATION_STAFFLINE_COUNT = 5
+STEP_ORDER = ["C", "D", "E", "F", "G", "A", "B"]

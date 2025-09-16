@@ -29,7 +29,7 @@ class _OnsetStaffWrapper:
     
     @classmethod
     def from_staff(cls, graph: NotationGraph, staff: Node) -> Self:
-        nodes = graph.parents(staff, InferenceEngineConstants().classes_bearing_duration)
+        nodes = graph.parents(staff, InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
         return cls(nodes, staff)
     
     def get_start_onset(self) -> Fraction:
@@ -331,7 +331,7 @@ class OnsetInferenceEngineWrapper:
         """
         onsets, durations, durations_wo_m = self._engine(graph)
 
-        for node in graph.filter_vertices(self._CONST.classes_bearing_duration):
+        for node in graph.filter_vertices(self._CONST.CLASSES_BEARING_DURATIONS):
             _add_onset_data_to_node(
                 node, onsets[node.id], durations[node.id], durations_wo_m[node.id]
             )

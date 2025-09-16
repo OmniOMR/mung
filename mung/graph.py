@@ -683,7 +683,7 @@ def group_staffs_into_systems(nodes: list[Node],
     staff_groups = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
     
     def is_empty_staff(staff: Node, graph: NotationGraph) -> bool:
-        durables = graph.parents(staff, class_filter=InferenceEngineConstants().classes_bearing_duration)
+        durables = graph.parents(staff, class_filter=InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
         return len(durables) == 0
 
     empty_staffs = [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if is_empty_staff(s, graph)]
