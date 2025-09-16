@@ -260,7 +260,7 @@ def staffline_surroundings_mask(staffline_node: Node) -> tuple[numpy.ndarray, nu
     return bmask, tmask
 
 
-def build_staff_nodes(nodes: list[Node]) -> list[Node]:
+def build_staff_nodes(nodes: list[Node], build_links: bool = True) -> list[Node]:
     """Derives staff objects from staffline objects.
 
     Assumes each staff has 5 stafflines.
@@ -308,12 +308,13 @@ def build_staff_nodes(nodes: list[Node]) -> list[Node]:
         staffs.append(staff)
         next_node_id += 1
 
-    for i, sc in enumerate(staffs):
-        sl_from = 5 * i
-        sl_to = 5 * (i + 1)
-        for sl in stafflines[sl_from:sl_to]:
-            sl.inlinks.append(sc.id)
-            sc.outlinks.append(sl.id)
+    if build_links:
+        for i, sc in enumerate(staffs):
+            sl_from = 5 * i
+            sl_to = 5 * (i + 1)
+            for sl in stafflines[sl_from:sl_to]:
+                sl.inlinks.append(sc.id)
+                sc.outlinks.append(sl.id)
 
     return staffs
 
