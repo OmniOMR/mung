@@ -93,13 +93,13 @@ class InferenceEngineConstants(ClassNamesConstants):
 
     FLAGS_AND_BEAMS = list(FLAGS_CLASS_NAMES + BEAM_CLASS_NAMES)
 
-    ACCIDENTAL_CLASS_NAMES = {
-        ClassNamesConstants.ACCIDENTAL_SHARP: 1,
-        ClassNamesConstants.ACCIDENTAL_FLAT: -1,
-        ClassNamesConstants.ACCIDENTAL_NATURAL: 0,
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP: 2,
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT: -2,
-    }
+    ACCIDENTAL_CLASS_NAMES = [
+        ClassNamesConstants.ACCIDENTAL_SHARP,
+        ClassNamesConstants.ACCIDENTAL_FLAT,
+        ClassNamesConstants.ACCIDENTAL_NATURAL,
+        ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP,
+        ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT,
+    ]
 
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
         0: 'C',
