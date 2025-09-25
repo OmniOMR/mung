@@ -1,8 +1,8 @@
-from .class_names import ClassNamesConstants
+from .class_names import ClassNamesConstants as C
 from .general import STEP_ORDER
 
 
-class InferenceEngineConstants(ClassNamesConstants):
+class InferenceEngineConstants(C):
     """This class stores the constants used for pitch inference."""
 
     ON_STAFFLINE_RATIO_THRESHOLD = 0.2
@@ -13,92 +13,97 @@ class InferenceEngineConstants(ClassNamesConstants):
     on the l.l. and is next to it.'''
     
     STAFF_CLASSES = [
-        ClassNamesConstants.STAFFLINE,
-        ClassNamesConstants.STAFFSPACE,
-        ClassNamesConstants.STAFF
+        C.STAFFLINE,
+        C.STAFFSPACE,
+        C.STAFF
     ]
     STAFFLINE_CLASS_NAMES = [
-        ClassNamesConstants.STAFFLINE,
-        ClassNamesConstants.STAFFSPACE
+        C.STAFFLINE,
+        C.STAFFSPACE
     ]
 
     STAFFLINE_LIKE_CLASS_NAMES = [
-        ClassNamesConstants.STAFFLINE,
-        ClassNamesConstants.LEGER_LINE
+        C.STAFFLINE,
+        C.LEGER_LINE
     ]
 
     STAFF_RELATED_CLASS_NAMES = {
-        ClassNamesConstants.STAFF_GROUPING,
-        ClassNamesConstants.MEASURE_SEPARATOR,
-        ClassNamesConstants.TIME_SIGNATURE,
-        ClassNamesConstants.KEY_SIGNATURE,
-        ClassNamesConstants.G_CLEF,
-        ClassNamesConstants.C_CLEF,
-        ClassNamesConstants.F_CLEF
+        C.STAFF_GROUPING,
+        C.MEASURE_SEPARATOR,
+        C.TIME_SIGNATURE,
+        C.KEY_SIGNATURE,
+        C.G_CLEF,
+        C.C_CLEF,
+        C.F_CLEF
     }
 
     SYSTEM_LEVEL_CLASS_NAMES = [
-        ClassNamesConstants.STAFF_GROUPING,
-        ClassNamesConstants.MEASURE_SEPARATOR
+        C.STAFF_GROUPING,
+        C.MEASURE_SEPARATOR
     ]
 
     NOTEHEAD_CLASS_NAMES = [
-        ClassNamesConstants.NOTEHEAD_FULL,
-        ClassNamesConstants.NOTEHEAD_HALF,
-        ClassNamesConstants.NOTEHEAD_WHOLE,
-        ClassNamesConstants.NOTEHEAD_FULL_SMALL,
-        ClassNamesConstants.NOTEHEAD_HALF_SMALL,
+        C.NOTEHEAD_FULL,
+        C.NOTEHEAD_HALF,
+        C.NOTEHEAD_WHOLE,
+        C.NOTEHEAD_FULL_SMALL,
+        C.NOTEHEAD_HALF_SMALL,
     ]
 
     NOTEHEADS_EMPTY = [
-        ClassNamesConstants.NOTEHEAD_HALF,
-        ClassNamesConstants.NOTEHEAD_WHOLE
+        C.NOTEHEAD_HALF,
+        C.NOTEHEAD_WHOLE
     ]
 
     GRACE_NOTEHEAD_CLASS_NAMES = [
-        ClassNamesConstants.NOTEHEAD_FULL_SMALL,
-        ClassNamesConstants.NOTEHEAD_HALF_SMALL
+        C.NOTEHEAD_FULL_SMALL,
+        C.NOTEHEAD_HALF_SMALL
     ]
 
     NONGRACE_NOTEHEAD_CLASS_NAMES = [
-        ClassNamesConstants.NOTEHEAD_FULL,
-        ClassNamesConstants.NOTEHEAD_HALF,
-        ClassNamesConstants.NOTEHEAD_WHOLE
+        C.NOTEHEAD_FULL,
+        C.NOTEHEAD_HALF,
+        C.NOTEHEAD_WHOLE
     ]
 
     CLEF_CLASS_NAMES = [
-        ClassNamesConstants.G_CLEF,
-        ClassNamesConstants.C_CLEF,
-        ClassNamesConstants.F_CLEF
+        C.G_CLEF,
+        C.C_CLEF,
+        C.F_CLEF
     ]
 
     MEASURE_SEPARATOR_CLASS_NAMES = [
-        ClassNamesConstants.MEASURE_SEPARATOR,
+        C.MEASURE_SEPARATOR,
     ]
 
     FLAGS_CLASS_NAMES = [
-        ClassNamesConstants.FLAG_8TH_UP,
-        ClassNamesConstants.FLAG_8TH_DOWN,
-        ClassNamesConstants.FLAG_16TH_UP,
-        ClassNamesConstants.FLAG_16TH_DOWN,
-        ClassNamesConstants.FLAG_32ND_UP,
-        ClassNamesConstants.FLAG_32ND_DOWN,
-        ClassNamesConstants.FLAG_64TH_UP,
-        ClassNamesConstants.FLAG_64TH_DOWN,
+        C.FLAG_8TH_UP,
+        C.FLAG_8TH_DOWN,
+        C.FLAG_16TH_UP,
+        C.FLAG_16TH_DOWN,
+        C.FLAG_32ND_UP,
+        C.FLAG_32ND_DOWN,
+        C.FLAG_64TH_UP,
+        C.FLAG_64TH_DOWN,
     ]
 
     BEAM_CLASS_NAMES = [
-        ClassNamesConstants.BEAM,
+        C.BEAM,
     ]
 
     FLAGS_AND_BEAMS = list(FLAGS_CLASS_NAMES + BEAM_CLASS_NAMES)
 
     ACCIDENTAL_CLASS_NAMES = [
-        ClassNamesConstants.ACCIDENTAL_SHARP,
-        ClassNamesConstants.ACCIDENTAL_FLAT,
-        ClassNamesConstants.ACCIDENTAL_NATURAL,
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP,
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT,
+        C.ACCIDENTAL_SHARP,
+        C.ACCIDENTAL_FLAT,
+        C.ACCIDENTAL_NATURAL,
+        C.ACCIDENTAL_DOUBLE_SHARP,
+        C.ACCIDENTAL_DOUBLE_FLAT,
+    ]
+
+    HAIRPINS = [
+        C.DYNAMIC_CRESHENDO,
+        C.DYNAMIC_DIMINUENDO,
     ]
 
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
@@ -150,20 +155,20 @@ class InferenceEngineConstants(ClassNamesConstants):
 
     # FROM clef --> TO clef. Imagine this on inline accidental delta
     CLEF_CHANGE_DELTA = {
-        ClassNamesConstants.G_CLEF: {
-            ClassNamesConstants.G_CLEF: 0,
-            ClassNamesConstants.C_CLEF: 6,
-            ClassNamesConstants.F_CLEF: 12,
+        C.G_CLEF: {
+            C.G_CLEF: 0,
+            C.C_CLEF: 6,
+            C.F_CLEF: 12,
         },
-        ClassNamesConstants.C_CLEF: {
-            ClassNamesConstants.G_CLEF: -6,
-            ClassNamesConstants.C_CLEF: 0,
-            ClassNamesConstants.F_CLEF: 6,
+        C.C_CLEF: {
+            C.G_CLEF: -6,
+            C.C_CLEF: 0,
+            C.F_CLEF: 6,
         },
-        ClassNamesConstants.F_CLEF: {
-            ClassNamesConstants.G_CLEF: -12,
-            ClassNamesConstants.C_CLEF: -6,
-            ClassNamesConstants.F_CLEF: 0,
+        C.F_CLEF: {
+            C.G_CLEF: -12,
+            C.C_CLEF: -6,
+            C.F_CLEF: 0,
         }
     }
 
@@ -171,63 +176,63 @@ class InferenceEngineConstants(ClassNamesConstants):
     # Wrap around twice for easier indexing.
 
     ACCIDENTAL_CODES = {
-        ClassNamesConstants.ACCIDENTAL_SHARP: '#',
-        ClassNamesConstants.ACCIDENTAL_FLAT: 'b',
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP: 'x',
-        ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT: 'bb'
+        C.ACCIDENTAL_SHARP: '#',
+        C.ACCIDENTAL_FLAT: 'b',
+        C.ACCIDENTAL_DOUBLE_SHARP: 'x',
+        C.ACCIDENTAL_DOUBLE_FLAT: 'bb'
     }
 
     REST_CLASS_NAMES = [
-        ClassNamesConstants.REST_WHOLE,
-        ClassNamesConstants.REST_HALF,
-        ClassNamesConstants.REST_QUARTER,
-        ClassNamesConstants.REST_8TH,
-        ClassNamesConstants.REST_16TH,
-        ClassNamesConstants.REST_32ND,
-        ClassNamesConstants.REST_64TH,
-        ClassNamesConstants.MULTI_MEASURE_REST,
-        ClassNamesConstants.REST_BREVE,
-        ClassNamesConstants.REST_LONGA
+        C.REST_WHOLE,
+        C.REST_HALF,
+        C.REST_QUARTER,
+        C.REST_8TH,
+        C.REST_16TH,
+        C.REST_32ND,
+        C.REST_64TH,
+        C.MULTI_MEASURE_REST,
+        C.REST_BREVE,
+        C.REST_LONGA
     ]
 
     MEASURE_LASTING_CLASS_NAMES = [
-        ClassNamesConstants.REST_WHOLE,
-        ClassNamesConstants.REST_BREVE,
-        ClassNamesConstants.REST_LONGA,
-        ClassNamesConstants.MULTI_MEASURE_REST,
-        ClassNamesConstants.REPEAT_ONE_BAR
+        C.REST_WHOLE,
+        C.REST_BREVE,
+        C.REST_LONGA,
+        C.MULTI_MEASURE_REST,
+        C.REPEAT_ONE_BAR
     ]
 
     TIME_SIGNATURES = [
-        ClassNamesConstants.TIME_SIGNATURE
+        C.TIME_SIGNATURE
     ]
 
     TIME_SIGNATURE_MEMBERS = [
-        ClassNamesConstants.TIME_SIG_COMMON,
-        ClassNamesConstants.TIME_SIG_CUT_COMMON,
-        ClassNamesConstants.Numerals.n0.value,
-        ClassNamesConstants.Numerals.n1.value,
-        ClassNamesConstants.Numerals.n2.value,
-        ClassNamesConstants.Numerals.n3.value,
-        ClassNamesConstants.Numerals.n4.value,
-        ClassNamesConstants.Numerals.n5.value,
-        ClassNamesConstants.Numerals.n6.value,
-        ClassNamesConstants.Numerals.n7.value,
-        ClassNamesConstants.Numerals.n8.value,
-        ClassNamesConstants.Numerals.n9.value
+        C.TIME_SIG_COMMON,
+        C.TIME_SIG_CUT_COMMON,
+        C.N0,
+        C.N1,
+        C.N2,
+        C.N3,
+        C.N4,
+        C.N5,
+        C.N6,
+        C.N7,
+        C.N8,
+        C.N9,
     ]
 
     NUMERALS = [
-        ClassNamesConstants.Numerals.n0.value,
-        ClassNamesConstants.Numerals.n1.value,
-        ClassNamesConstants.Numerals.n2.value,
-        ClassNamesConstants.Numerals.n3.value,
-        ClassNamesConstants.Numerals.n4.value,
-        ClassNamesConstants.Numerals.n5.value,
-        ClassNamesConstants.Numerals.n6.value,
-        ClassNamesConstants.Numerals.n7.value,
-        ClassNamesConstants.Numerals.n8.value,
-        ClassNamesConstants.Numerals.n9.value
+        C.N0,
+        C.N1,
+        C.N2,
+        C.N3,
+        C.N4,
+        C.N5,
+        C.N6,
+        C.N7,
+        C.N8,
+        C.N9,
     ]
 
     @property
@@ -239,7 +244,7 @@ class InferenceEngineConstants(ClassNamesConstants):
         + self.REST_CLASS_NAMES
         + self.MEASURE_SEPARATOR_CLASS_NAMES
         + self.TIME_SIGNATURES
-        + [ClassNamesConstants.REPEAT_ONE_BAR]
+        + [C.REPEAT_ONE_BAR]
         ))
 
     @property

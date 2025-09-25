@@ -1,6 +1,6 @@
-from enum import Enum
 from fractions import Fraction
 from typing import Optional
+
 
 class ClassNamesConstants:
     """
@@ -81,64 +81,64 @@ class ClassNamesConstants:
         :param rest_name: The rest class name.
         :return: The duration of the rest as a Fraction.
         """
+        C = ClassNamesConstants
         _LOOK_UP = {
-            ClassNamesConstants.REST_LONGA: Fraction(16, 1),  # !!! We should find the Time Signature.
-            ClassNamesConstants.REST_BREVE: Fraction(8, 1),  # !!! We should find the Time Signature.
-            ClassNamesConstants.REST_WHOLE: Fraction(4, 1),  # !!! We should find the Time Signature.
-            ClassNamesConstants.REST_HALF: Fraction(2, 1),
-            ClassNamesConstants.REST_QUARTER: Fraction(1, 1),
-            ClassNamesConstants.REST_8TH: Fraction(1, 2),
-            ClassNamesConstants.REST_16TH: Fraction(1, 4),
-            ClassNamesConstants.REST_32ND: Fraction(1, 8),
-            ClassNamesConstants.REST_64TH: Fraction(1, 16),
+            C.REST_LONGA: Fraction(16, 1),  # !!! We should find the Time Signature.
+            C.REST_BREVE: Fraction(8, 1),  # !!! We should find the Time Signature.
+            C.REST_WHOLE: Fraction(4, 1),  # !!! We should find the Time Signature.
+            C.REST_HALF: Fraction(2, 1),
+            C.REST_QUARTER: Fraction(1, 1),
+            C.REST_8TH: Fraction(1, 2),
+            C.REST_16TH: Fraction(1, 4),
+            C.REST_32ND: Fraction(1, 8),
+            C.REST_64TH: Fraction(1, 16),
             # Technically, these two should just apply time sig.,
             # but the measure-factorized precedence graph
             # means these durations never have sounding
             # descendants anyway:
-            ClassNamesConstants.MULTI_MEASURE_REST: Fraction(4, 1),
-            ClassNamesConstants.REPEAT_ONE_BAR: Fraction(4, 1),
+            C.MULTI_MEASURE_REST: Fraction(4, 1),
+            C.REPEAT_ONE_BAR: Fraction(4, 1),
         }
         duration = _LOOK_UP.get(rest_name, None)
         if duration is None:
             raise ValueError(f"Unknown rest name \"{rest_name}\"")
         return duration
 
-    class Numerals(Enum):
+    N0 = "numeral0"
+    N1 = "numeral1"
+    N2 = "numeral2"
+    N3 = "numeral3"
+    N4 = "numeral4"
+    N5 = "numeral5"
+    N6 = "numeral6"
+    N7 = "numeral7"
+    N8 = "numeral8"
+    N9 = "numeral9"
 
-        n0 = "numeral0"
-        n1 = "numeral1"
-        n2 = "numeral2"
-        n3 = "numeral3"
-        n4 = "numeral4"
-        n5 = "numeral5"
-        n6 = "numeral6"
-        n7 = "numeral7"
-        n8 = "numeral8"
-        n9 = "numeral9"
-
-        @classmethod
-        def interpret(cls, numeral_list: list[str] | str) -> Optional[int]:
-            if isinstance(numeral_list, str):
-                numeral_list = [numeral_list]
-            if len(numeral_list) == 0:
+    @classmethod
+    def interpret_numerals(cls, numeral_list: list[str] | str) -> Optional[int]:
+        if isinstance(numeral_list, str):
+            numeral_list = [numeral_list]
+        if len(numeral_list) == 0:
+            return None
+        
+        C = ClassNamesConstants
+        numeral_to_digit = {
+            C.N0: 0,
+            C.N1: 1,
+            C.N2: 2,
+            C.N3: 3,
+            C.N4: 4,
+            C.N5: 5,
+            C.N6: 6,
+            C.N7: 7,
+            C.N8: 8,
+            C.N9: 9,
+        }
+        result = 0
+        for numeral in numeral_list:
+            current_num = numeral_to_digit.get(numeral, None)
+            if current_num is None:
                 return None
-
-            numeral_to_digit = {
-                cls.n0.value: 0,
-                cls.n1.value: 1,
-                cls.n2.value: 2,
-                cls.n3.value: 3,
-                cls.n4.value: 4,
-                cls.n5.value: 5,
-                cls.n6.value: 6,
-                cls.n7.value: 7,
-                cls.n8.value: 8,
-                cls.n9.value: 9,
-            }
-            result = 0
-            for numeral in numeral_list:
-                current_num = numeral_to_digit.get(numeral, None)
-                if current_num is None:
-                    return None
-                result = result * 10 + current_num
-            return result
+            result = result * 10 + current_num
+        return result
