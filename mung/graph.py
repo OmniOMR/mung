@@ -3,7 +3,7 @@ functions for manipulating notation graphs."""
 import copy
 from pathlib import Path
 from queue import Queue
-from typing import Iterable, Optional, Self, Any, TypeVar
+from typing import Iterable, Optional, Self, Any, TypeVar, Callable
 from collections import defaultdict
 
 from .node import Node
@@ -164,6 +164,44 @@ class NotationGraph(object):
         Returns a ``Node`` instance based on its id.
         """
         return self.__id_to_node_mapping[node_id]
+    
+    def _template_node_search_not_recursive_single_lookahead(
+            self,
+            node_or_id: Node | int,
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
+        """
+        Returns a list of nodes that are one layer from the given node,
+        based on the `next_node_from_node` function.
+        """
+        node_id = self.__to_id(node_or_id)
+
+        if node_id not in self.__id_to_node_mapping:
+            raise ValueError(f"Node {self.__id_to_node_mapping[node_id].id} not in graph!")
+
+        source = self[node_id]
+        children = []
+        for child in next_node_from_node(source):
+            if child.id in self.__id_to_node_mapping:
+                children.append(child)
+            else:
+                logger.warning(f"Node {child.id} not in graph, skipping")
+        return children
+    
+    def _template_filtered_node_search_not_recursive_single_lookahead(
+            self,
+            node_or_id: Node | int,
+            class_filter: Optional[Iterable[str] | str],
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
+        """
+        Adds class filter to the template function above.
+        """
+        class_filter = self.__to_iterable(class_filter)
+        return self._template_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            lambda n: (x for x in next_node_from_node(n) if class_filter is None or x.class_name in class_filter)
+        )
 
     def children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -173,47 +211,90 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
-
-        if node_id not in self.__id_to_node_mapping:
-            raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
-
-        parent = self.__id_to_node_mapping[node_id]
-        children = []
-        for child_id in parent.outlinks:
-            if child_id in self.__id_to_node_mapping:
-                child = self.__id_to_node_mapping[child_id]
-                if class_filter is None:
-                    children.append(child)
-                elif child.class_name in class_filter:
-                    children.append(child)
-        return children
-
-    def parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.outlinks)
+        )
+    
+    def precedence_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
-        Find all children of the given node. ``class_filter`` can be used to only get children of a particular class.
+        Find all precedence children of the given node. ``class_filter`` can be used to only get children of a particular class.
 
         :param node_or_id: The root ``Node`` ID or instance to search from.
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.precedence_outlinks)
+        )
+
+    def parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all parents of the given node. ``class_filter`` can be used to only get children of a particular class.
+
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.inlinks)
+        )
+    
+    def precedence_parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence parents of the given node. ``class_filter`` can be used to only get children of a particular class.
+
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.precedence_inlinks)
+        )
+    
+    def _template_node_search_recursive_dfs(
+            self,
+            node_or_id: Node | int,
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
         node_id = self.__to_id(node_or_id)
+        node = self[node_id]
+        
+        descendants: list[Node] = []
+        visited: set[Node] = set([node])
+        queue: Queue[Node] = Queue()
+        queue.put(node)
+
+        while not queue.empty():
+            current_node = queue.get()
+            if current_node != node:
+                descendants.append(current_node)
+
+            for child in next_node_from_node(current_node):
+                if child not in visited:
+                    visited.add(child)
+                    queue.put(child)
+
+        return descendants
+    
+    def _template_filtered_node_search_recursive_dfs(
+            self,
+            node_or_id: Node | int,
+            class_filter: Optional[Iterable[str] | str],
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
         class_filter = self.__to_iterable(class_filter)
-
-        if node_id not in self.__id_to_node_mapping:
-            raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
-
-        child = self.__id_to_node_mapping[node_id]
-        parents = []
-        for parent_ids in child.inlinks:
-            if parent_ids in self.__id_to_node_mapping:
-                parent = self.__id_to_node_mapping[parent_ids]
-                if class_filter is None:
-                    parents.append(parent)
-                elif parent.class_name in class_filter:
-                    parents.append(parent)
-        return parents
+        return self._template_node_search_recursive_dfs(
+            node_or_id,
+            lambda n: (x for x in next_node_from_node(n) if class_filter is None or x.class_name in class_filter)
+        )
 
     def descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -223,26 +304,25 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
+        return self._template_filtered_node_search_recursive_dfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.children(n)
+        )
+    
+    def precedence_descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence descendants of the given node. ``class_filter`` can be used to only get nodes of a particular class.
 
-        descendant_ids = []
-        visited = set([node_id])
-        queue = Queue()
-        queue.put(node_id)
-
-        while not queue.empty():
-            current_node_id = queue.get()
-            if current_node_id != node_id:
-                descendant_ids.append(current_node_id)
-
-            children = self.children(current_node_id, class_filter=class_filter)
-            for child in children:
-                if child.id not in visited:
-                    visited.add(child.id)
-                    queue.put(child.id)
-
-        return [self.__id_to_node_mapping[o] for o in descendant_ids]
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_recursive_dfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.precedence_children(n)
+        )
 
     def ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -252,23 +332,25 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
+        return self._template_filtered_node_search_recursive_dfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.parents(n)
+        )
+    
+    def precedence_ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence ancestors of the given node. ``class_filter`` can be used to only get nodes of a particular class.
 
-        ancestor_node_ids = []
-        queue = Queue()
-        queue.put(node_id)
-        while not queue.empty():
-            current_node_id = queue.get()
-            if current_node_id != node_id:
-                ancestor_node_ids.append(current_node_id)
-            parents = self.parents(current_node_id, class_filter=class_filter)
-            parent_node_ids = [parent.id for parent in parents]
-            for parent_id in parent_node_ids:
-                if parent_id not in queue.queue:
-                    queue.put(parent_id)
-
-        return [self.__id_to_node_mapping[objid] for objid in ancestor_node_ids]
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_recursive_dfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.precedence_parents(n)
+        )
 
     def has_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
         """
