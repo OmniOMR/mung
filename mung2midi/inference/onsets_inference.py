@@ -97,7 +97,7 @@ class OnsetsInferenceEngine(object):
             self.__warning_or_error(
                 f"Cannot compute beats for object {node.id} of class {node.class_name};"
                 "beats only available for notes and rests: "
-                f"{', '.join(self._CONST.NOTEHEAD_CLASS_NAMES | self._CONST.REST_CLASS_NAMES)}"
+                f"{', '.join(self._CONST.NOTEHEAD_CLASS_NAMES + self._CONST.REST_CLASS_NAMES)}"
             )
             return None
 
@@ -1196,7 +1196,7 @@ class OnsetsInferenceEngine(object):
             if n.class_name not in InferenceEngineConstants.NUMERALS:
                 raise ValueError(f"Symbol {n.id} is not a numeral!")
         numeral_names = [n.class_name for n in sorted(numerals, key=lambda x: x.left)]
-        return ClassNamesConstants.Numerals.interpret(numeral_names)
+        return ClassNamesConstants.interpret_numerals(numeral_names)
 
     def interpret_time_signature(
             self,

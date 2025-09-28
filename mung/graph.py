@@ -603,9 +603,12 @@ class NotationGraph(object):
         else:
             return False
 
-    def add_edge(self, from_id: int, to_id: int):
+    def add_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int):
         """Add an edge between the MuNGOs with ids ``from --> to``.
         If the edge is already in the graph, warns and does nothing."""
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
+
         if from_id not in self.__id_to_node_mapping:
             raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
@@ -631,11 +634,13 @@ class NotationGraph(object):
         self.__id_to_node_mapping[from_id].outlinks.append(to_id)
         self.__id_to_node_mapping[to_id].inlinks.append(from_id)
 
-    def add_precedence_edge(self, from_id: int, to_id: int):
+    def add_precedence_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int):
         """
         Add a *precedence* edge between the MuNGOs with ids ``from --> to``.
         If the edge is already in the graph, warns and does nothing.
         """
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
         if from_id not in self.__id_to_node_mapping:
             raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
@@ -661,10 +666,12 @@ class NotationGraph(object):
         from_node.add_precedence_outlinks(to_id)
         to_node.add_precedence_inlinks(from_id)
 
-    def remove_precedence_edge(self, from_id: int, to_id: int, suppress_not_in_list_error: bool = False):
+    def remove_precedence_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int, suppress_not_in_list_error: bool = False):
         """
         Removes precedence edge ``from -> to``, does **not** bridge the created gap.
         """
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
         if from_id not in self.__id_to_node_mapping:
             raise ValueError(f"Cannot remove edge from id {from_id}: not in graph!")
         if to_id not in self.__id_to_node_mapping:

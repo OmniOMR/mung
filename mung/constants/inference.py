@@ -255,4 +255,5 @@ class InferenceEngineConstants(C):
         return list(set(
         self.NONGRACE_NOTEHEAD_CLASS_NAMES
         + self.REST_CLASS_NAMES
+        + [C.REPEAT_ONE_BAR]
         ))

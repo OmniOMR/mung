@@ -19,7 +19,7 @@ class ClassNamesConstants:
     STEM = "stem"
 
     TIE_CLASS_NAME = "tie"
-    SLUR_CLASS_NAME = "slur"
+    SLUR = "slur"
 
     G_CLEF = "gClef"
     C_CLEF = "cClef"
@@ -115,8 +115,8 @@ class ClassNamesConstants:
     N8 = "numeral8"
     N9 = "numeral9"
 
-    @classmethod
-    def interpret_numerals(cls, numeral_list: list[str] | str) -> Optional[int]:
+    @staticmethod
+    def interpret_numerals(numeral_list: list[str] | str) -> Optional[int]:
         if isinstance(numeral_list, str):
             numeral_list = [numeral_list]
         if len(numeral_list) == 0:
@@ -142,3 +142,12 @@ class ClassNamesConstants:
                 return None
             result = result * 10 + current_num
         return result
+
+    @staticmethod
+    def all_class_names() -> list[str]:
+        """
+        Returns all class names defined in this class.
+        """
+        return [value for key, value in vars(ClassNamesConstants).items()
+                if isinstance(value, str) and not key.startswith("_")]
+    
