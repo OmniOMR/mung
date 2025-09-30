@@ -456,7 +456,7 @@ class OnsetsInferenceEngine(object):
         if beat_above != beat_below:
             raise NotImplementedError('Cannot deal with multi-stem note'
                                       ' that has different pre-modification'
-                                      ' durations: {0} vs {1}'
+                                      ' durations: {0} vs {1} '
                                       '{2}'.format(beat_above, beat_below, notehead.id))
 
         beat = [beat_above]
