@@ -3,7 +3,7 @@ functions for manipulating notation graphs."""
 import copy
 from pathlib import Path
 from queue import Queue
-from typing import Iterable, Optional, Self, Any, TypeVar, Callable
+from typing import Iterable, Optional, Self, Any, TypeVar, Callable, Generator
 from collections import defaultdict
 
 from .node import Node
@@ -259,15 +259,20 @@ class NotationGraph(object):
             lambda n: (self[x] for x in n.precedence_inlinks)
         )
     
-    def _template_node_search_recursive_dfs(
+    def _template_node_search_recursive_bfs(
             self,
             node_or_id: Node | int,
-            next_node_from_node: Callable[[Node], Iterable[Node]]
-    ) -> list[Node]:
+            get_next: Callable[[Node], Iterable[Node]]
+    ) -> Generator[Node, None, None]:
+        """
+        Searches through nodes using BFS.
+        Gets neighbors with ```get_next``.
+        Returns a generator off nodes.
+        """
         node_id = self.__to_id(node_or_id)
         node = self[node_id]
         
-        descendants: list[Node] = []
+        # descendants: list[Node] = []
         visited: set[Node] = set([node])
         queue: Queue[Node] = Queue()
         queue.put(node)
@@ -275,26 +280,34 @@ class NotationGraph(object):
         while not queue.empty():
             current_node = queue.get()
             if current_node != node:
-                descendants.append(current_node)
+                # descendants.append(current_node)
+                yield current_node
 
-            for child in next_node_from_node(current_node):
+            for child in get_next(current_node):
                 if child not in visited:
                     visited.add(child)
                     queue.put(child)
 
-        return descendants
+        # return descendants
     
-    def _template_filtered_node_search_recursive_dfs(
+    def _template_filtered_node_search_recursive_bfs(
             self,
             node_or_id: Node | int,
             class_filter: Optional[Iterable[str] | str],
-            next_node_from_node: Callable[[Node], Iterable[Node]]
+            get_next: Callable[[Node], Iterable[Node]]
     ) -> list[Node]:
+        """
+        Adds class filter over the found set.
+        The search will pass through all nodes, even through
+        those that are not included in the filter, but it will
+        not output them.
+        """
         class_filter = self.__to_iterable(class_filter)
-        return self._template_node_search_recursive_dfs(
+        return [x for x in self._template_node_search_recursive_bfs(
             node_or_id,
-            lambda n: (x for x in next_node_from_node(n) if class_filter is None or x.class_name in class_filter)
-        )
+            get_next)
+            if class_filter is None or x.class_name in class_filter
+        ]
 
     def descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -304,10 +317,10 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        return self._template_filtered_node_search_recursive_dfs(
+        return self._template_filtered_node_search_recursive_bfs(
             node_or_id,
             class_filter,
-            lambda n: self.children(n)
+            self.children
         )
     
     def precedence_descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
@@ -318,10 +331,10 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        return self._template_filtered_node_search_recursive_dfs(
+        return self._template_filtered_node_search_recursive_bfs(
             node_or_id,
             class_filter,
-            lambda n: self.precedence_children(n)
+            self.precedence_children
         )
 
     def ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
@@ -332,7 +345,7 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        return self._template_filtered_node_search_recursive_dfs(
+        return self._template_filtered_node_search_recursive_bfs(
             node_or_id,
             class_filter,
             lambda n: self.parents(n)
@@ -346,12 +359,12 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        return self._template_filtered_node_search_recursive_dfs(
+        return self._template_filtered_node_search_recursive_bfs(
             node_or_id,
             class_filter,
             lambda n: self.precedence_parents(n)
         )
-
+    
     def has_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
         """
         Returns true if given ``Node`` has at least one child.
@@ -375,6 +388,14 @@ class NotationGraph(object):
         """
         parents = self.parents(node_or_id, class_filter=class_filter)
         return len(parents) > 0
+    
+    def has_precedence_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
+        children = self.precedence_children(node_or_id, class_filter)
+        return len(children) > 0
+    
+    def has_precedence_parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
+        parents = self.precedence_parents(node_or_id, class_filter)
+        return len(parents) > 0
 
     def is_child_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
         """
@@ -390,8 +411,8 @@ class NotationGraph(object):
         parent = self.__id_to_node_mapping[parent_id]
         if child_id in parent.outlinks:
             return True
-        else:
-            return False
+
+        return False
 
     def is_parent_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
         """
@@ -402,6 +423,96 @@ class NotationGraph(object):
         :return: True if ``parent_node_or_id`` is a parent of ``child_node_or_id``
         """
         return self.is_child_of(child_node_or_id, parent_node_or_id)
+    
+    def is_precedence_child_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the first ``Node`` is a precedence child of the second ``Node``.
+
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is a precedence child of ``parent_node_or_id``.
+        """
+        child_id = self.__to_id(child_node_or_id)
+        parent = self.__to_node(parent_node_or_id)
+
+        if child_id in parent.precedence_outlinks:
+            return True
+        
+        return False
+    
+    def is_precedence_parent_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the first ``Node`` is a precedence parent of the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is a precedence parent of ``child_node_or_id``
+        """
+        return self.is_precedence_child_of(child_node_or_id, parent_node_or_id)
+
+    def _template_is_relation_node_search(
+            self,
+            search_from: Node | int,
+            search_for: Node | int,
+            get_next: Callable[[Node], Iterable[Node]]
+        ) -> bool:
+        search_from = self.__to_node(search_from)
+        search_for = self.__to_node(search_for)
+
+        return search_for in self._template_node_search_recursive_bfs(
+            search_from,
+            get_next
+        )
+    
+    def is_descendant_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed syntax path
+        from the second ``Node`` to the first ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is syntax descendant of ``parent_node_or_id``.
+        """
+        return self._template_is_relation_node_search(
+            parent_node_or_id, child_node_or_id,
+            self.children
+        )
+    
+    def is_ancestor_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed syntax path
+        from the first ``Node`` to the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is syntax ancestor of ``child_node_or_id``.
+        """
+        return self.is_descendant_of(child_node_or_id, parent_node_or_id)
+    
+    def is_precedence_descendant_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed precedence path
+        from the second ``Node`` to the first ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is precedence descendant of ``parent_node_or_id``.
+        """
+        return self._template_is_relation_node_search(
+            parent_node_or_id, child_node_or_id,
+            self.precedence_children
+        )
+    
+    def is_precedence_ancestor_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed precedence path
+        from the first ``Node`` to the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is precedence ancestor of ``child_node_or_id``.
+        """
+        return self.is_precedence_descendant_of(child_node_or_id, parent_node_or_id)
 
     def is_stem_direction_above(self, notehead: Node, stem: Node) -> bool:
         """Determines whether the given stem of the given notehead
@@ -610,9 +721,9 @@ class NotationGraph(object):
         to_id = self.__to_id(to_node_or_id)
 
         if from_id not in self.__id_to_node_mapping:
-            raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
+            raise NotationGraphError('Cannot add edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
-            raise NotationGraphError('Cannot remove edge to id {0}: not in graph!'.format(to_id))
+            raise NotationGraphError('Cannot add edge to id {0}: not in graph!'.format(to_id))
         
         from_node = self.__id_to_node_mapping[from_id]
         to_node = self.__id_to_node_mapping[to_id]
@@ -845,6 +956,7 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
         objects_per_staff[staff.id] = list(staff_related)
 
     return objects_per_staff
+
 
 def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     """
