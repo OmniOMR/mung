@@ -370,9 +370,21 @@ class Node(object):
         >>> node.middle
         (30, 35)
         """
-        vertical_center = self.top + self.height // 2
-        horizontal_center = self.left + self.width // 2
-        return int(vertical_center), int(horizontal_center)
+        return self.vertical_center, self.horizontal_center
+    
+    @property
+    def vertical_center(self) -> int:
+        """
+        Returns the nodes vertical center coordinate.
+        """
+        return int(self.top + self.height // 2)
+
+    @property
+    def horizontal_center(self) -> int:
+        """
+        Returns the nodes horizontal center coordinate.
+        """
+        return int(self.left + self.width // 2)
 
     @property
     def mask(self) -> Optional[np.ndarray]:
