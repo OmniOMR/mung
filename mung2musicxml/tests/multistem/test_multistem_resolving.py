@@ -194,7 +194,7 @@ class TestDoubleStemResolving(TestCase):
         self.assertSetEqual(graph.precedence_edges, expected_edges)
 
     @parameterized.expand(
-            product([C.NOTEHEAD_FULL],
+            product([C.NOTEHEAD_FULL, C.NOTEHEAD_HALF],
                     [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
                     [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
                     [-5, 5],

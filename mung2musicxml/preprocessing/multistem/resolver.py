@@ -41,7 +41,7 @@ class MultistemResolver:
         self._strategy = strategy if strategy is not None else MultistemResolverStrategy()
         if self._strategy._DEBUG_GHOST_SHIFT:
             logger.warning(f"{type(self).__name__} running in DEBUG MODE, all created noteheads will be shifted")
-        self._onset_engine = OnsetsInferenceEngine()
+        self._onset_engine = OnsetsInferenceEngine(self._strategy.ONSET_STRATEGY)
 
     def __call__(self, graph: NotationGraph) -> NotationGraph:
         return self.resolve_double_stemmed_noteheads(graph)

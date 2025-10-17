@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from mung.constants import ClassNamesConstants as C, InferenceEngineConstants as I
 
+from ...inference import OnsetsInferenceEngineWrapperStrategy
+
 
 @dataclass(frozen=True)
 class MultistemResolverStrategy:
@@ -24,6 +26,10 @@ class MultistemResolverStrategy:
     
     # If set to True, shifts the ghost notehead a bit for it to be visible
     _DEBUG_GHOST_SHIFT: bool = False
+
+    # Strategy for notehead duration inference - crucial when filling in outlinks 
+    ONSET_STRATEGY: OnsetsInferenceEngineWrapperStrategy = field(
+        default=OnsetsInferenceEngineWrapperStrategy(count_flags_and_beams_for_notehead_half=True))
 
     def __post_init__(self) -> None:
         self._validate()

@@ -147,6 +147,10 @@ class OnsetsInferenceEngine:
                                         " where multiple durations apply.")
                 beat = [max(beat)]
 
+        elif len(flags_and_beams) > 0 and notehead.class_name == C.NOTEHEAD_HALF and self.strategy.count_flags_and_beams_for_notehead_half:
+            logger.warning(f"Counting flags nad beams for {notehead.class_name} {notehead.id}")
+            beat = [Fraction(1) * (Fraction(1, 2) ** len(flags_and_beams))]
+
         elif notehead.class_name == I.NOTEHEAD_HALF or notehead.class_name == I.NOTEHEAD_WHOLE:
             if len(flags_and_beams) != 0:
                 self.__warning_or_error(

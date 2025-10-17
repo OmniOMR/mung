@@ -167,8 +167,8 @@ class PitchInferenceEngineState(object):
 
         # Shift the key and inline accidental deltas
         # according to the change.
-        assert clef is not None
         if self.current_clef is not None:
+            assert clef is not None
             transposition_delta = I.CLEF_CHANGE_DELTA[self.current_clef.class_name][clef.class_name]
             if transposition_delta != 0:
                 new_key_accidentals = {
@@ -479,8 +479,6 @@ class PitchInferenceEngine(object):
             If ``with_names`` is given, also returns id to pitch name dict.
             If ``with_pitch_objects`` is given, also returns id to ``Pitch`` object dict .
         """
-        assert self.staves is not None
-
         self.id_to_node_mapping = {c.id: c for c in nodes}
 
         # Initialize pitch temp data.
@@ -496,6 +494,7 @@ class PitchInferenceEngine(object):
         # self.durations_beats = {}
         # self.durations_beats_per_staff = {}
 
+        assert self.staves is not None
         for staff in self.staves:
             self.process_staff(staff)
             self.pitches.update(self.pitches_per_staff[staff.id])
