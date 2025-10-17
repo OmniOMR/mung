@@ -235,6 +235,16 @@ class InferenceEngineConstants(C):
         C.N9,
     ]
 
+    IN_MEASURE = (
+        TIME_SIGNATURES
+        + [C.KEY_SIGNATURE]
+        + CLEF_CLASS_NAMES
+        
+        + NOTEHEAD_CLASS_NAMES
+        + REST_CLASS_NAMES
+        + [C.REPEAT_ONE_BAR]
+    )
+
     @property
     def CLASSES_AFFECTING_ONSETS(self) -> list[str]:
         """Returns a list of Node class names for objects
@@ -247,13 +257,18 @@ class InferenceEngineConstants(C):
         + [C.REPEAT_ONE_BAR]
         ))
 
-    @property
-    def CLASSES_BEARING_DURATIONS(self) -> list[str]:
-        """Returns the list of classes that actually bear duration,
-        i.e. contribute to onsets of their descendants in the precedence
-        graph."""
-        return list(set(
-        self.NONGRACE_NOTEHEAD_CLASS_NAMES
-        + self.REST_CLASS_NAMES
+    CLASSES_BEARING_DURATIONS = (
+        NONGRACE_NOTEHEAD_CLASS_NAMES
+        + REST_CLASS_NAMES
         + [C.REPEAT_ONE_BAR]
-        ))
+    )
+    # @property
+    # def CLASSES_BEARING_DURATIONS(self) -> list[str]:
+    #     """Returns the list of classes that actually bear duration,
+    #     i.e. contribute to onsets of their descendants in the precedence
+    #     graph."""
+    #     return list(set(
+    #     self.NONGRACE_NOTEHEAD_CLASS_NAMES
+    #     + self.REST_CLASS_NAMES
+    #     + [C.REPEAT_ONE_BAR]
+    #     ))

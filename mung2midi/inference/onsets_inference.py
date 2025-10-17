@@ -5,22 +5,21 @@ import operator
 import warnings
 from fractions import Fraction
 from typing import Optional, Iterable
+from dataclasses import dataclass
 
 from mung.constants import InferenceEngineConstants, ClassNamesConstants, PrecedenceLinksConstants, OnsetDataConstants
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
-from mung.graph import UnionFind
+from mung.subevents_from_nodes import subevents_from_list_of_symbols
 from .precedence_graph_node import PrecedenceGraphNode
-from dataclasses import dataclass
 from ..logger import logger
 
 
 @dataclass(frozen=True)
-class BaseOnsetsInferenceStrategy(object):
+class OnsetsInferenceStrategy(object):
     permissive_desynchronization: bool = True
     precedence_only_for_objects_connected_to_staff: bool = True
     permissive: bool = True
-    link_sinks_to_sources_at_ends_and_starts_of_systems: bool = True
 
 
 class OnsetsInferenceEngine(object):
@@ -29,13 +28,13 @@ class OnsetsInferenceEngine(object):
 
     def __init__(
             self,
-            strategy: Optional[BaseOnsetsInferenceStrategy] = None,
+            strategy: Optional[OnsetsInferenceStrategy] = None,
             nodes_or_graph: Optional[list[Node] | NotationGraph] = None
     ):
         """Initialize the onset inference engine with the full Node
         list in a document."""
         if strategy is None:
-            strategy = BaseOnsetsInferenceStrategy()
+            strategy = OnsetsInferenceStrategy()
         
         # self.id_to_node_mapping = {c.id: c for c in nodes}
         self.strategy = strategy
@@ -87,12 +86,14 @@ class OnsetsInferenceEngine(object):
         return durations
 
     def beats(self, node: Node, ignore_modifiers=False) -> Optional[Fraction]:
-        if node.class_name in self._CONST.NOTEHEAD_CLASS_NAMES:
-            return self.notehead_beats(node,
-                                       ignore_modifiers=ignore_modifiers)
-        elif node.class_name in self._CONST.REST_CLASS_NAMES:
-            return self.rest_beats(node,
-                                   ignore_modifiers=ignore_modifiers)
+        from mung.constants import InferenceEngineConstants as I
+        from mung.constants import ClassNamesConstants as C
+        if node.class_name in I.NOTEHEAD_CLASS_NAMES:
+            return self.notehead_beats(node, ignore_modifiers=ignore_modifiers)
+        elif node.class_name in I.REST_CLASS_NAMES:
+            return self.rest_beats(node, ignore_modifiers=ignore_modifiers)
+        elif node.class_name == C.REPEAT_ONE_BAR:
+            return self.rest_beats(node, ignore_modifiers=ignore_modifiers)
         else:
             self.__warning_or_error(
                 f"Cannot compute beats for object {node.id} of class {node.class_name};"
@@ -145,7 +146,7 @@ class OnsetsInferenceEngine(object):
 
         elif notehead.class_name == self._CONST.NOTEHEAD_HALF or notehead.class_name == self._CONST.NOTEHEAD_WHOLE:
             if len(flags_and_beams) != 0:
-                raise ValueError(
+                self.__warning_or_error(
                     f"Notehead {notehead.id} is empty, but has {len(flags_and_beams)} flags and beams!"
                 )
             
@@ -194,11 +195,19 @@ class OnsetsInferenceEngine(object):
         affected_noteheads = self.__graph.parents(tuple_, class_filter=InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
         # noteheads without stems should not appear in a tuple
         # every notehead should contribute at most one stem
-        stems = [stems for n in affected_noteheads if len(stems := self.__graph.children(n, ClassNamesConstants.STEM)) > 0]
-        logger.debug(f"Found stem groups: {[[x.id for x in xs] for xs in stems]}")
-        groups = UnionFind.merge_groups(stems)
-        logger.debug(f"Merge stem groups: {[[x.id for x in xs] for xs in groups]}")
-        return len(groups)
+        subevents = subevents_from_list_of_symbols(affected_noteheads, self.__graph)
+        # wholes = [n for n in affected_noteheads if n.class_name == ClassNamesConstants.NOTEHEAD_WHOLE]
+        # # other noteheads are also special, as they can form chords
+        # noteheads = [n for n in affected_noteheads
+        #              if n.class_name in InferenceEngineConstants.NONGRACE_NOTEHEAD_CLASS_NAMES and n not in wholes]
+        # # and than there are other symbols, like rests, that cannot form chords
+        # others = [n for n in affected_noteheads if n not in wholes + noteheads]
+
+        # stems = [stems for n in noteheads if len(stems := self.__graph.children(n, ClassNamesConstants.STEM)) > 0]
+        # logger.debug(f"Found stem groups: {[[x.id for x in xs] for xs in stems]}")
+        # groups = UnionFind.merge_groups(stems)
+        logger.debug(f"Found subevents: {[[x.id for x in xs] for xs in subevents]}")
+        return len(subevents)
 
     def compute_tuple_modifier(self, tuple_: Node) -> Fraction:
         # Find the number in the tuple.
@@ -215,9 +224,13 @@ class OnsetsInferenceEngine(object):
         # Count noteheads attached to that tuple
         if tuple_number is None:
             tuple_number = self._no_numeral_tuple_fallback(tuple_)
+            logger.warning(f"Using numeral fall back, counting events: {tuple_number}")
 
         # Last note in tuple should get complementary duration
         # to sum to a whole. Otherwise, playing brings slight trouble.
+        if tuple_number > 6:
+            logger.warning("Cannot really deal with higher tuples than 6.")
+
         match tuple_number:
             case 2:
                 # Duola makes notes *longer*
@@ -239,17 +252,21 @@ class OnsetsInferenceEngine(object):
                 # or 8 / 7 (7 32nds in a beat).
                 # In the same vein, we cannot resolve higher
                 # tuples unless we establish precedence/simultaneity.
-                logger.warning("Cannot really deal with higher tuples than 6.")
                 # For MUSCIMA++ specifically, we can cheat: there is only one
                 # septuple, which consists of 7 x 32rd in 1 beat, so they
                 # get 8 / 7.
                 logger.warning("MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.")
                 return Fraction(8, 7)
+            case 9:
+                return Fraction(9, 8)
             case 10:
                 logger.warning("MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.")
                 return Fraction(4, 5)
+            case 8:
+                return Fraction(7, 8)
             case _:
-                raise NotImplementedError(f"Notehead {tuple_.id}: Cannot deal with tuple number {tuple_number}")
+                return Fraction(2, 3)
+                raise NotImplementedError(f"Tuple {tuple_.id}: Cannot deal with tuple number {tuple_number}")
     
     @staticmethod
     def _cache_time_modifier_tuple(tuple_: Node, modifier: Fraction) -> None:
@@ -349,26 +366,25 @@ class OnsetsInferenceEngine(object):
         # sig from the other symbols. This necessitates two-pass processing:
         # first get all available durations, then guess the time signatures
         # (technically this might also be needed for each measure).
+        beat: Fraction
         if (rest.class_name in self._CONST.MEASURE_LASTING_CLASS_NAMES) and not ignore_modifiers:
             base_rest_duration = self.measure_lasting_beats(rest)
-            if rest.class_name == ClassNamesConstants.REST_BREVE:
-                beat = [base_rest_duration * 2]
-            elif rest.class_name == ClassNamesConstants.REST_LONGA:
-                beat = [base_rest_duration * 4]
-            else:
-                beat = [base_rest_duration]  # Measure duration should never be ambiguous.
+            beat = base_rest_duration
+            # if rest.class_name == ClassNamesConstants.REST_BREVE:
+            #     beat = [base_rest_duration * 2]
+            # elif rest.class_name == ClassNamesConstants.REST_LONGA:
+            #     beat = [base_rest_duration * 4]
+            # else:
+            #     beat = [base_rest_duration]  # Measure duration should never be ambiguous.
 
         elif not ignore_modifiers:
             duration_modifier = self._compute_duration_modifier(rest)
-            beat = [base_rest_duration * duration_modifier]
+            beat = base_rest_duration * duration_modifier
 
         else:
-            beat = [base_rest_duration]
+            beat = base_rest_duration
 
-        if len(beat) > 1:
-            logger.warning('Rest {0}: more than 1 duration: {1}, choosing first'
-                            ''.format(rest.id, beat))
-        return beat[0]
+        return beat
 
     def measure_lasting_beats(self, node: Node) -> Fraction:
         """Find the duration of an object that lasts for an entire measure
@@ -529,11 +545,6 @@ class OnsetsInferenceEngine(object):
 
         if len(systems) == 1:
             logger.info('Single-system score, no staff chaining needed.')
-            source_nodes = [n for n in list(p_nodes.values()) if len(n.inlinks) == 0]
-            return source_nodes
-
-        if not self.strategy.link_sinks_to_sources_at_ends_and_starts_of_systems:
-            logger.info("Strategy to not connect sinks and sources applied")
             source_nodes = [n for n in list(p_nodes.values()) if len(n.inlinks) == 0]
             return source_nodes
 
@@ -1351,6 +1362,7 @@ class OnsetsInferenceEngine(object):
         self.__graph = NotationGraph(nodes)
 
         precedence_graph = self._infer_precedence_from_annotations(nodes)
+        # precedence_graph = self.infer_precedence(nodes)
         for node in precedence_graph:
             node.onset = Fraction(0)
 
@@ -1382,7 +1394,7 @@ class OnsetsInferenceEngine(object):
             #     break
 
             q = queue[qstart]
-            logger.debug('Current @{0}: {1}'.format(qstart, q.obj.id))
+            logger.debug('Current @{0}: {1} \'{2}\''.format(qstart, q.obj.id, self.__graph[q.node_id].class_name))
             logger.debug('Will add @{0}: {1}'.format(qstart, q.outlinks))
 
             qstart += 1

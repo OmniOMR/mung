@@ -131,14 +131,20 @@ class NotationGraph(object):
         class_filter = self.__to_iterable(class_filter) # type: ignore
         return [x for x in self.vertices if x.class_name in class_filter]
     
-    def collect_data(self, key: Any, class_filter: Optional[Iterable[str] | str]=None, raise_key_error: bool = False) -> dict[int, Any]:
+    def collect_data(
+            self,
+            key: Any,
+            class_filter: Optional[Iterable[str] | str] = None,
+            log_level: int = 1
+        ) -> dict[int, Any]:
         """
         Retrieves values from the ``Node`` 's data field
         as a dictionary ``{ID: values}``.
 
         :param key: Key to retrieves values from.
         :param class_filter: Optional class filter.
-        :param raise_key_error: Raise ``KeyError``, if the key is not found inside node's data.
+        :param log_level: Raise ``KeyError``, if the level is set to 2,
+            warning if 1 and suppress it, if 0.
         :return: Dictionary of node IDs to values.
         """
         if class_filter is None:
@@ -149,11 +155,14 @@ class NotationGraph(object):
         output: dict[int, Any] = {}
         for node in nodes:
             if key not in node.data:
-                message = f"Unknown key {key} for node {node.id}."
-                if raise_key_error:
-                    raise KeyError(message)
-                else:
-                    logger.info(message)
+                msg = f"Unknown key {key} for node {node.id}."
+                match log_level:
+                    case 0:
+                        pass
+                    case 1:
+                        logger.warning(msg)
+                    case _:
+                        KeyError(msg)
             else:
                 output[node.id] = node.data[key]
         
@@ -1297,35 +1306,107 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
 
 
 ##############################################################################
+from .constants import ClassNamesConstants as C
+from .constants import InferenceEngineConstants as I
+from typing import Iterable
 
-def group_by_measure(nodes: list[Node]):
-    """Groups the objects into measures.
-    Assumes the measures are consistent across staffs: no polytempi.
+def _nodes_or_graph_to_graph(nodes_or_graph: Iterable[Node] | NotationGraph) -> NotationGraph:
+    if isinstance(nodes_or_graph, NotationGraph):
+        return nodes_or_graph
+    return NotationGraph(list(nodes_or_graph))
 
-    If there are objects that span multiple measures, they are assigned
-    to all the measures they intersect.
+
+def group_by_system_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[list[Node]]:
+    """
+    Groups the objects into system measures.
 
     If no measure separators are found, assumes everything belongs
     to one measure.
 
+    :returns: A list of lists of nodes that belong to the same system measure,
+        sorted from top left to bottom right.
+    """
+    graph = _nodes_or_graph_to_graph(nodes_or_graph)
+    
+    systems = group_staffs_into_systems(graph.vertices)
+
+    def get_all_separators_from_system(staffs: list[Node], graph: NotationGraph) -> set[Node]:
+        """
+        Finds all measure separators inside a system defined by a list of staffs.
+        """
+        output: set[Node] = set()
+        for staff in staffs:
+            output.update(graph.parents(staff, class_filter=C.MEASURE_SEPARATOR))
+        
+        return output
+    
+    def get_all_in_measure_symbols_from_system(staffs: list[Node], graph: NotationGraph) -> list[Node]:
+        output: list[Node] = []
+        for staff in staffs:
+            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE):
+                if symbol in output:
+                    logger.warning(f"Symbol {symbol.class_name} {symbol.id} assigned to multiple staffs in the same system")
+                else:
+                    output.append(symbol)
+        return output
+
+    measures: list[list[Node]] = []
+    for system in systems:
+        separators = sorted(get_all_separators_from_system(system, graph), key=lambda n: n.horizontal_center)
+        symbols = get_all_in_measure_symbols_from_system(system, graph)
+
+        bins = [[] for _ in range(len(separators) + 1)]
+
+        for x in symbols:
+            for i, upper in enumerate(separators):
+                if x.horizontal_center <= upper.horizontal_center:
+                    bins[i].append(x)
+                    break
+            else:
+                bins[-1].append(x)
+
+        # remove last bin, if it is empty
+        # (there might be an unclosed measure)
+        if len(bins[-1]) == 0:
+            bins = bins[:-1]
+        
+        measures.extend(bins)
+    
+    # debug prints
+    for i, measure in enumerate(measures):
+        logger.debug(f"Found system measure {i}: {[x.id for x in measure]}")
+    
+    return measures
+
+
+def group_by_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[list[Node]]:
+    """Groups the objects into measures.
+    Assumes the measures are consistent across staffs: no polytempi.
+
     :returns: A list of Node lists corresponding to measures. The list
         is ordered left-to-right.
     """
-    graph = NotationGraph(nodes)
-    logger.debug('Find measure separators.')
+    # TODO:
+    raise NotImplementedError
+    graph = _nodes_or_graph_to_graph(nodes_or_graph)
+    system_measures = group_by_system_measure(graph)
+    output: list[list[Node]] = []
 
-    measure_separators = [node for node in nodes if node.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES]
+    for sm in system_measures:
+        
+        measures: defaultdict[Node, list[Node]] = defaultdict(list)
+        # split symbols inside a single system measure to measure based on their linkage to staffs
+        for symbol in sm:
+            staffs = sorted(graph.children(symbol, class_filter=C.STAFF), key=lambda x: x.id)
+            if len(staffs) == 0:
+                raise ValueError(f"Symbol {symbol.class_name} {symbol.id} is not linked to any staff")
+            if len(staffs) > 1:
+                logger.warning(f"Symbol {symbol.class_name} {symbol.id} is linked to multiple staffs, choosing the one with smallest id")
+            staff = staffs[0]
+            measures[staff].append(symbol)
 
-    if len(measure_separators) == 0:
-        return nodes
-
-    logger.debug('Order measure separators by precedence.')
-    # Systems
-    # measure seps. by system
-    measure_separators = sorted(measure_separators, key=lambda m: m.left)
-
-    logger.debug('Denote measure areas: bounding boxes and masks.')
-    logger.debug('Assign objects to measures, based on overlap.')
+        # append found measures to the output and 
+        output.extend([measures[staff] for staff in measures.keys()])
 
     raise NotImplementedError()
 

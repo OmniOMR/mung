@@ -1,6 +1,6 @@
 from mung.constants import InferenceEngineConstants, ClassNamesConstants
 from mung import NotationGraph, Node
-from typing import Any, Optional, Callable
+from typing import Optional, Callable
 from itertools import chain
 
 from .strategies import NoteheadSnapEngineStrategy
