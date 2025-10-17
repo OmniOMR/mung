@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from mung.constants import (
     InferenceEngineConstants as I,
     ClassNamesConstants as C,
-    PrecedenceLinksConstants,
-    OnsetDataConstants
+    PrecedenceLinksConstants as P,
+    OnsetDataConstants as O
 )
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
@@ -269,12 +269,12 @@ class OnsetsInferenceEngine:
         assert tuple_.class_name == C.TUPLE
         assert modifier > 0
         logger.debug(f"Caching time modifier for tuple {tuple_.id}, {modifier}")
-        tuple_.data[OnsetDataConstants.TUPLE_TIME_MODIFICATION] = modifier
+        tuple_.data[O.TUPLE_TIME_MODIFICATION] = modifier
     
     @staticmethod
     def _try_decache_time_modifier_tuple(tuple_: Node) -> Optional[Fraction]:
         assert tuple_.class_name == C.TUPLE
-        return tuple_.data.get(OnsetDataConstants.TUPLE_TIME_MODIFICATION, None)
+        return tuple_.data.get(O.TUPLE_TIME_MODIFICATION, None)
 
     def compute_or_decache_tuple_modifier(self, tuple_: Node, cache: bool = True) -> Fraction:
         """
@@ -519,10 +519,11 @@ class OnsetsInferenceEngine:
         for c in p_nodes.values():
             inlinks = []
             outlinks = []
-            if PrecedenceLinksConstants.PrecedenceInlinks in c.data:
-                inlinks = c.data[PrecedenceLinksConstants.PrecedenceInlinks]
-            if PrecedenceLinksConstants.PrecedenceOutlinks in c.data:
-                outlinks = c.data[PrecedenceLinksConstants.PrecedenceOutlinks]
+            
+            if P.PRECEDENCE_INLINKS in c.data:
+                inlinks = c.data[P.PRECEDENCE_INLINKS]
+            if P.PRECEDENCE_OUTLINKS in c.data:
+                outlinks = c.data[P.PRECEDENCE_OUTLINKS]
             p_node = p_nodes[c.node_id]
             p_node.outlinks = [p_nodes[o] for o in outlinks]
             p_node.inlinks = [p_nodes[i] for i in inlinks]

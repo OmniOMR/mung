@@ -7,14 +7,16 @@ from typing import Iterable, Optional, Self, Any, TypeVar, Callable, Generator
 from collections import defaultdict
 
 from .node import Node
-from .constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
+from .constants import (
+    InferenceEngineConstants as I,
+    PrecedenceLinksConstants as P,
+    ClassNamesConstants as C
+)
 from .io import read_nodes_from_file, write_nodes_to_file
 from .logger import logger
 
 
 T = TypeVar("T")
-
-_CONST = InferenceEngineConstants()
 
 
 class NotationGraphError(ValueError):
@@ -27,8 +29,6 @@ class NotationGraphUnsupportedError(NotImplementedError):
 
 class NotationGraph(object):
     """The NotationGraph class is the abstraction for a notation graph."""
-
-    _CONST = InferenceEngineConstants()
 
     def __init__(self, nodes: list[Node]):
         """Initialize the notation graph with a list of Nodes."""
@@ -111,10 +111,8 @@ class NotationGraph(object):
         """
         edges = set()
         for node in self.__nodes:
-            if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
-                for t in node.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
-                    t: int
-                    edges.add((node.id, t))
+            for t in node.precedence_outlinks:
+                edges.add((node.id, t))
         return edges
 
     @property
@@ -531,7 +529,7 @@ class NotationGraph(object):
             raise NotationGraphError('Asking for notehead which is not in graph: {0}'.format(notehead.id))
 
         # This works even if there is just one. There should always be one.
-        sibling_noteheads = self.parents(stem, class_filter=self._CONST.NOTEHEAD_CLASS_NAMES)
+        sibling_noteheads = self.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
         if notehead not in sibling_noteheads:
             raise ValueError('Asked for stem direction, but notehead {0} is'
                              ' unrelated to given stem {1}!'
@@ -653,17 +651,17 @@ class NotationGraph(object):
 
         # Check if the node has at least some predecessors or descendants
         _has_predecessors = False
-        if PrecedenceLinksConstants.PrecedenceInlinks in node.data:
-            _has_predecessors = (len(node.data[PrecedenceLinksConstants.PrecedenceInlinks]) > 0)
+        if P.PRECEDENCE_INLINKS in node.data:
+            _has_predecessors = (len(node.data[P.PRECEDENCE_INLINKS]) > 0)
         if _has_predecessors:
             predecessors = copy.deepcopy(
-                node.data[PrecedenceLinksConstants.PrecedenceInlinks])  # That damn iterator modification
+                node.data[P.PRECEDENCE_INLINKS])  # That damn iterator modification
 
         _has_descendants = False
-        if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
-            _has_descendants = (len(node.data[PrecedenceLinksConstants.PrecedenceOutlinks]) > 0)
+        if P.PRECEDENCE_OUTLINKS in node.data:
+            _has_descendants = (len(node.data[P.PRECEDENCE_OUTLINKS]) > 0)
         if _has_descendants:
-            descendants = copy.deepcopy(node.data[PrecedenceLinksConstants.PrecedenceOutlinks])
+            descendants = copy.deepcopy(node.data[P.PRECEDENCE_OUTLINKS])
 
         if (not _has_predecessors) and (not _has_descendants):
             return
@@ -671,37 +669,37 @@ class NotationGraph(object):
         # Remove inlinks
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
-            if PrecedenceLinksConstants.PrecedenceOutlinks not in predecessor.data:
+            if P.PRECEDENCE_OUTLINKS not in predecessor.data:
                 raise ValueError(
                     'Predecessor {} of Node {} does not have precedence outlinks!'
                     ''.format(predecessor_id, node.id))
-            if node.id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
+            if node.id not in predecessor.data[P.PRECEDENCE_OUTLINKS]:
                 raise ValueError('Predecessor {} of Node {} does not have reciprocal outlink!'
                                  ''.format(predecessor_id, node.id))
-            predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(node.id)
-            node.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(predecessor_id)
+            predecessor.data[P.PRECEDENCE_OUTLINKS].remove(node.id)
+            node.data[P.PRECEDENCE_INLINKS].remove(predecessor_id)
 
         # Remove outlinks
         for descendant_id in descendants:
             descendant = self.__id_to_node_mapping[descendant_id]
-            if PrecedenceLinksConstants.PrecedenceInlinks not in descendant.data:
+            if P.PRECEDENCE_INLINKS not in descendant.data:
                 raise ValueError('Descendant {} of node {} does not have precedence inlinks!'
                                  ''.format(descendant_id, node.id))
-            if node.id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
+            if node.id not in descendant.data[P.PRECEDENCE_INLINKS]:
                 raise ValueError('Descendant {} of node {} does not have reciprocal inlink!'
                                  ''.format(descendant_id, node.id))
-            descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(node.id)
-            node.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(descendant_id)
+            descendant.data[P.PRECEDENCE_INLINKS].remove(node.id)
+            node.data[P.PRECEDENCE_OUTLINKS].remove(descendant_id)
 
         # Bridge removed element
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
             for descendant_id in descendants:
                 descendant = self.__id_to_node_mapping[descendant_id]
-                if descendant_id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
-                    predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].append(descendant_id)
-                if predecessor_id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
-                    descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].append(predecessor_id)
+                if descendant_id not in predecessor.data[P.PRECEDENCE_OUTLINKS]:
+                    predecessor.data[P.PRECEDENCE_OUTLINKS].append(descendant_id)
+                if predecessor_id not in descendant.data[P.PRECEDENCE_INLINKS]:
+                    descendant.data[P.PRECEDENCE_INLINKS].append(predecessor_id)
 
     def has_edge(self, from_id: int, to_id: int) -> bool:
         if from_id not in self.__id_to_node_mapping:
@@ -889,27 +887,27 @@ def group_staffs_into_systems(nodes: list[Node],
     :returns: A list of systems, where each system is a list of ``staff`` Nodes.
     """
     graph = NotationGraph(nodes)
-    staff_groups = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
+    staff_groups = graph.filter_vertices(C.STAFF_GROUPING)
     
     def is_empty_staff(staff: Node, graph: NotationGraph) -> bool:
-        durables = graph.parents(staff, class_filter=InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
+        durables = graph.parents(staff, class_filter=I.CLASSES_BEARING_DURATIONS)
         return len(durables) == 0
 
-    empty_staffs = [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if is_empty_staff(s, graph)]
+    empty_staffs = [s for s in graph.filter_vertices(C.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
         logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # For simplicity, add non-empty staffs as potential systems.
-    staff_groups += [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if s not in empty_staffs]
+    staff_groups += [s for s in graph.filter_vertices(C.STAFF) if s not in empty_staffs]
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
     if use_fallback_measure_separators:
         # Collect measure separators, sort them left to right
-        measure_separators = graph.filter_vertices(_CONST.MEASURE_SEPARATOR_CLASS_NAMES)
+        measure_separators = graph.filter_vertices(I.MEASURE_SEPARATOR_CLASS_NAMES)
         measure_separators = sorted(measure_separators, key=lambda x: x.left)
         # Use only the leftmost measure separator for each staff.
-        staffs = [c for c in nodes if c.class_name in [_CONST.STAFF]]
+        staffs = [c for c in nodes if c.class_name in [I.STAFF]]
 
         if leftmost_measure_separators_only:
             leftmost_measure_separators = set()
@@ -927,7 +925,7 @@ def group_staffs_into_systems(nodes: list[Node],
     if len(staff_groups) == 0:
         return [[]]
     
-    staffs_per_group = {node.id: graph.children(node, class_filter=ClassNamesConstants.STAFF) for node in staff_groups}
+    staffs_per_group = {node.id: graph.children(node, class_filter=C.STAFF) for node in staff_groups}
     
     merged = UnionFind.merge_groups(list(staffs_per_group.values()))
     for group in merged:
@@ -947,14 +945,14 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
     """
     g = NotationGraph(nodes=nodes)
 
-    staffs = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staffs = [c for c in nodes if c.class_name == I.STAFF]
     objects_per_staff = dict()  # type: dict[int, list[Node]]
     for staff in staffs:
         descendants = g.descendants(staff)
         ancestors = g.ancestors(staff)
         a_descendants = []
         for ancestor in ancestors:
-            if ancestor.class_name in _CONST.SYSTEM_LEVEL_CLASS_NAMES:
+            if ancestor.class_name in I.SYSTEM_LEVEL_CLASS_NAMES:
                 continue
             _ad = g.descendants(ancestor)
             a_descendants.extend(_ad)
@@ -984,7 +982,7 @@ def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     closure = []
     chord_mapping: dict[int, list[Node]] = {}
     for node in nodes:
-        stems = graph.children(node, ClassNamesConstants.STEM)
+        stems = graph.children(node, C.STEM)
         if len(stems) == 0:
             closure.append([node])
         elif len(stems) == 1:
@@ -1036,15 +1034,15 @@ def find_related_staffs(query_nodes: list[Node], all_nodes: NotationGraph | list
 
     related_staffs = set()
     for c in query_nodes:
-        desc_staffs = graph.descendants(c, class_filter=[_CONST.STAFF])
-        anc_staffs = graph.ancestors(c, class_filter=[_CONST.STAFF])
+        desc_staffs = graph.descendants(c, class_filter=[I.STAFF])
+        anc_staffs = graph.ancestors(c, class_filter=[I.STAFF])
         current_staffs = set(desc_staffs + anc_staffs)
         related_staffs = related_staffs.union(current_staffs)
 
     if with_stafflines:
         related_stafflines = set()
         for s in related_staffs:
-            staffline_objs = graph.descendants(s, _CONST.STAFFLINE_CLASS_NAMES)
+            staffline_objs = graph.descendants(s, I.STAFFLINE_CLASS_NAMES)
             related_stafflines = related_stafflines.union(set(staffline_objs))
         related_staffs = related_staffs.union(related_stafflines)
 
@@ -1069,7 +1067,7 @@ def find_beams_incoherent_with_stems(nodes: list[Node]) -> list[list[Node]]:
         is not coherent with the stem direction for the notehead.
     """
     graph = NotationGraph(nodes)
-    noteheads = [c for c in nodes if c.class_name in _CONST.NOTEHEAD_CLASS_NAMES]
+    noteheads = [c for c in nodes if c.class_name in I.NOTEHEAD_CLASS_NAMES]
 
     incoherent_pairs = []
     for notehead in noteheads:
@@ -1116,10 +1114,10 @@ def find_leger_lines_with_noteheads_from_both_directions(nodes: list[Node]) -> l
     problem_leger_lines = []
 
     for node in nodes:
-        if node.class_name != _CONST.LEGER_LINE:
+        if node.class_name != I.LEGER_LINE:
             continue
 
-        noteheads = graph.parents(node, class_filter=_CONST.NOTEHEAD_CLASS_NAMES)
+        noteheads = graph.parents(node, class_filter=I.NOTEHEAD_CLASS_NAMES)
 
         if len(noteheads) < 2:
             continue
@@ -1146,11 +1144,11 @@ def find_noteheads_with_leger_line_and_staff_conflict(nodes: list[Node]) -> list
     problem_noteheads = []
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
-        staff_objs = graph.children(node, _CONST.STAFFLINE_CLASS_NAMES)
+        lls = graph.children(node, [I.LEGER_LINE])
+        staff_objs = graph.children(node, I.STAFFLINE_CLASS_NAMES)
         if lls and staff_objs:
             problem_noteheads.append(node)
 
@@ -1175,10 +1173,10 @@ def find_noteheads_on_staff_linked_to_leger_line(nodes: list[Node]) -> list[Node
                          key=lambda x: x.top)
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
+        lls = graph.children(node, [I.LEGER_LINE])
         if len(lls) == 0:
             continue
 
@@ -1216,14 +1214,14 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
     misdirected_object_pairs = []
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
+        lls = graph.children(node, [I.LEGER_LINE])
         if not lls:
             continue
 
-        staffs = graph.children(node, [_CONST.STAFF])
+        staffs = graph.children(node, [I.STAFF])
         if not staffs:
             logger.warning('Notehead {0} not connected to any staff!'.format(node.id))
             continue
@@ -1233,7 +1231,7 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
         # Because of mistakes in notehead-ll edges, can actually be
         # *on* the staff. (If it is on a staffline, then the edge is
         # definitely wrong.)
-        stafflines = sorted(graph.children(staff, [_CONST.STAFFLINE]),
+        stafflines = sorted(graph.children(staff, [I.STAFFLINE]),
                             key=lambda x: x.top)
         p_top = resolve_notehead_wrt_staffline(node, stafflines[0])
         p_bottom = resolve_notehead_wrt_staffline(node, stafflines[-1])
@@ -1256,9 +1254,9 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
                 _current_misdirected_object_pairs.append([node, ll])
 
         if retain_ll_for_disconnected_noteheads:
-            staffline_like_children = graph.children(node, class_filter=[_CONST.STAFFLINE,
-                                                                         _CONST.STAFFSPACE,
-                                                                         _CONST.LEGER_LINE])
+            staffline_like_children = graph.children(node, class_filter=[I.STAFFLINE,
+                                                                         I.STAFFSPACE,
+                                                                         I.LEGER_LINE])
             # If all the notehead's links to staffline-like objects are scheduled to be discarded:
             if len(staffline_like_children) == len(_current_misdirected_object_pairs):
                 # Remove them from the schedule
@@ -1281,12 +1279,12 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
     graph = NotationGraph(nodes)
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
-        stafflines = graph.children(node, _CONST.STAFFLINE_CLASS_NAMES)
-        staff = graph.children(node, _CONST.STAFF)
+        lls = graph.children(node, [I.LEGER_LINE])
+        stafflines = graph.children(node, I.STAFFLINE_CLASS_NAMES)
+        staff = graph.children(node, I.STAFF)
 
         if len(lls) == 0:
             continue
@@ -1306,9 +1304,6 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
 
 
 ##############################################################################
-from .constants import ClassNamesConstants as C
-from .constants import InferenceEngineConstants as I
-from typing import Iterable
 
 def _nodes_or_graph_to_graph(nodes_or_graph: Iterable[Node] | NotationGraph) -> NotationGraph:
     if isinstance(nodes_or_graph, NotationGraph):
@@ -1426,7 +1421,7 @@ def find_contained_nodes(nodes: list[Node], mask_threshold: float = 0.95):
     # we are just checking bounding boxes for candidates first,
     # it does not matter too much.
 
-    nonstaff_nodes = [node for node in nodes if node.class_name not in _CONST.STAFF_CLASSES]
+    nonstaff_nodes = [node for node in nodes if node.class_name not in I.STAFF_CLASSES]
 
     contained_nodes = []
     for c1 in nonstaff_nodes:
@@ -1500,7 +1495,7 @@ def resolve_notehead_wrt_staffline(notehead: Node, staffline_or_leger_line: Node
             dbottom = notehead.bottom - ll.bottom
 
             if min(dtop, dbottom) / max(dtop, dbottom) \
-                    < _CONST.ON_STAFFLINE_RATIO_THRESHOLD:
+                    < I.ON_STAFFLINE_RATIO_THRESHOLD:
                 if dtop > dbottom:
                     output_position = 1
                 else:
@@ -1527,7 +1522,7 @@ def resolve_notehead_wrt_staffline(notehead: Node, staffline_or_leger_line: Node
 
 def is_notehead_on_line(notehead: Node, line: Node) -> bool:
     """Check whether given notehead is positioned on the line object."""
-    if line.class_name not in _CONST.STAFFLINE_LIKE_CLASS_NAMES:
+    if line.class_name not in I.STAFFLINE_LIKE_CLASS_NAMES:
         raise ValueError('Cannot resolve relative position of notehead'
                          ' {0} to non-staffline-like object {1}'
                          ''.format(notehead.id, line.id))

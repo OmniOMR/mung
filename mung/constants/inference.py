@@ -244,31 +244,17 @@ class InferenceEngineConstants(C):
         + REST_CLASS_NAMES
         + [C.REPEAT_ONE_BAR]
     )
-
-    @property
-    def CLASSES_AFFECTING_ONSETS(self) -> list[str]:
-        """Returns a list of Node class names for objects
-        that affect onsets. Assumes notehead and rest durations
-        have already been given."""
-        return list(set(self.NONGRACE_NOTEHEAD_CLASS_NAMES
-        + self.REST_CLASS_NAMES
-        + self.MEASURE_SEPARATOR_CLASS_NAMES
-        + self.TIME_SIGNATURES
+    
+    CLASSES_AFFECTING_ONSETS = list(set(
+        NONGRACE_NOTEHEAD_CLASS_NAMES
+        + REST_CLASS_NAMES
+        + MEASURE_SEPARATOR_CLASS_NAMES
+        + TIME_SIGNATURES
         + [C.REPEAT_ONE_BAR]
-        ))
+    ))
 
-    CLASSES_BEARING_DURATIONS = (
+    CLASSES_BEARING_DURATIONS = list(set(
         NONGRACE_NOTEHEAD_CLASS_NAMES
         + REST_CLASS_NAMES
         + [C.REPEAT_ONE_BAR]
-    )
-    # @property
-    # def CLASSES_BEARING_DURATIONS(self) -> list[str]:
-    #     """Returns the list of classes that actually bear duration,
-    #     i.e. contribute to onsets of their descendants in the precedence
-    #     graph."""
-    #     return list(set(
-    #     self.NONGRACE_NOTEHEAD_CLASS_NAMES
-    #     + self.REST_CLASS_NAMES
-    #     + [C.REPEAT_ONE_BAR]
-    #     ))
+    ))
