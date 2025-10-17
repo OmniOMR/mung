@@ -1,6 +1,9 @@
-class PrecedenceLinksConstants:
+from enum import StrEnum
+
+
+class PrecedenceLinksConstants(StrEnum):
     """
     This class stores names of precedence-link-related fields in ``Node.data``.
     """
-    PrecedenceInlinks: str = "precedence_inlinks"
-    PrecedenceOutlinks: str = "precedence_outlinks"
+    PRECEDENCE_INLINKS = "precedence_inlinks"
+    PRECEDENCE_OUTLINKS = "precedence_outlinks"

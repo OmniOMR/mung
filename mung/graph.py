@@ -3,18 +3,20 @@ functions for manipulating notation graphs."""
 import copy
 from pathlib import Path
 from queue import Queue
-from typing import Iterable, Optional, Self, Any, TypeVar
+from typing import Iterable, Optional, Self, Any, TypeVar, Callable, Generator
 from collections import defaultdict
 
 from .node import Node
-from .constants import InferenceEngineConstants, PrecedenceLinksConstants, ClassNamesConstants
+from .constants import (
+    InferenceEngineConstants as I,
+    PrecedenceLinksConstants as P,
+    ClassNamesConstants as C
+)
 from .io import read_nodes_from_file, write_nodes_to_file
 from .logger import logger
 
 
 T = TypeVar("T")
-
-_CONST = InferenceEngineConstants()
 
 
 class NotationGraphError(ValueError):
@@ -27,8 +29,6 @@ class NotationGraphUnsupportedError(NotImplementedError):
 
 class NotationGraph(object):
     """The NotationGraph class is the abstraction for a notation graph."""
-
-    _CONST = InferenceEngineConstants()
 
     def __init__(self, nodes: list[Node]):
         """Initialize the notation graph with a list of Nodes."""
@@ -111,10 +111,8 @@ class NotationGraph(object):
         """
         edges = set()
         for node in self.__nodes:
-            if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
-                for t in node.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
-                    t: int
-                    edges.add((node.id, t))
+            for t in node.precedence_outlinks:
+                edges.add((node.id, t))
         return edges
 
     @property
@@ -131,14 +129,20 @@ class NotationGraph(object):
         class_filter = self.__to_iterable(class_filter) # type: ignore
         return [x for x in self.vertices if x.class_name in class_filter]
     
-    def collect_data(self, key: Any, class_filter: Optional[Iterable[str] | str]=None, raise_key_error: bool = False) -> dict[int, Any]:
+    def collect_data(
+            self,
+            key: Any,
+            class_filter: Optional[Iterable[str] | str] = None,
+            log_level: int = 1
+        ) -> dict[int, Any]:
         """
         Retrieves values from the ``Node`` 's data field
         as a dictionary ``{ID: values}``.
 
         :param key: Key to retrieves values from.
         :param class_filter: Optional class filter.
-        :param raise_key_error: Raise ``KeyError``, if the key is not found inside node's data.
+        :param log_level: Raise ``KeyError``, if the level is set to 2,
+            warning if 1 and suppress it, if 0.
         :return: Dictionary of node IDs to values.
         """
         if class_filter is None:
@@ -149,11 +153,14 @@ class NotationGraph(object):
         output: dict[int, Any] = {}
         for node in nodes:
             if key not in node.data:
-                message = f"Unknown key {key} for node {node.id}."
-                if raise_key_error:
-                    raise KeyError(message)
-                else:
-                    logger.info(message)
+                msg = f"Unknown key {key} for node {node.id}."
+                match log_level:
+                    case 0:
+                        pass
+                    case 1:
+                        logger.warning(msg)
+                    case _:
+                        KeyError(msg)
             else:
                 output[node.id] = node.data[key]
         
@@ -164,6 +171,44 @@ class NotationGraph(object):
         Returns a ``Node`` instance based on its id.
         """
         return self.__id_to_node_mapping[node_id]
+    
+    def _template_node_search_not_recursive_single_lookahead(
+            self,
+            node_or_id: Node | int,
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
+        """
+        Returns a list of nodes that are one layer from the given node,
+        based on the `next_node_from_node` function.
+        """
+        node_id = self.__to_id(node_or_id)
+
+        if node_id not in self.__id_to_node_mapping:
+            raise ValueError(f"Node {self.__id_to_node_mapping[node_id].id} not in graph!")
+
+        source = self[node_id]
+        children = []
+        for child in next_node_from_node(source):
+            if child.id in self.__id_to_node_mapping:
+                children.append(child)
+            else:
+                logger.warning(f"Node {child.id} not in graph, skipping")
+        return children
+    
+    def _template_filtered_node_search_not_recursive_single_lookahead(
+            self,
+            node_or_id: Node | int,
+            class_filter: Optional[Iterable[str] | str],
+            next_node_from_node: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
+        """
+        Adds class filter to the template function above.
+        """
+        class_filter = self.__to_iterable(class_filter)
+        return self._template_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            lambda n: (x for x in next_node_from_node(n) if class_filter is None or x.class_name in class_filter)
+        )
 
     def children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -173,47 +218,103 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
-
-        if node_id not in self.__id_to_node_mapping:
-            raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
-
-        parent = self.__id_to_node_mapping[node_id]
-        children = []
-        for child_id in parent.outlinks:
-            if child_id in self.__id_to_node_mapping:
-                child = self.__id_to_node_mapping[child_id]
-                if class_filter is None:
-                    children.append(child)
-                elif child.class_name in class_filter:
-                    children.append(child)
-        return children
-
-    def parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.outlinks)
+        )
+    
+    def precedence_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
-        Find all children of the given node. ``class_filter`` can be used to only get children of a particular class.
+        Find all precedence children of the given node. ``class_filter`` can be used to only get children of a particular class.
 
         :param node_or_id: The root ``Node`` ID or instance to search from.
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.precedence_outlinks)
+        )
+
+    def parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all parents of the given node. ``class_filter`` can be used to only get children of a particular class.
+
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.inlinks)
+        )
+    
+    def precedence_parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence parents of the given node. ``class_filter`` can be used to only get children of a particular class.
+
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_not_recursive_single_lookahead(
+            node_or_id,
+            class_filter,
+            lambda n: (self[x] for x in n.precedence_inlinks)
+        )
+    
+    def _template_node_search_recursive_bfs(
+            self,
+            node_or_id: Node | int,
+            get_next: Callable[[Node], Iterable[Node]]
+    ) -> Generator[Node, None, None]:
+        """
+        Searches through nodes using BFS.
+        Gets neighbors with ```get_next``.
+        Returns a generator off nodes.
+        """
         node_id = self.__to_id(node_or_id)
+        node = self[node_id]
+        
+        # descendants: list[Node] = []
+        visited: set[Node] = set([node])
+        queue: Queue[Node] = Queue()
+        queue.put(node)
+
+        while not queue.empty():
+            current_node = queue.get()
+            if current_node != node:
+                # descendants.append(current_node)
+                yield current_node
+
+            for child in get_next(current_node):
+                if child not in visited:
+                    visited.add(child)
+                    queue.put(child)
+
+        # return descendants
+    
+    def _template_filtered_node_search_recursive_bfs(
+            self,
+            node_or_id: Node | int,
+            class_filter: Optional[Iterable[str] | str],
+            get_next: Callable[[Node], Iterable[Node]]
+    ) -> list[Node]:
+        """
+        Adds class filter over the found set.
+        The search will pass through all nodes, even through
+        those that are not included in the filter, but it will
+        not output them.
+        """
         class_filter = self.__to_iterable(class_filter)
-
-        if node_id not in self.__id_to_node_mapping:
-            raise ValueError('Node {0} not in graph!'.format(self.__id_to_node_mapping[node_id].id))
-
-        child = self.__id_to_node_mapping[node_id]
-        parents = []
-        for parent_ids in child.inlinks:
-            if parent_ids in self.__id_to_node_mapping:
-                parent = self.__id_to_node_mapping[parent_ids]
-                if class_filter is None:
-                    parents.append(parent)
-                elif parent.class_name in class_filter:
-                    parents.append(parent)
-        return parents
+        return [x for x in self._template_node_search_recursive_bfs(
+            node_or_id,
+            get_next)
+            if class_filter is None or x.class_name in class_filter
+        ]
 
     def descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -223,26 +324,25 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
+        return self._template_filtered_node_search_recursive_bfs(
+            node_or_id,
+            class_filter,
+            self.children
+        )
+    
+    def precedence_descendants(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence descendants of the given node. ``class_filter`` can be used to only get nodes of a particular class.
 
-        descendant_ids = []
-        visited = set([node_id])
-        queue = Queue()
-        queue.put(node_id)
-
-        while not queue.empty():
-            current_node_id = queue.get()
-            if current_node_id != node_id:
-                descendant_ids.append(current_node_id)
-
-            children = self.children(current_node_id, class_filter=class_filter)
-            for child in children:
-                if child.id not in visited:
-                    visited.add(child.id)
-                    queue.put(child.id)
-
-        return [self.__id_to_node_mapping[o] for o in descendant_ids]
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_recursive_bfs(
+            node_or_id,
+            class_filter,
+            self.precedence_children
+        )
 
     def ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
         """
@@ -252,24 +352,26 @@ class NotationGraph(object):
         :param class_filter: Filter to only get nodes of given class name or names.
         :return: A list of ``Node`` objects.
         """
-        node_id = self.__to_id(node_or_id)
-        class_filter = self.__to_iterable(class_filter)
+        return self._template_filtered_node_search_recursive_bfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.parents(n)
+        )
+    
+    def precedence_ancestors(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> list[Node]:
+        """
+        Find all precedence ancestors of the given node. ``class_filter`` can be used to only get nodes of a particular class.
 
-        ancestor_node_ids = []
-        queue = Queue()
-        queue.put(node_id)
-        while not queue.empty():
-            current_node_id = queue.get()
-            if current_node_id != node_id:
-                ancestor_node_ids.append(current_node_id)
-            parents = self.parents(current_node_id, class_filter=class_filter)
-            parent_node_ids = [parent.id for parent in parents]
-            for parent_id in parent_node_ids:
-                if parent_id not in queue.queue:
-                    queue.put(parent_id)
-
-        return [self.__id_to_node_mapping[objid] for objid in ancestor_node_ids]
-
+        :param node_or_id: The root ``Node`` ID or instance to search from.
+        :param class_filter: Filter to only get nodes of given class name or names.
+        :return: A list of ``Node`` objects.
+        """
+        return self._template_filtered_node_search_recursive_bfs(
+            node_or_id,
+            class_filter,
+            lambda n: self.precedence_parents(n)
+        )
+    
     def has_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
         """
         Returns true if given ``Node`` has at least one child.
@@ -293,6 +395,14 @@ class NotationGraph(object):
         """
         parents = self.parents(node_or_id, class_filter=class_filter)
         return len(parents) > 0
+    
+    def has_precedence_children(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
+        children = self.precedence_children(node_or_id, class_filter)
+        return len(children) > 0
+    
+    def has_precedence_parents(self, node_or_id: Node | int, class_filter: Optional[Iterable[str] | str] = None) -> bool:
+        parents = self.precedence_parents(node_or_id, class_filter)
+        return len(parents) > 0
 
     def is_child_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
         """
@@ -308,8 +418,8 @@ class NotationGraph(object):
         parent = self.__id_to_node_mapping[parent_id]
         if child_id in parent.outlinks:
             return True
-        else:
-            return False
+
+        return False
 
     def is_parent_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
         """
@@ -320,6 +430,96 @@ class NotationGraph(object):
         :return: True if ``parent_node_or_id`` is a parent of ``child_node_or_id``
         """
         return self.is_child_of(child_node_or_id, parent_node_or_id)
+    
+    def is_precedence_child_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the first ``Node`` is a precedence child of the second ``Node``.
+
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is a precedence child of ``parent_node_or_id``.
+        """
+        child_id = self.__to_id(child_node_or_id)
+        parent = self.__to_node(parent_node_or_id)
+
+        if child_id in parent.precedence_outlinks:
+            return True
+        
+        return False
+    
+    def is_precedence_parent_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the first ``Node`` is a precedence parent of the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is a precedence parent of ``child_node_or_id``
+        """
+        return self.is_precedence_child_of(child_node_or_id, parent_node_or_id)
+
+    def _template_is_relation_node_search(
+            self,
+            search_from: Node | int,
+            search_for: Node | int,
+            get_next: Callable[[Node], Iterable[Node]]
+        ) -> bool:
+        search_from = self.__to_node(search_from)
+        search_for = self.__to_node(search_for)
+
+        return search_for in self._template_node_search_recursive_bfs(
+            search_from,
+            get_next
+        )
+    
+    def is_descendant_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed syntax path
+        from the second ``Node`` to the first ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is syntax descendant of ``parent_node_or_id``.
+        """
+        return self._template_is_relation_node_search(
+            parent_node_or_id, child_node_or_id,
+            self.children
+        )
+    
+    def is_ancestor_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed syntax path
+        from the first ``Node`` to the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is syntax ancestor of ``child_node_or_id``.
+        """
+        return self.is_descendant_of(child_node_or_id, parent_node_or_id)
+    
+    def is_precedence_descendant_of(self, child_node_or_id: Node | int, parent_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed precedence path
+        from the second ``Node`` to the first ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``child_node_or_id`` is precedence descendant of ``parent_node_or_id``.
+        """
+        return self._template_is_relation_node_search(
+            parent_node_or_id, child_node_or_id,
+            self.precedence_children
+        )
+    
+    def is_precedence_ancestor_of(self, parent_node_or_id: Node | int, child_node_or_id: Node | int) -> bool:
+        """
+        Check whether the there exists a directed precedence path
+        from the first ``Node`` to the second ``Node``.
+
+        :param parent_node_or_id: The parent ``Node`` ID or instance.
+        :param child_node_or_id: The child ``Node`` ID or instance.
+        :return: True if ``parent_node_or_id`` is precedence ancestor of ``child_node_or_id``.
+        """
+        return self.is_precedence_descendant_of(child_node_or_id, parent_node_or_id)
 
     def is_stem_direction_above(self, notehead: Node, stem: Node) -> bool:
         """Determines whether the given stem of the given notehead
@@ -329,7 +529,7 @@ class NotationGraph(object):
             raise NotationGraphError('Asking for notehead which is not in graph: {0}'.format(notehead.id))
 
         # This works even if there is just one. There should always be one.
-        sibling_noteheads = self.parents(stem, class_filter=self._CONST.NOTEHEAD_CLASS_NAMES)
+        sibling_noteheads = self.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
         if notehead not in sibling_noteheads:
             raise ValueError('Asked for stem direction, but notehead {0} is'
                              ' unrelated to given stem {1}!'
@@ -451,17 +651,17 @@ class NotationGraph(object):
 
         # Check if the node has at least some predecessors or descendants
         _has_predecessors = False
-        if PrecedenceLinksConstants.PrecedenceInlinks in node.data:
-            _has_predecessors = (len(node.data[PrecedenceLinksConstants.PrecedenceInlinks]) > 0)
+        if P.PRECEDENCE_INLINKS in node.data:
+            _has_predecessors = (len(node.data[P.PRECEDENCE_INLINKS]) > 0)
         if _has_predecessors:
             predecessors = copy.deepcopy(
-                node.data[PrecedenceLinksConstants.PrecedenceInlinks])  # That damn iterator modification
+                node.data[P.PRECEDENCE_INLINKS])  # That damn iterator modification
 
         _has_descendants = False
-        if PrecedenceLinksConstants.PrecedenceOutlinks in node.data:
-            _has_descendants = (len(node.data[PrecedenceLinksConstants.PrecedenceOutlinks]) > 0)
+        if P.PRECEDENCE_OUTLINKS in node.data:
+            _has_descendants = (len(node.data[P.PRECEDENCE_OUTLINKS]) > 0)
         if _has_descendants:
-            descendants = copy.deepcopy(node.data[PrecedenceLinksConstants.PrecedenceOutlinks])
+            descendants = copy.deepcopy(node.data[P.PRECEDENCE_OUTLINKS])
 
         if (not _has_predecessors) and (not _has_descendants):
             return
@@ -469,37 +669,37 @@ class NotationGraph(object):
         # Remove inlinks
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
-            if PrecedenceLinksConstants.PrecedenceOutlinks not in predecessor.data:
+            if P.PRECEDENCE_OUTLINKS not in predecessor.data:
                 raise ValueError(
                     'Predecessor {} of Node {} does not have precedence outlinks!'
                     ''.format(predecessor_id, node.id))
-            if node.id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
+            if node.id not in predecessor.data[P.PRECEDENCE_OUTLINKS]:
                 raise ValueError('Predecessor {} of Node {} does not have reciprocal outlink!'
                                  ''.format(predecessor_id, node.id))
-            predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(node.id)
-            node.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(predecessor_id)
+            predecessor.data[P.PRECEDENCE_OUTLINKS].remove(node.id)
+            node.data[P.PRECEDENCE_INLINKS].remove(predecessor_id)
 
         # Remove outlinks
         for descendant_id in descendants:
             descendant = self.__id_to_node_mapping[descendant_id]
-            if PrecedenceLinksConstants.PrecedenceInlinks not in descendant.data:
+            if P.PRECEDENCE_INLINKS not in descendant.data:
                 raise ValueError('Descendant {} of node {} does not have precedence inlinks!'
                                  ''.format(descendant_id, node.id))
-            if node.id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
+            if node.id not in descendant.data[P.PRECEDENCE_INLINKS]:
                 raise ValueError('Descendant {} of node {} does not have reciprocal inlink!'
                                  ''.format(descendant_id, node.id))
-            descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].remove(node.id)
-            node.data[PrecedenceLinksConstants.PrecedenceOutlinks].remove(descendant_id)
+            descendant.data[P.PRECEDENCE_INLINKS].remove(node.id)
+            node.data[P.PRECEDENCE_OUTLINKS].remove(descendant_id)
 
         # Bridge removed element
         for predecessor_id in predecessors:
             predecessor = self.__id_to_node_mapping[predecessor_id]
             for descendant_id in descendants:
                 descendant = self.__id_to_node_mapping[descendant_id]
-                if descendant_id not in predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks]:
-                    predecessor.data[PrecedenceLinksConstants.PrecedenceOutlinks].append(descendant_id)
-                if predecessor_id not in descendant.data[PrecedenceLinksConstants.PrecedenceInlinks]:
-                    descendant.data[PrecedenceLinksConstants.PrecedenceInlinks].append(predecessor_id)
+                if descendant_id not in predecessor.data[P.PRECEDENCE_OUTLINKS]:
+                    predecessor.data[P.PRECEDENCE_OUTLINKS].append(descendant_id)
+                if predecessor_id not in descendant.data[P.PRECEDENCE_INLINKS]:
+                    descendant.data[P.PRECEDENCE_INLINKS].append(predecessor_id)
 
     def has_edge(self, from_id: int, to_id: int) -> bool:
         if from_id not in self.__id_to_node_mapping:
@@ -521,13 +721,16 @@ class NotationGraph(object):
         else:
             return False
 
-    def add_edge(self, from_id: int, to_id: int):
+    def add_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int):
         """Add an edge between the MuNGOs with ids ``from --> to``.
         If the edge is already in the graph, warns and does nothing."""
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
+
         if from_id not in self.__id_to_node_mapping:
-            raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
+            raise NotationGraphError('Cannot add edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
-            raise NotationGraphError('Cannot remove edge to id {0}: not in graph!'.format(to_id))
+            raise NotationGraphError('Cannot add edge to id {0}: not in graph!'.format(to_id))
         
         from_node = self.__id_to_node_mapping[from_id]
         to_node = self.__id_to_node_mapping[to_id]
@@ -549,11 +752,13 @@ class NotationGraph(object):
         self.__id_to_node_mapping[from_id].outlinks.append(to_id)
         self.__id_to_node_mapping[to_id].inlinks.append(from_id)
 
-    def add_precedence_edge(self, from_id: int, to_id: int):
+    def add_precedence_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int):
         """
         Add a *precedence* edge between the MuNGOs with ids ``from --> to``.
         If the edge is already in the graph, warns and does nothing.
         """
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
         if from_id not in self.__id_to_node_mapping:
             raise NotationGraphError('Cannot remove edge from id {0}: not in graph!'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
@@ -579,10 +784,12 @@ class NotationGraph(object):
         from_node.add_precedence_outlinks(to_id)
         to_node.add_precedence_inlinks(from_id)
 
-    def remove_precedence_edge(self, from_id: int, to_id: int, suppress_not_in_list_error: bool = False):
+    def remove_precedence_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int, suppress_not_in_list_error: bool = False):
         """
         Removes precedence edge ``from -> to``, does **not** bridge the created gap.
         """
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
         if from_id not in self.__id_to_node_mapping:
             raise ValueError(f"Cannot remove edge from id {from_id}: not in graph!")
         if to_id not in self.__id_to_node_mapping:
@@ -680,27 +887,27 @@ def group_staffs_into_systems(nodes: list[Node],
     :returns: A list of systems, where each system is a list of ``staff`` Nodes.
     """
     graph = NotationGraph(nodes)
-    staff_groups = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
+    staff_groups = graph.filter_vertices(C.STAFF_GROUPING)
     
     def is_empty_staff(staff: Node, graph: NotationGraph) -> bool:
-        durables = graph.parents(staff, class_filter=InferenceEngineConstants().CLASSES_BEARING_DURATIONS)
+        durables = graph.parents(staff, class_filter=I.CLASSES_BEARING_DURATIONS)
         return len(durables) == 0
 
-    empty_staffs = [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if is_empty_staff(s, graph)]
+    empty_staffs = [s for s in graph.filter_vertices(C.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
         logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # For simplicity, add non-empty staffs as potential systems.
-    staff_groups += [s for s in graph.filter_vertices(ClassNamesConstants.STAFF) if s not in empty_staffs]
+    staff_groups += [s for s in graph.filter_vertices(C.STAFF) if s not in empty_staffs]
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
     if use_fallback_measure_separators:
         # Collect measure separators, sort them left to right
-        measure_separators = graph.filter_vertices(_CONST.MEASURE_SEPARATOR_CLASS_NAMES)
+        measure_separators = graph.filter_vertices(I.MEASURE_SEPARATOR_CLASS_NAMES)
         measure_separators = sorted(measure_separators, key=lambda x: x.left)
         # Use only the leftmost measure separator for each staff.
-        staffs = [c for c in nodes if c.class_name in [_CONST.STAFF]]
+        staffs = [c for c in nodes if c.class_name in [I.STAFF]]
 
         if leftmost_measure_separators_only:
             leftmost_measure_separators = set()
@@ -718,7 +925,7 @@ def group_staffs_into_systems(nodes: list[Node],
     if len(staff_groups) == 0:
         return [[]]
     
-    staffs_per_group = {node.id: graph.children(node, class_filter=ClassNamesConstants.STAFF) for node in staff_groups}
+    staffs_per_group = {node.id: graph.children(node, class_filter=C.STAFF) for node in staff_groups}
     
     merged = UnionFind.merge_groups(list(staffs_per_group.values()))
     for group in merged:
@@ -738,14 +945,14 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
     """
     g = NotationGraph(nodes=nodes)
 
-    staffs = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staffs = [c for c in nodes if c.class_name == I.STAFF]
     objects_per_staff = dict()  # type: dict[int, list[Node]]
     for staff in staffs:
         descendants = g.descendants(staff)
         ancestors = g.ancestors(staff)
         a_descendants = []
         for ancestor in ancestors:
-            if ancestor.class_name in _CONST.SYSTEM_LEVEL_CLASS_NAMES:
+            if ancestor.class_name in I.SYSTEM_LEVEL_CLASS_NAMES:
                 continue
             _ad = g.descendants(ancestor)
             a_descendants.extend(_ad)
@@ -756,6 +963,7 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
         objects_per_staff[staff.id] = list(staff_related)
 
     return objects_per_staff
+
 
 def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     """
@@ -774,7 +982,7 @@ def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     closure = []
     chord_mapping: dict[int, list[Node]] = {}
     for node in nodes:
-        stems = graph.children(node, ClassNamesConstants.STEM)
+        stems = graph.children(node, C.STEM)
         if len(stems) == 0:
             closure.append([node])
         elif len(stems) == 1:
@@ -826,15 +1034,15 @@ def find_related_staffs(query_nodes: list[Node], all_nodes: NotationGraph | list
 
     related_staffs = set()
     for c in query_nodes:
-        desc_staffs = graph.descendants(c, class_filter=[_CONST.STAFF])
-        anc_staffs = graph.ancestors(c, class_filter=[_CONST.STAFF])
+        desc_staffs = graph.descendants(c, class_filter=[I.STAFF])
+        anc_staffs = graph.ancestors(c, class_filter=[I.STAFF])
         current_staffs = set(desc_staffs + anc_staffs)
         related_staffs = related_staffs.union(current_staffs)
 
     if with_stafflines:
         related_stafflines = set()
         for s in related_staffs:
-            staffline_objs = graph.descendants(s, _CONST.STAFFLINE_CLASS_NAMES)
+            staffline_objs = graph.descendants(s, I.STAFFLINE_CLASS_NAMES)
             related_stafflines = related_stafflines.union(set(staffline_objs))
         related_staffs = related_staffs.union(related_stafflines)
 
@@ -859,7 +1067,7 @@ def find_beams_incoherent_with_stems(nodes: list[Node]) -> list[list[Node]]:
         is not coherent with the stem direction for the notehead.
     """
     graph = NotationGraph(nodes)
-    noteheads = [c for c in nodes if c.class_name in _CONST.NOTEHEAD_CLASS_NAMES]
+    noteheads = [c for c in nodes if c.class_name in I.NOTEHEAD_CLASS_NAMES]
 
     incoherent_pairs = []
     for notehead in noteheads:
@@ -906,10 +1114,10 @@ def find_leger_lines_with_noteheads_from_both_directions(nodes: list[Node]) -> l
     problem_leger_lines = []
 
     for node in nodes:
-        if node.class_name != _CONST.LEGER_LINE:
+        if node.class_name != I.LEGER_LINE:
             continue
 
-        noteheads = graph.parents(node, class_filter=_CONST.NOTEHEAD_CLASS_NAMES)
+        noteheads = graph.parents(node, class_filter=I.NOTEHEAD_CLASS_NAMES)
 
         if len(noteheads) < 2:
             continue
@@ -936,11 +1144,11 @@ def find_noteheads_with_leger_line_and_staff_conflict(nodes: list[Node]) -> list
     problem_noteheads = []
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
-        staff_objs = graph.children(node, _CONST.STAFFLINE_CLASS_NAMES)
+        lls = graph.children(node, [I.LEGER_LINE])
+        staff_objs = graph.children(node, I.STAFFLINE_CLASS_NAMES)
         if lls and staff_objs:
             problem_noteheads.append(node)
 
@@ -965,10 +1173,10 @@ def find_noteheads_on_staff_linked_to_leger_line(nodes: list[Node]) -> list[Node
                          key=lambda x: x.top)
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
+        lls = graph.children(node, [I.LEGER_LINE])
         if len(lls) == 0:
             continue
 
@@ -1006,14 +1214,14 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
     misdirected_object_pairs = []
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
+        lls = graph.children(node, [I.LEGER_LINE])
         if not lls:
             continue
 
-        staffs = graph.children(node, [_CONST.STAFF])
+        staffs = graph.children(node, [I.STAFF])
         if not staffs:
             logger.warning('Notehead {0} not connected to any staff!'.format(node.id))
             continue
@@ -1023,7 +1231,7 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
         # Because of mistakes in notehead-ll edges, can actually be
         # *on* the staff. (If it is on a staffline, then the edge is
         # definitely wrong.)
-        stafflines = sorted(graph.children(staff, [_CONST.STAFFLINE]),
+        stafflines = sorted(graph.children(staff, [I.STAFFLINE]),
                             key=lambda x: x.top)
         p_top = resolve_notehead_wrt_staffline(node, stafflines[0])
         p_bottom = resolve_notehead_wrt_staffline(node, stafflines[-1])
@@ -1046,9 +1254,9 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
                 _current_misdirected_object_pairs.append([node, ll])
 
         if retain_ll_for_disconnected_noteheads:
-            staffline_like_children = graph.children(node, class_filter=[_CONST.STAFFLINE,
-                                                                         _CONST.STAFFSPACE,
-                                                                         _CONST.LEGER_LINE])
+            staffline_like_children = graph.children(node, class_filter=[I.STAFFLINE,
+                                                                         I.STAFFSPACE,
+                                                                         I.LEGER_LINE])
             # If all the notehead's links to staffline-like objects are scheduled to be discarded:
             if len(staffline_like_children) == len(_current_misdirected_object_pairs):
                 # Remove them from the schedule
@@ -1071,12 +1279,12 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
     graph = NotationGraph(nodes)
 
     for node in nodes:
-        if node.class_name not in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [_CONST.LEGER_LINE])
-        stafflines = graph.children(node, _CONST.STAFFLINE_CLASS_NAMES)
-        staff = graph.children(node, _CONST.STAFF)
+        lls = graph.children(node, [I.LEGER_LINE])
+        stafflines = graph.children(node, I.STAFFLINE_CLASS_NAMES)
+        staff = graph.children(node, I.STAFF)
 
         if len(lls) == 0:
             continue
@@ -1097,34 +1305,103 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
 
 ##############################################################################
 
-def group_by_measure(nodes: list[Node]):
-    """Groups the objects into measures.
-    Assumes the measures are consistent across staffs: no polytempi.
+def _nodes_or_graph_to_graph(nodes_or_graph: Iterable[Node] | NotationGraph) -> NotationGraph:
+    if isinstance(nodes_or_graph, NotationGraph):
+        return nodes_or_graph
+    return NotationGraph(list(nodes_or_graph))
 
-    If there are objects that span multiple measures, they are assigned
-    to all the measures they intersect.
+
+def group_by_system_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[list[Node]]:
+    """
+    Groups the objects into system measures.
 
     If no measure separators are found, assumes everything belongs
     to one measure.
 
+    :returns: A list of lists of nodes that belong to the same system measure,
+        sorted from top left to bottom right.
+    """
+    graph = _nodes_or_graph_to_graph(nodes_or_graph)
+    
+    systems = group_staffs_into_systems(graph.vertices)
+
+    def get_all_separators_from_system(staffs: list[Node], graph: NotationGraph) -> set[Node]:
+        """
+        Finds all measure separators inside a system defined by a list of staffs.
+        """
+        output: set[Node] = set()
+        for staff in staffs:
+            output.update(graph.parents(staff, class_filter=C.MEASURE_SEPARATOR))
+        
+        return output
+    
+    def get_all_in_measure_symbols_from_system(staffs: list[Node], graph: NotationGraph) -> list[Node]:
+        output: list[Node] = []
+        for staff in staffs:
+            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE):
+                if symbol in output:
+                    logger.warning(f"Symbol {symbol.class_name} {symbol.id} assigned to multiple staffs in the same system")
+                else:
+                    output.append(symbol)
+        return output
+
+    measures: list[list[Node]] = []
+    for system in systems:
+        separators = sorted(get_all_separators_from_system(system, graph), key=lambda n: n.horizontal_center)
+        symbols = get_all_in_measure_symbols_from_system(system, graph)
+
+        bins = [[] for _ in range(len(separators) + 1)]
+
+        for x in symbols:
+            for i, upper in enumerate(separators):
+                if x.horizontal_center <= upper.horizontal_center:
+                    bins[i].append(x)
+                    break
+            else:
+                bins[-1].append(x)
+
+        # remove last bin, if it is empty
+        # (there might be an unclosed measure)
+        if len(bins[-1]) == 0:
+            bins = bins[:-1]
+        
+        measures.extend(bins)
+    
+    # debug prints
+    for i, measure in enumerate(measures):
+        logger.debug(f"Found system measure {i}: {[x.id for x in measure]}")
+    
+    return measures
+
+
+def group_by_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[list[Node]]:
+    """Groups the objects into measures.
+    Assumes the measures are consistent across staffs: no polytempi.
+
     :returns: A list of Node lists corresponding to measures. The list
         is ordered left-to-right.
     """
-    graph = NotationGraph(nodes)
-    logger.debug('Find measure separators.')
+    # TODO:
+    raise NotImplementedError
+    graph = _nodes_or_graph_to_graph(nodes_or_graph)
+    system_measures = group_by_system_measure(graph)
+    output: list[list[Node]] = []
 
-    measure_separators = [node for node in nodes if node.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES]
+    for sm in system_measures:
+        
+        measures: defaultdict[Node, list[Node]] = defaultdict(list)
+        # split symbols inside a single system measure to measure based on their linkage to staffs
+        for symbol in sm:
+            staffs = sorted(graph.children(symbol, class_filter=C.STAFF), key=lambda x: x.id)
+            if len(staffs) == 0:
+                raise ValueError(f"Symbol {symbol.class_name} {symbol.id} is not linked to any staff")
+            if len(staffs) > 1:
+                logger.warning(f"Symbol {symbol.class_name} {symbol.id} is linked to multiple staffs, choosing the one with smallest id")
+            staff = staffs[0]
+            measures[staff].append(symbol)
 
-    if len(measure_separators) == 0:
-        return nodes
-
-    logger.debug('Order measure separators by precedence.')
-    # Systems
-    # measure seps. by system
-    measure_separators = sorted(measure_separators, key=lambda m: m.left)
-
-    logger.debug('Denote measure areas: bounding boxes and masks.')
-    logger.debug('Assign objects to measures, based on overlap.')
+        # append found measures to the output and 
+        output.extend([measures[staff] for staff in measures.keys()])
 
     raise NotImplementedError()
 
@@ -1144,7 +1421,7 @@ def find_contained_nodes(nodes: list[Node], mask_threshold: float = 0.95):
     # we are just checking bounding boxes for candidates first,
     # it does not matter too much.
 
-    nonstaff_nodes = [node for node in nodes if node.class_name not in _CONST.STAFF_CLASSES]
+    nonstaff_nodes = [node for node in nodes if node.class_name not in I.STAFF_CLASSES]
 
     contained_nodes = []
     for c1 in nonstaff_nodes:
@@ -1218,7 +1495,7 @@ def resolve_notehead_wrt_staffline(notehead: Node, staffline_or_leger_line: Node
             dbottom = notehead.bottom - ll.bottom
 
             if min(dtop, dbottom) / max(dtop, dbottom) \
-                    < _CONST.ON_STAFFLINE_RATIO_THRESHOLD:
+                    < I.ON_STAFFLINE_RATIO_THRESHOLD:
                 if dtop > dbottom:
                     output_position = 1
                 else:
@@ -1245,7 +1522,7 @@ def resolve_notehead_wrt_staffline(notehead: Node, staffline_or_leger_line: Node
 
 def is_notehead_on_line(notehead: Node, line: Node) -> bool:
     """Check whether given notehead is positioned on the line object."""
-    if line.class_name not in _CONST.STAFFLINE_LIKE_CLASS_NAMES:
+    if line.class_name not in I.STAFFLINE_LIKE_CLASS_NAMES:
         raise ValueError('Cannot resolve relative position of notehead'
                          ' {0} to non-staffline-like object {1}'
                          ''.format(notehead.id, line.id))

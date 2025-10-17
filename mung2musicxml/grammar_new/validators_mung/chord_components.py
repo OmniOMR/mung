@@ -16,7 +16,7 @@ class ChordComponentValidator:
         ClassNamesConstants.TUPLE,
         ClassNamesConstants.DYNAMIC_CRESHENDO,
         ClassNamesConstants.DYNAMIC_DIMINUENDO,
-        ClassNamesConstants.SLUR_CLASS_NAME
+        ClassNamesConstants.SLUR
         ]
 
     def __init__(self) -> None:

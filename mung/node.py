@@ -7,7 +7,7 @@ from lxml import etree
 
 
 from .utils import compute_connected_components
-from .constants import PrecedenceLinksConstants
+from .constants import PrecedenceLinksConstants as P
 from .logger import logger
 
 
@@ -370,9 +370,21 @@ class Node(object):
         >>> node.middle
         (30, 35)
         """
-        vertical_center = self.top + self.height // 2
-        horizontal_center = self.left + self.width // 2
-        return int(vertical_center), int(horizontal_center)
+        return self.vertical_center, self.horizontal_center
+    
+    @property
+    def vertical_center(self) -> int:
+        """
+        Returns the nodes vertical center coordinate.
+        """
+        return int(self.top + self.height // 2)
+
+    @property
+    def horizontal_center(self) -> int:
+        """
+        Returns the nodes horizontal center coordinate.
+        """
+        return int(self.left + self.width // 2)
 
     @property
     def mask(self) -> Optional[np.ndarray]:
@@ -660,11 +672,11 @@ class Node(object):
 
     @property
     def precedence_inlinks(self) -> list[int]:
-        return self.data.get(PrecedenceLinksConstants.PrecedenceInlinks, [])
+        return self.data.get(P.PRECEDENCE_INLINKS, [])
 
     @property
     def precedence_outlinks(self) -> list[int]:
-        return self.data.get(PrecedenceLinksConstants.PrecedenceOutlinks, [])
+        return self.data.get(P.PRECEDENCE_OUTLINKS, [])
 
     def __add_values_to_data_template(self, data_index: Any, value_or_values: Any | list[Any]) -> None:
         if data_index not in self.data:
@@ -677,12 +689,12 @@ class Node(object):
 
     def add_precedence_inlinks(self, precedence_inlink_or_inlinks_id: list[int] | int) -> None:
         self.__add_values_to_data_template(
-            PrecedenceLinksConstants.PrecedenceInlinks, precedence_inlink_or_inlinks_id
+            P.PRECEDENCE_INLINKS, precedence_inlink_or_inlinks_id
         )
 
     def add_precedence_outlinks(self, precedence_outlink_or_outlinks_id: list[int] | int) -> None:
         self.__add_values_to_data_template(
-            PrecedenceLinksConstants.PrecedenceOutlinks, precedence_outlink_or_outlinks_id
+            P.PRECEDENCE_OUTLINKS, precedence_outlink_or_outlinks_id
         )
 
     @classmethod

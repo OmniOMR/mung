@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class OnsetDataConstants(Enum):
+class OnsetDataConstants(StrEnum):
     ONSET_BEATS = "onset_beats"
     DURATION_BEATS = "duration_beats"
     DURATION_BEATS_WO_M = "duration_beats_wo_m"

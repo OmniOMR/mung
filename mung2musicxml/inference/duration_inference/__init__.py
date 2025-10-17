@@ -1,1 +1,2 @@
-from .wrapper import OnsetInferenceEngineWrapper
+from .engine import OnsetInferenceEngineWrapper
+from .strategy import OnsetsInferenceEngineWrapperStrategy
