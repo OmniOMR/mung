@@ -3,16 +3,12 @@ import copy
 from typing import Optional
 from dataclasses import dataclass
 
-from mung.constants import InferenceEngineConstants
-from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
-from mung.node import bounding_box_dice_coefficient, Node
-from mung.constants import ClassNamesConstants
+from mung.constants import InferenceEngineConstants as I, ClassNamesConstants as C
+from mung import  NotationGraph, Node
 from .pitch import Pitch, Octave, Step, Alter
 from ..logger import logger
 from .clefs_impl import get_clef_data_from_node
 
-
-_CONST = InferenceEngineConstants()
 
 @dataclass(frozen=True)
 class PitchInferenceStrategy:
@@ -171,8 +167,9 @@ class PitchInferenceEngineState(object):
 
         # Shift the key and inline accidental deltas
         # according to the change.
+        assert clef is not None
         if self.current_clef is not None:
-            transposition_delta = _CONST.CLEF_CHANGE_DELTA[self.current_clef.class_name][clef.class_name]
+            transposition_delta = I.CLEF_CHANGE_DELTA[self.current_clef.class_name][clef.class_name]
             if transposition_delta != 0:
                 new_key_accidentals = {
                     (d + transposition_delta) % 7: v
@@ -215,22 +212,22 @@ class PitchInferenceEngineState(object):
 
         # The pitches (F, C, G, D, ...) have to be re-cast
         # in terms of deltas, mod 7.
-        if (self.current_clef is None) or (self.current_clef.class_name == _CONST.G_CLEF):
+        if (self.current_clef is None) or (self.current_clef.class_name == I.G_CLEF):
             deltas_sharp = [4, 1, 5, 2, 6, 3, 0]
             deltas_flat = [0, 3, 6, 2, 5, 1, 4]
-        elif self.current_clef.class_name == _CONST.C_CLEF:
+        elif self.current_clef.class_name == I.C_CLEF:
             deltas_sharp = [3, 0, 4, 1, 5, 2, 6]
             deltas_flat = [6, 2, 5, 1, 4, 0, 3]
-        elif self.current_clef.class_name == _CONST.F_CLEF:
+        elif self.current_clef.class_name == I.F_CLEF:
             deltas_sharp = [2, 6, 3, 0, 4, 1, 5]
             deltas_flat = [5, 1, 4, 0, 3, 6, 2]
         else:
             raise ValueError("Incorrect clef node set as current_clef {0}.".format(self.current_clef))
 
         for d in deltas_sharp[:number_of_sharps]:
-            new_key_accidentals[d] = ClassNamesConstants.ACCIDENTAL_SHARP
+            new_key_accidentals[d] = C.ACCIDENTAL_SHARP
         for d in deltas_flat[:number_of_flats]:
-            new_key_accidentals[d] = ClassNamesConstants.ACCIDENTAL_FLAT
+            new_key_accidentals[d] = C.ACCIDENTAL_FLAT
         self.key_accidentals = new_key_accidentals
 
     def set_inline_accidental(self, delta: int, accidental: Node):
@@ -247,13 +244,13 @@ class PitchInferenceEngineState(object):
         step_delta = delta % 7
         if step_delta in self.key_accidentals:
             match self.key_accidentals[step_delta]:
-                case ClassNamesConstants.ACCIDENTAL_SHARP:
+                case C.ACCIDENTAL_SHARP:
                     pitch_mod = 1
-                case ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP:
+                case C.ACCIDENTAL_DOUBLE_SHARP:
                     pitch_mod = 2
-                case ClassNamesConstants.ACCIDENTAL_FLAT:
+                case C.ACCIDENTAL_FLAT:
                     pitch_mod = -1
-                case ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT:
+                case C.ACCIDENTAL_DOUBLE_FLAT:
                     pitch_mod = -2
                 case _:
                     raise ValueError(f"Unknown pitch mode {self.key_accidentals} for step delta {step_delta}")
@@ -261,16 +258,16 @@ class PitchInferenceEngineState(object):
         # Inline accidentals override key accidentals.
         if delta in self.inline_accidentals:
             match self.inline_accidentals[delta]:
-                case ClassNamesConstants.ACCIDENTAL_NATURAL:
+                case C.ACCIDENTAL_NATURAL:
                     logger.info('Natural at delta = {0}'.format(delta))
                     pitch_mod = 0
-                case ClassNamesConstants.ACCIDENTAL_SHARP:
+                case C.ACCIDENTAL_SHARP:
                     pitch_mod = 1
-                case ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP:
+                case C.ACCIDENTAL_DOUBLE_SHARP:
                     pitch_mod = 2
-                case ClassNamesConstants.ACCIDENTAL_FLAT:
+                case C.ACCIDENTAL_FLAT:
                     pitch_mod = -1
-                case ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT:
+                case C.ACCIDENTAL_DOUBLE_FLAT:
                     pitch_mod = -2
                 case _:
                     raise ValueError(f"Unknown pitch mode {self.inline_accidentals} for delta {delta}")
@@ -315,20 +312,20 @@ class PitchInferenceEngineState(object):
         """Given a staffline delta, returns the name of the corresponding pitch."""
         delta += self.current_clef_delta_shift
 
-        output_step = _CONST.PITCH_STEPS[(self.base_pitch_step + delta) % 7]
+        output_step = I.PITCH_STEPS[(self.base_pitch_step + delta) % 7]
         output_octave = self.base_pitch_octave + ((delta + self.base_pitch_step) // 7)
 
         # output_mod = ''
         accidental = self.accidental(delta)
         # match accidental:
         #     case 1:
-        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_SHARP]
+        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_SHARP]
         #     case 2:
-        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_SHARP]
+        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_DOUBLE_SHARP]
         #     case -1:
-        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_FLAT]
+        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_FLAT]
         #     case -2:
-        #         output_mod = _CONST.ACCIDENTAL_CODES[ClassNamesConstants.ACCIDENTAL_DOUBLE_FLAT]
+        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_DOUBLE_FLAT]
         #     case 0:
         #         pass
         #     case _:
@@ -482,6 +479,8 @@ class PitchInferenceEngine(object):
             If ``with_names`` is given, also returns id to pitch name dict.
             If ``with_pitch_objects`` is given, also returns id to ``Pitch`` object dict .
         """
+        assert self.staves is not None
+
         self.id_to_node_mapping = {c.id: c for c in nodes}
 
         # Initialize pitch temp data.
@@ -510,6 +509,15 @@ class PitchInferenceEngine(object):
         return tuple(output)
 
     def process_staff(self, staff: Node):
+        assert self.pitches_per_staff is not None
+        assert self.pitch_names_per_staff is not None
+        assert self.staff_to_clef_map is not None
+        assert self.staff_to_msep_map is not None
+        assert self.staff_to_key_map is not None
+        assert self.staff_to_noteheads_map is not None
+        assert self.pitches is not None
+        assert self.pitch_names is not None
+        assert self.pitch_objects is not None
 
         self.pitches_per_staff[staff.id] = {}
         self.pitch_names_per_staff[staff.id] = {}
@@ -530,13 +538,13 @@ class PitchInferenceEngine(object):
             q: Node
             logger.info(f"Processing staff object {q.class_name} {q.id}")
 
-            if q.class_name in _CONST.CLEF_CLASS_NAMES:
+            if q.class_name in I.CLEF_CLASS_NAMES:
                 self.process_clef(q)
-            elif q.class_name in _CONST.KEY_SIGNATURE:
+            elif q.class_name in I.KEY_SIGNATURE:
                 self.process_key_signature(q)
-            elif q.class_name in _CONST.MEASURE_SEPARATOR_CLASS_NAMES:
+            elif q.class_name in I.MEASURE_SEPARATOR_CLASS_NAMES:
                 self.process_measure_separator(q)
-            elif q.class_name in _CONST.NOTEHEAD_CLASS_NAMES:
+            elif q.class_name in I.NOTEHEAD_CLASS_NAMES:
                 p, pn, po = self.process_notehead(q, with_name=True, with_pitch_object=True) # type: ignore
                 self.pitches[q.id] = p
                 self.pitch_objects[q.id] = po
@@ -565,11 +573,15 @@ class PitchInferenceEngine(object):
         :param with_name: If set, will return not only the MIDI pitch
             code, but the name of the encoded note (e.g., F#3) as well.
         """
+        assert self.pitches is not None
+        assert self.pitch_names is not None
+        assert self.pitch_objects is not None
+
         # Processing ties
         # ---------------
-        ties = self.__children(notehead, [_CONST.TIE_CLASS_NAME])
+        ties = self.__children(notehead, [I.TIE_CLASS_NAME])
         for t in ties:
-            tied_noteheads = self.__parents(t, _CONST.NOTEHEAD_CLASS_NAMES)
+            tied_noteheads = self.__parents(t, I.NOTEHEAD_CLASS_NAMES)
 
             # Corner cases: mistakes and staff breaks
             if len(tied_noteheads) > 2:
@@ -621,7 +633,7 @@ class PitchInferenceEngine(object):
 
         # Processing inline accidentals
         # -----------------------------
-        accidentals = self.__children(notehead, _CONST.ACCIDENTAL_CLASS_NAMES)
+        accidentals = self.__children(notehead, I.ACCIDENTAL_CLASS_NAMES)
 
         if len(accidentals) > 0:
             logger.debug(f"Found {len(accidentals)} accidental for {notehead.class_name} {notehead.id}")
@@ -631,8 +643,8 @@ class PitchInferenceEngine(object):
                 self.__warning_or_error('More than two accidentals attached to notehead'
                                         ' {0}'.format(notehead.id))
             elif len(accidentals) == 2:
-                naturals = [a for a in accidentals if a.class_name == ClassNamesConstants.ACCIDENTAL_NATURAL]
-                non_naturals = [a for a in accidentals if a.class_name != ClassNamesConstants.ACCIDENTAL_NATURAL]
+                naturals = [a for a in accidentals if a.class_name == C.ACCIDENTAL_NATURAL]
+                non_naturals = [a for a in accidentals if a.class_name != C.ACCIDENTAL_NATURAL]
                 if len(naturals) == 0:
                     self.__warning_or_error('More than one non-natural accidental'
                                             ' attached to notehead {0}'
@@ -678,7 +690,7 @@ class PitchInferenceEngine(object):
         """
         current_staff = self.__children(notehead, ['staff'])[0]
         staffline_objects = self.__children(notehead,
-                                            _CONST.STAFFLINE_CLASS_NAMES)
+                                            I.STAFFLINE_CLASS_NAMES)
 
         # Leger lines
         # ------------
@@ -686,7 +698,7 @@ class PitchInferenceEngine(object):
 
             # Processing leger lines:
             #  - count leger lines
-            lls = self.__children(notehead, [_CONST.LEGER_LINE])
+            lls = self.__children(notehead, [I.LEGER_LINE])
             n_lls = len(lls)
             if n_lls == 0:
                 raise ValueError('Notehead with no staffline or staffspace,'
@@ -732,7 +744,7 @@ class PitchInferenceEngine(object):
                     dbottom = notehead.bottom - closest_ll.bottom
 
                     if min(dtop, dbottom) / max(dtop, dbottom) \
-                            < _CONST.ON_STAFFLINE_RATIO_THRESHOLD:
+                            < I.ON_STAFFLINE_RATIO_THRESHOLD:
                         on_leger_line = False
 
                         # Check orientation congruent with rel. to staff.
@@ -755,7 +767,7 @@ class PitchInferenceEngine(object):
                     # dtop = closest_ll.top - notehead.top
                     # dbottom = max(notehead.bottom - closest_ll.top, 1)
                     # if float(dbottom) / float(dtop) \
-                    #         < _CONST.ON_STAFFLINE_RATIO_TRHESHOLD:
+                    #         < I.ON_STAFFLINE_RATIO_TRHESHOLD:
                     on_leger_line = False
 
                 # Notehead interlaced with leger line, leger line on top
@@ -763,7 +775,7 @@ class PitchInferenceEngine(object):
                     # dtop = max(closest_ll.bottom - notehead.top, 1)
                     # dbottom = notehead.bottom - closest_ll.bottom
                     # if float(dtop) / float(dbottom) \
-                    #         < _CONST.ON_STAFFLINE_RATIO_TRHESHOLD:
+                    #         < I.ON_STAFFLINE_RATIO_TRHESHOLD:
                     on_leger_line = False
 
                 else:
@@ -788,7 +800,7 @@ class PitchInferenceEngine(object):
             # Count how far from the current staffline we are.
             #  - Collect staffline objects from the current staff
             all_staffline_objects = self.__children(current_staff,
-                                                    _CONST.STAFFLINE_CLASS_NAMES)
+                                                    I.STAFFLINE_CLASS_NAMES)
 
             #  - Determine their ordering, top to bottom
             sorted_staffline_objects = sorted(all_staffline_objects,
@@ -816,13 +828,13 @@ class PitchInferenceEngine(object):
         self.pitch_state.reset_inline_accidentals()
 
     def process_key_signature(self, key_signature):
-        sharps = self.__children(key_signature, [ClassNamesConstants.ACCIDENTAL_SHARP])
-        flats = self.__children(key_signature, [ClassNamesConstants.ACCIDENTAL_FLAT])
+        sharps = self.__children(key_signature, [C.ACCIDENTAL_SHARP])
+        flats = self.__children(key_signature, [C.ACCIDENTAL_FLAT])
         self.pitch_state.set_key(len(sharps), len(flats))
 
     def process_clef(self, clef):
         # Check for staffline children
-        stafflines = self.__children(clef, class_names=_CONST.STAFFLINE_CLASS_NAMES)
+        stafflines = self.__children(clef, class_names=I.STAFFLINE_CLASS_NAMES)
         if len(stafflines) == 0:
             logger.info('Clef {0} not connected to any staffline, assuming default'
                          ' position'.format(clef.id))
@@ -850,19 +862,19 @@ class PitchInferenceEngine(object):
         graph = NotationGraph(nodes)
 
         # Collect staves.
-        self.staves = graph.filter_vertices(InferenceEngineConstants.STAFF)
+        self.staves = graph.filter_vertices(I.STAFF)
         logger.info('We have {0} staves.'.format(len(self.staves)))
 
         # Collect clefs and key signatures per staff.
-        self.clefs = graph.filter_vertices(_CONST.CLEF_CLASS_NAMES)
+        self.clefs = graph.filter_vertices(I.CLEF_CLASS_NAMES)
         if ignore_nonstaff:
-            self.clefs = [c for c in self.clefs if graph.has_children(c, [InferenceEngineConstants.STAFF])]
+            self.clefs = [c for c in self.clefs if graph.has_children(c, [I.STAFF])]
         logger.info(f"We have {len(self.clefs)} clefs.")
 
-        self.key_signatures = graph.filter_vertices(InferenceEngineConstants.KEY_SIGNATURE)
+        self.key_signatures = graph.filter_vertices(I.KEY_SIGNATURE)
         if ignore_nonstaff:
             self.key_signatures = [c for c in self.key_signatures
-                                   if graph.has_children(c, [InferenceEngineConstants.STAFF])]
+                                   if graph.has_children(c, [I.STAFF])]
         logger.info(f"We have {len(self.key_signatures)} key signatures.")
 
         self.clef_to_staff_map = {}
@@ -870,7 +882,7 @@ class PitchInferenceEngine(object):
         self.staff_to_clef_map = collections.defaultdict(list)
         for c in self.clefs:
             # Assuming one staff per clef
-            children = graph.children(c, [InferenceEngineConstants.STAFF])
+            children = graph.children(c, [I.STAFF])
             if len(children) > 0:
                 s = children[0]
                 self.clef_to_staff_map[c.id] = s
@@ -884,7 +896,7 @@ class PitchInferenceEngine(object):
         # There may be more than one key signature per staff.
         self.staff_to_key_map = collections.defaultdict(list)
         for k in self.key_signatures:
-            children = graph.children(k, [InferenceEngineConstants.STAFF])
+            children = graph.children(k, [I.STAFF])
             if len(children) > 0:
                 s = children[0]
                 self.key_to_staff_map[k.id] = s
@@ -895,15 +907,15 @@ class PitchInferenceEngine(object):
                 continue
 
         # Collect measure separators.
-        self.measure_separators = graph.filter_vertices(InferenceEngineConstants.MEASURE_SEPARATOR)
+        self.measure_separators = graph.filter_vertices(I.MEASURE_SEPARATOR)
         if ignore_nonstaff:
             self.measure_separators = [c for c in self.measure_separators
-                                       if graph.has_children(c, [InferenceEngineConstants.STAFF])]
+                                       if graph.has_children(c, [I.STAFF])]
         logger.info(f"We have {len(self.measure_separators)} measure separators.")
 
         self.staff_to_msep_map = collections.defaultdict(list)
         for m in self.measure_separators:
-            _m_staves = self.__children(m, [InferenceEngineConstants.STAFF])
+            _m_staves = self.__children(m, [I.STAFF])
             # (Measure separators might belong to multiple staves.)
             for s in _m_staves:
                 self.staff_to_msep_map[s.id].append(m)
@@ -911,15 +923,15 @@ class PitchInferenceEngine(object):
 
         # Collect noteheads.
         self.noteheads = [c for c in nodes
-                          if c.class_name in _CONST.NOTEHEAD_CLASS_NAMES]
+                          if c.class_name in I.NOTEHEAD_CLASS_NAMES]
         if ignore_nonstaff:
             self.noteheads = [c for c in self.noteheads
-                              if graph.has_children(c, [InferenceEngineConstants.STAFF])]
+                              if graph.has_children(c, [I.STAFF])]
         logger.info(f"We have {len(self.noteheads)} noteheads.")
 
         self.staff_to_noteheads_map = collections.defaultdict(list)
         for n in self.noteheads:
-            s = self.__children(n, [InferenceEngineConstants.STAFF])[0]
+            s = self.__children(n, [I.STAFF])[0]
             self.staff_to_noteheads_map[s.id].append(n)
 
     def __children(self, c: Node, class_names: list[str]) -> list[Node]:
