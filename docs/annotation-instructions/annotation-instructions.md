@@ -119,7 +119,7 @@ TODO: vyřešit graf
 ### arpeggiato 
 - ne arpeggio
 ### ornamentTrill
-- tr text
+- tr text, pokud je to krátký trylek
 
 ### wiggleTrill
 - typicky jako čára za tr
@@ -146,8 +146,9 @@ TODO: Pochodem. ????
 ### otherText
 - číslo stránky, nadpis, číslo sloky
 
-### systemSeparator
+### systemDivider
 - v CVAT system_break
+- systemSeparator neee
 
 ### brace
 - `{` složená
@@ -163,6 +164,58 @@ TODO: Pochodem. ????
 ### barlineSingle
 - CVAT thin_barline
 
+### barlineHeavy
+- tlustá čára
+- CVAT barline_thick
+
+### staff1Line
+- CVAT Staff line
+- 1 linka
+
+### staff
+- shlukuje 5 linek
+- potřeba, aby sedělo přesně na rohy
+- těsný box čar
+
+### staffGrouping
+- abstraktní shlukovač
+- obskurnější staff grouping https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13698771 
+- pravidla ke staff grouping https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410 
+
+### measureSeparator
+
+### keySignature
+
+### repetice se skládá z:
+#### repeat
+- maska
+#### bracket/barlineSingle/barlineHeavy
+#### repeatDot
+
+### splitBarDivider
+- napojení taktu (ta vlnovka na konci)
+
+### repeat1Bar
+- CVAT repeat_measure_sign
+
+### unclassified
+- CVAT ufo
+- prosaky není potřeba řešit, pokud vyloženě neiterferujíc s notací (tzn. člověk by si špatně mohl vyložit)
+- vlasy, rozlitý kafe, rozpláclý mouchy dělám jako ufo area (ale dávám to jen tam, kde to zasahuje do not/osnov, zkrátka do čtení textu)
+- NEZNAČIT: hřbety knih a notaci na sousední stránce, věci které nevím jak značit (pokud nevím, zeptat se), symboly z předchozích stránek
+- prosak, co nevypadá jako by byl v popředí (takový duch) - udělat screen: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a
+
+### figuredBassText
+- konvexní obal skupinky
+
+### TODO: figured_bass_spanner
+
+### TODO: “=”
+- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign!!! POTŘEBA VYŘEŠIT
+- dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem
+
+### TODO když se vyskytne
+repetice, takže vlnovky jako repeat_dot, šikmé dvojčárky možná jako "other" - taková ta divná repetice - voláme výš, tohle je potřeba dořešit
 
 
 další symboly co lze najít ve vyhledávání jsou pro kompatibilitu s jinýma datasetama - není pro anotátory - pokud tady není zaznačený znak, neznačit nějakým vymyšleným z možností, ale doptat se
