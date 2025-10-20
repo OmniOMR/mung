@@ -12,6 +12,8 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 
 ![noteheadWhole](./img/notehead-whole-1.png)
 
+---
+
 ### noteheadHalf
 - Always **leave out the center**. Don’t just outline the shape.
 
@@ -20,6 +22,7 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
   <img src="./img/notehead-half-2.png" alt="noteheadHalf example 2" width="220"/>
 </p>
 
+---
 
 ### noteheadBlack
 
@@ -30,14 +33,17 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
   <img src="./img/notehead-black-2.png" alt="noteheadBlack Example 2" width="175"/>
 </p>
 
+---
+
 ### augmentationDot
 
 *(Previously in CVAT: `duration_dot`)*
 
 <p>
   <img src="./img/augmentation-dot-1.png" alt="augmentationDot Example" width="200"/>
-  <img src="./img/augmentation-dot-2.png" alt="augmentationDot Example 2" width="220"/>
 </p>
+
+---
 
 ### stem
 
@@ -45,12 +51,13 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
   <img src="./img/stem-1.png" alt="stem Example" width="150"/>
 </p>
 
-TODO: Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku?
+**TODO:** Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku?
 
 <p>
   <img src="./img/stem-2.png" alt="stem Example 2" width="150"/>
 </p>
 
+---
 
 ### flag(number)th(Up/Down)
 
@@ -58,7 +65,7 @@ Flags are divided into separate classes according to their type and direction:
 
 - **flag8thUp** / **flag8thDown**
 <p>
-  <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="170"/>
+  <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="220"/>
 </p>
 
 - **flag16thUp** / **flag16thDown**  
@@ -68,38 +75,86 @@ Flags are divided into separate classes according to their type and direction:
 
 ⚠️ flag8thUp, flag16thUp
 <p>
-  <img src="./img/flag-8th-up-1.png" alt="flag8thUp outer Example" width="150"/>
-  <img src="./img/flag-16th-up-1.png" alt="flag16thUp inner Example" width="140"/>
+  <img src="./img/flag-8th-up-1.png" alt="flag8thUp outer Example" width="190"/>
+  <img src="./img/flag-16th-up-1.png" alt="flag16thUp inner Example" width="180"/>
 </p>
+
+---
 
 ### beam
 
+<p>
+  <img src="./img/beam-1.png" alt="flag8thUp outer Example" width="290"/>
+</p>
+
+---
+
 ### legerLine
-(not ledger - yes both variants valid [https://en.wikipedia.org/wiki/Ledger_line](Wikipedia), in cvat ledger, now leger to be compliant with SMuFL)
 
-### Grace note
-Composed of:
+*(Not “ledger”, both variants are correct ([Wikipedia](https://en.wikipedia.org/wiki/Ledger_line)), but we use leger to stay compliant with SMuFL specification.)*
 
-#### noteheadWholeSmall / noteheadHalfSmall / noteheadBlackSmall
+<p>
+  <img src="./img/leger-line-1.png" alt="legerLine Example" width="450"/>
+</p>
 
-obyčejný stem, flag, beam, přeškrtnutí zatím nejasné (ornament zatím, tak zpět, rozseknuto na `graceNoteSlashStemUp`+`graceNoteSlashStemDown` - nikde to není standardizované) (tady stará diskuze ke cvatu - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887) 
+---
+
+### Grace note (composite)
+A grace note is composed of:
+- **noteheadWholeSmall / noteheadHalfSmall / noteheadBlackSmall**
+<p>
+  <img src="./img/notehead-black-small-1.png" alt="noteheadBlackSmall Example" width="350"/>
+</p>
+
+- Uses a standard **stem, flag(number)th(Up/Down), beam**
+
+<p>
+  <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
+</p>
+
+- **TODO:** přeškrtnutí zatím nejasné (ornament? předběžně rozseknuto na `graceNoteSlashStemUp`+`graceNoteSlashStemDown`) (tady stará diskuze ke cvatu - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887) 
+
+---
 
 ### tremolo1
-- we use SMuFL, so tremolo1
-- more tremolo lines, outer to inner tremolo1,tremolo2,tremolo3,... (similar to flag principle)
-TODO: potřeba zkontrolovat vyšší mocí
+- Following SMuFL notation: `tremolo1`
+- Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
+
+- **TODO:** Needs verification.
+
+---
 
 ### slur
-dávat i když je na konci stránky a není jasné, jestli to je tie nebo slur (viz [https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13986659](zde)), Ale je možnost navazující stránku dohledat (jako dohledáváme klíče v MuseScore). Všechny anotované stránky jsou v Digitální knihovně, kde se dá listovat celým dokumentem. Kdybyste to chtěli dohledávat sami (třeba i kvůli těm klíčům), odkazy vypadají takhle: https://www.digitalniknihovna.cz/mzk/view/uuid:5c5a6d8c-b434-4496-a9ac-67d518230273?page=uuid:858b1bb0-c001-427c-95b0-a3ee0ad1b3bc (to je 1. obrázek v tabulce obrázků ze CVATu). Takže vždycky "...view/uuid:[číslo před podtržítkem]?page=uuid:[číslo po podtržítku]".
+
+- Annotate even when the slur appears at the **end of a page** and it’s unclear whether it’s a slur or a tie (see [discussion](https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13986659)).
+- All annotated pages are available in the **Digital Library**, where you can browse the full document. If you want to check it yourself (for clefs or slurs), the links follow this format:
+
+    `https://www.digitalniknihovna.cz/mzk/view/uuid:<document_id>?page=uuid:<page_id>`
+
+<p>
+  <img src="./img/slur-1.png" alt="slur Example" width="300"/>
+</p>
+
+---
 
 ### tie
 
+<p>
+  <img src="./img/tie-1.png" alt="tie Example" width="600"/>
+</p>
+
+---
+
 ### accidentalSharp
-(sharp in CVAT)
-- vždycky vynechávat prostředky!!! nedělat jen obal!!!
+*(`sharp` in CVAT)*  
+- Always **leave out the center!** Don’t just outline the shape.
+
+
+
+---
 
 ### accidentalFlat
-- vždycky vynechávat prostředky!!! nedělat jen obal!!!
+- Always **leave out the center!** Don’t just outline the shape.
 
 ### accidentalNatural
 
