@@ -120,7 +120,7 @@ A grace note is composed of:
 - Following SMuFL notation: `tremolo1`
 - Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
 
-- **TODO:** Needs verification.
+- **TODO:** Needs verification. Při převodu z CVAT použito: `tremoloMark`
 
 ---
 
@@ -149,80 +149,202 @@ A grace note is composed of:
 *(`sharp` in CVAT)*  
 - Always **leave out the center!** Don’t just outline the shape.
 
-
+<p>
+  <img src="./img/accidental-sharp-1.png" alt="accidentalSharp Example" width="200"/>
+</p>
 
 ---
 
 ### accidentalFlat
 - Always **leave out the center!** Don’t just outline the shape.
 
+<p>
+  <img src="./img/accidental-flag-1.png" alt="accidentalFlat Example" width="200"/>
+</p>
+
+---
+
 ### accidentalNatural
 
-### fermataAbove
+- Always **leave out the center!** Don’t just outline the shape.
 
-### fermataBelow
+<p>
+  <img src="./img/accidental-natural-1.png" alt="accidentalNatural Example" width="150"/>
+</p>
+
+---
+
+### fermataAbove / fermataBelow
+
+<p>
+  <img src="./img/fermata-above-1.png" alt="fermataAbove Example" width="200"/>
+  <img src="./img/fermata-below-1.png" alt="fermataBelow Example" width="183"/>
+</p>
+
+---
 
 ### fClef
 
+<p>
+  <img src="./img/f-clef-1.png" alt="fClef Example" width="200"/>
+</p>
+
+---
+
 ### fClefChange
+- Used when the **clef changes in the middle of the staff** to an F clef.
+- These symbols are typically **smaller in size** than standard clefs.
+- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+
+---
 
 ### gClef
-- vynechávat prostředky! nedělat jen obal!
+- Always **leave out the center!** Don’t just outline the shape.
+
+<p>
+  <img src="./img/g-clef-2.png" alt="gClef Example" width="135"/>
+  <img src="./img/g-clef-1.png" alt="gClef Example" width="140"/>
+</p>
+
+---
 
 ### gClefChange
+- Used when the **clef changes in the middle of the staff** to a G clef.
+- These symbols are typically **smaller in size** than standard clefs.
+- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+
+---
 
 ### cClef
 
-### cClefChange
+<p>
+  <img src="./img/c-clef-1.png" alt="cClef Example" width="150"/>
+</p>
 
+---
+
+### cClefChange
+- Used when the **clef changes in the middle of the staff** to a C clef.
+- These symbols are typically **smaller in size** than standard clefs.
+- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+
+---
 
 ### timeSig[Number 0-9]
-- if number > 9, then mark it via numerals (e.g. 10 is divided into timeSig1 and timeSig0)
-TODO: vyřešit graf
+- Represents individual **digits** in the time signature (0–9).  
+- If the number is **greater than 9**, annotate each digit separately. (For example, a time signature of `10` should be split into **`timeSig1`** and **`timeSig0`**.)
+- **TODO:** vyřešit graf
 
-### timeSignature
-- obalovač
-- obalit i jeden objekt, nebo i víc ¾=6/10, pak obalit celé
-- může být i na konci řádku (screen 7. řádek)
+<p>
+  <img src="./img/time-sig-1.png" alt="timeSig 6 and 8 Example" width="350"/>
+</p>
+
+---
 
 ### timeSigFractionalSlash
-- vodorovná čára nebo lomítko oddělující horní a dolní číslo
+- Represents the **horizontal line or slash** separating the upper and lower numbers of a time signature.
+
+---
 
 ### timeSigFractionalEquals
+- Represents the **equals sign (“=”)** used in **fractional or complex time signatures**.
 
+---
+
+### timeSignature
+- A **container class** for grouping all elements that form a complete time signature.
+- obalit i jeden objekt, nebo i víc ¾=6/10, pak obalit celé
+- Use it to wrap **either a single object** (e.g., 3/4=6/10 as a compact symbol) **or multiple separate digits**.
+- If the time signature appears **at the end of a staff line**, still annotate it as a full `timeSignature` object:
+
+<p>
+  <img src="./img/time-signature-1.png" alt="timeSignature Example" width="300"/>
+</p>
+
+---
 
 ### restWhole
 
+<p>
+  <img src="./img/rest-whole-1.png" alt="restWhole Example" width="250"/>
+</p>
+
+---
+
+### restHalf
+
+---
+
 ### restQuarter
+
+<p>
+  <img src="./img/rest-quarter-1.png" alt="restQuarter Example" width="250"/>
+</p>
+
+---
 
 ### rest8th
 
-### rest16th
-...
+<p>
+  <img src="./img/rest-8th-1.png" alt="rest8th Example" width="200"/>
+</p>
 
-### articAccentAbove
-### articAccentBelow
-### articStaccatoAbove
-- do NOT use articulationStaccato
-### articStaccatoBelow
-### articTenutoAbove
-### articTenutoBelow
+---
+
+### rest16th
+
+<p>
+  <img src="./img/rest-16th-1.png" alt="rest16th Example" width="200"/>
+</p>
+
+---
+
+### articSomething
+- previously in CVAT `articulation_mark` for every articulation mark, now separated into classes.
+
+### articAccentAbove / articAccentBelow
+
+### articStaccatoAbove / articStaccatoBelow
+- Represents **staccato dots** placed above or below the notehead.
+- **Do not use** the old class name `articulationStaccato`.
+### articTenutoAbove / articTenutoBelow
 ### articMarcatoAbove
 ### articMarcatoBelow
 
+---
+
 ### arpeggiato 
-- ne arpeggio
+*(Previously grouped under `ornament` in CVAT.)*  
+- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
+- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+
+---
+
 ### ornamentTrill
-- tr text, pokud je to krátký trylek
+*(Previously grouped under `ornament` in CVAT.)*  
+- Used for the **“tr” text** symbol marking a **short trill**.
+- Do not use a simple convex hull. The annotation **must follow the exact shape** of the symbol. **TODO:** je toto pravda?
+
+<p>
+  <img src="./img/ornament-trill-1.png" alt="ornamentTrill Example" width="200"/>
+</p>
+
+---
 
 ### wiggleTrill
-- typicky jako čára za tr
+- Represents the **wavy line** that typically **follows a trill mark**,  
+indicating the continuation of the trill.
+
+---
 
 ### lyricsText
-- vyscreenovat https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_c98a8dd2-1141-48c8-a594-ee15db270b02
 - vyscreenovat https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
 - dělat po slabikách / tak aby se dalo navázat na notační graf
 - stačí konvexní obal (hrubá maska)
+
+<p>
+  <img src="./img/lyrics-text-1.png" alt="lyricsText Example" width="400"/>
+</p>
 
 ### dynamicsText
 - maska nad dynamicTextem
@@ -240,15 +362,20 @@ TODO: Pochodem. ????
 ### otherText
 - číslo stránky, nadpis, číslo sloky
 
+---
+
 ### systemDivider
 - v CVAT system_break
-- systemSeparator neee
+
+---
 
 ### brace
 - `{` složená
 - staff_bracket ve cvatu
 - spojit více osnov pro jeden nástroj - např. piano
 - někdy může být i přes tři osnovy, ale výjimečné (u varhan třeba)
+
+---
 
 ### bracket
 - hranatá `[`
@@ -311,6 +438,7 @@ TODO: Pochodem. ????
 
 ### TODO když se vyskytne
 repetice, takže vlnovky jako repeat_dot, šikmé dvojčárky možná jako "other" - taková ta divná repetice - voláme výš, tohle je potřeba dořešit
+- teď jsem našla, že asi Vojta to převádí ze CVATu do `repeatOneBar`
 
 
 další symboly co lze najít ve vyhledávání jsou pro kompatibilitu s jinýma datasetama - není pro anotátory - pokud tady není zaznačený znak, neznačit nějakým vymyšleným z možností, ale doptat se
