@@ -1,53 +1,92 @@
 
-připsat, že pravým tlačítkem lze u vytváření polygonu skočit o jeden bod dozadu
-
-ukončila jsem masku brzo, ale potřebuji něco přidat, co s tím? stačí vybrat objekt ke kterému chci přidávat a zmáčknout `N`. Případně vybrat objekt a v dolním okénku `Edit nodes` (pětiúhelník).
+## Tips
+- When creating a polygon, you can go **one point back** by **right-clicking**.
+- If you **finished a mask too early** but need to add more, simply **select the object** you want to modify and press `N`.
+Alternatively, select the object and click the “Edit nodes” icon (⬟) in the bottom panel.
 
 ## Classes
 
 ### noteheadWhole
-- celá nota, vynechávat střed
-- není k ní attached nožička
+- It does not have an attached stem.
+- Fill the entire notehead but **leave out the center**.
+
+![noteheadWhole](./img/notehead-whole-1.png)
 
 ### noteheadHalf
-- vždycky vynechávat prostředky!!! nedělat jen obal!!!
+- Always **leave out the center**. Don’t just outline the shape.
+
+<p>
+  <img src="./img/notehead-half-1.png" alt="noteheadHalf example" width="300"/>
+  <img src="./img/notehead-half-2.png" alt="noteheadHalf example 2" width="220"/>
+</p>
+
 
 ### noteheadBlack
 
-(previously in CVAT `notehead_full`, you can find `noteheadFull` in MuNG, but do NOT use it)
+*(Previously in CVAT: `notehead_full`. You may find `noteheadFull` in MuNG, but **do NOT use it.**)*
+
+<p>
+  <img src="./img/notehead-black-1.png" alt="noteheadBlack Example" width="200"/>
+  <img src="./img/notehead-black-2.png" alt="noteheadBlack Example 2" width="175"/>
+</p>
 
 ### augmentationDot
 
-(previously `duration_dot`)
+*(Previously in CVAT: `duration_dot`)*
+
+<p>
+  <img src="./img/augmentation-dot-1.png" alt="augmentationDot Example" width="200"/>
+  <img src="./img/augmentation-dot-2.png" alt="augmentationDot Example 2" width="220"/>
+</p>
 
 ### stem
 
+<p>
+  <img src="./img/stem-1.png" alt="stem Example" width="150"/>
+</p>
 
-### Grance note
-Composed of:
+TODO: Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku?
 
-#### noteheadHalfSmall
+<p>
+  <img src="./img/stem-2.png" alt="stem Example 2" width="150"/>
+</p>
 
-#### noteheadBlackSmall
 
-obyčejný stem, flag, beam, přeškrtnutí zatím nejasné (ornament zatím, tak zpět, rozseknuto na `graceNoteSlashStemUp`+`graceNoteSlashStemDown` - nikde to není standardizované) (tady stará diskuze ke cvatu - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887) 
+### flag(number)th(Up/Down)
 
-### flag
-rozdělený do tříd
-8th up/down
-16th up/down - tady catch - když 2flags u jedné noty, tak jedna 8th, druhá 16th (zvnějšku)
-32th ...
-#### flag8thUp
+Flags are divided into separate classes according to their type and direction:
 
+- **flag8thUp** / **flag8thDown**
+<p>
+  <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="170"/>
+</p>
+
+- **flag16thUp** / **flag16thDown**  
+  ⚠️ *Be careful:* If a single note has **two flags**, the outer is **8th** and the inner is **16th** (and the same for three flags - 8th, 16th, 32nd... and so on).
+- **flag32ndUp** / **flag32ndDown**
+- *(and so on for higher flag counts)*
+
+⚠️ flag8thUp, flag16thUp
+<p>
+  <img src="./img/flag-8th-up-1.png" alt="flag8thUp outer Example" width="150"/>
+  <img src="./img/flag-16th-up-1.png" alt="flag16thUp inner Example" width="140"/>
+</p>
 
 ### beam
 
 ### legerLine
 (not ledger - yes both variants valid [https://en.wikipedia.org/wiki/Ledger_line](Wikipedia), in cvat ledger, now leger to be compliant with SMuFL)
 
-### tremolo
-we use SMuFL, so tremolo1
-more tremolo, outer to inner tremolo1,tremolo2,tremolo3,... (similar to flag principle)
+### Grace note
+Composed of:
+
+#### noteheadWholeSmall / noteheadHalfSmall / noteheadBlackSmall
+
+obyčejný stem, flag, beam, přeškrtnutí zatím nejasné (ornament zatím, tak zpět, rozseknuto na `graceNoteSlashStemUp`+`graceNoteSlashStemDown` - nikde to není standardizované) (tady stará diskuze ke cvatu - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887) 
+
+### tremolo1
+- we use SMuFL, so tremolo1
+- more tremolo lines, outer to inner tremolo1,tremolo2,tremolo3,... (similar to flag principle)
 TODO: potřeba zkontrolovat vyšší mocí
 
 ### slur
@@ -209,6 +248,7 @@ TODO: Pochodem. ????
 - konvexní obal skupinky
 
 ### TODO: figured_bass_spanner
+- zatím pro to není třída
 
 ### TODO: “=”
 - TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign!!! POTŘEBA VYŘEŠIT
