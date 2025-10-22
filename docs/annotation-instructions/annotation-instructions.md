@@ -253,8 +253,7 @@ A grace note is composed of:
 
 ### timeSignature
 - A **container class** for grouping all elements that form a complete time signature.
-- obalit i jeden objekt, nebo i víc ¾=6/10, pak obalit celé
-- Use it to wrap **either a single object** (e.g., 3/4=6/10 as a compact symbol) **or multiple separate digits**.
+- Use it to wrap **either a single object or multiple separate digits** (e.g., 3/4=6/10 as a compact symbol).
 - If the time signature appears **at the end of a staff line**, still annotate it as a full `timeSignature` object:
 
 <p>
@@ -299,14 +298,16 @@ A grace note is composed of:
 
 ---
 
-### articSomething
+### artic(Something)
 - previously in CVAT `articulation_mark` for every articulation mark, now separated into classes.
 
 ### articAccentAbove / articAccentBelow
+- Represents an **accent mark** placed **above or below** the notehead.
 
 ### articStaccatoAbove / articStaccatoBelow
 - Represents **staccato dots** placed above or below the notehead.
 - **Do not use** the old class name `articulationStaccato`.
+
 ### articTenutoAbove / articTenutoBelow
 ### articMarcatoAbove
 ### articMarcatoBelow
@@ -337,66 +338,118 @@ indicating the continuation of the trill.
 
 ---
 
+**TODO:** U textů bude potřeba vyřešit jestli texty přepisovat (podobně jako umožňoval CVAT - pozor na nečitelné texty).
+
 ### lyricsText
-- vyscreenovat https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
-- dělat po slabikách / tak aby se dalo navázat na notační graf
-- stačí konvexní obal (hrubá maska)
+- Annotate **syllable by syllable or separate words**, so that each lyric segment can be correctly aligned with the notation graph.
+- It is sufficient to use a **convex hull (rough mask)** for lyrics — precise outlining is not required.
 
 <p>
   <img src="./img/lyrics-text-1.png" alt="lyricsText Example" width="400"/>
 </p>
 
 ### dynamicsText
-- maska nad dynamicTextem
-- třeba piano `p` bude `dynamicPiano` značený přesně a `dynamicsText` nad tím jako konvexní obal.
-- ff budou dva symboly `dynamicForte` a nad tím bude `dynamicsText` jako konvexní obal.
+- Represents a **textual region** covering one or more **dynamic marks**.
+- The **specific dynamic symbol** (e.g., `p`, `f`, `ff`) should be annotated **precisely** using its respective `dynamicXXX` class.  
+- The surrounding **text region** should then be annotated as `dynamicsText`, using a **convex hull** that encloses all relevant symbols.
 
-#### dynamicsXXX značené přesně
-- `dynamicForte`, `dynamicMezzo`, `dynamicNiente`, `dynamicPiano`, `dynamicRinforzando`, `dynamicSforzando`, `dynamicZ`
-- a nad tím nezapomenout na `dynamicsText jako konvexní obal`
-- `po`, `p:` značit celé jako jeden `dynamicPiano`
+**Examples:**
+- For a single “p” (piano), mark:
+  - `dynamicPiano` — exact symbol outline  
+  - `dynamicsText` — convex hull enclosing it
+- For “ff” (fortissimo), mark:
+  - Two symbols: `dynamicForte` + `dynamicForte`
+  - One `dynamicsText` area enclosing both
+
+### `dynamic<Symbol>` (precise masks)
+The following classes must be annotated **accurately (not convex)**:
+- `dynamicForte`
+- `dynamicMezzo`
+- `dynamicNiente`
+- `dynamicPiano`
+- `dynamicRinforzando`
+- `dynamicSforzando`
+- `dynamicZ`
+
+Also remember to add a `dynamicsText` convex hull over these symbols.
+
+> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
 
 ### tempoText
-TODO: Pochodem. ????
+- **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
 
 ### otherText
-- číslo stránky, nadpis, číslo sloky
+Used for **non-musical text elements** such as:
+- Page numbers  
+- Titles  
+- Verse numbers
 
 ---
 
 ### systemDivider
-- v CVAT system_break
+*(Called `system_break` in CVAT)* 
 
 ---
 
 ### brace
-- `{` složená
-- staff_bracket ve cvatu
-- spojit více osnov pro jeden nástroj - např. piano
-- někdy může být i přes tři osnovy, ale výjimečné (u varhan třeba)
+- Represents the **curly bracket `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).  
+- Corresponds to `staff_bracket` in CVAT.  
+- Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
+
+<p>
+  <img src="./img/brace-1.png" alt="brace Example" width="150"/>
+</p>
 
 ---
 
 ### bracket
-- hranatá `[`
-- udělat screen - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a
-- pozor, často u bracket bývá druhá čára, která ale už bracket není a má se značit jako `barlineSingle`
+- Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
+- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
+
+<p>
+  <img src="./img/bracket-1.png" alt="bracket Example" width="300"/>
+</p>
+
+---
 
 ### barlineSingle
-- CVAT thin_barline
+*(Called `thin_barline` in CVAT)*  
+- Represents a **single thin barline**.  
+- Annotate **precisely around the entire shape**.
+
+<p>
+  <img src="./img/barline-single-1.png" alt="barlineSingle Example" width="180"/>
+</p>
+
+---
 
 ### barlineHeavy
-- tlustá čára
-- CVAT barline_thick
+*(Called `barline_thick` in CVAT)*
+- Represents a **thick barline**, usually used at section endings
+
+<p>
+  <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
+</p>
+
+---
 
 ### staff1Line
-- CVAT Staff line
-- 1 linka
+*(Called `Staff line` in CVAT)*  
+- Represents a **single staff line**.
+- Annotate **precisely around the entire shape**.
+
+<p>
+  <img src="./img/staff-1-line.png" alt="staff1Line Example" width="700"/>
+</p>
+
+---
 
 ### staff
 - shlukuje 5 linek
 - potřeba, aby sedělo přesně na rohy
 - těsný box čar
+
+---
 
 ### staffGrouping
 - abstraktní shlukovač
@@ -420,6 +473,7 @@ TODO: Pochodem. ????
 - CVAT repeat_measure_sign
 
 ### unclassified
+- TODO: rozseknout, jestli je tahle kategorie potřeba a při jekých situacích
 - CVAT ufo
 - prosaky není potřeba řešit, pokud vyloženě neiterferujíc s notací (tzn. člověk by si špatně mohl vyložit)
 - vlasy, rozlitý kafe, rozpláclý mouchy dělám jako ufo area (ale dávám to jen tam, kde to zasahuje do not/osnov, zkrátka do čtení textu)
@@ -438,7 +492,8 @@ TODO: Pochodem. ????
 
 ### TODO když se vyskytne
 repetice, takže vlnovky jako repeat_dot, šikmé dvojčárky možná jako "other" - taková ta divná repetice - voláme výš, tohle je potřeba dořešit
-- teď jsem našla, že asi Vojta to převádí ze CVATu do `repeatOneBar`
+
+`%` teď jsem našla, že asi Vojta to převádí ze CVATu do `repeatOneBar`
 
 
 další symboly co lze najít ve vyhledávání jsou pro kompatibilitu s jinýma datasetama - není pro anotátory - pokud tady není zaznačený znak, neznačit nějakým vymyšleným z možností, ale doptat se
