@@ -4,6 +4,12 @@
 - If you **finished a mask too early** but need to add more, simply **select the object** you want to modify and press `N`.
 Alternatively, select the object and click the “Edit nodes” icon (⬟) in the bottom panel.
 
+> **Note:**  
+> Some additional symbols that appear in the search list exist **only for compatibility with other datasets** - they are **not intended for annotators**.  
+>  
+> If you encounter a symbol that is **not listed in this guide**, **do not annotate it using an improvised or similar class name**.  
+> Instead, **ask for clarification** before proceeding.
+
 ## Classes
 
 ### noteheadWhole
@@ -46,6 +52,7 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 ---
 
 ### stem
+- The stem mask may **pass through the notehead and extend above it**. If it looks more like an irregular notehead (and not a visible overlap), you can **end the mask just below the head**.
 
 <p>
   <img src="./img/stem-1.png" alt="stem Example" width="150"/>
@@ -82,6 +89,7 @@ Flags are divided into separate classes according to their type and direction:
 ---
 
 ### beam
+- Use the same rule as for `stem and notehead`: if the stem clearly continues past the beam, **draw it through**; if not, **end it below**. Overlaps between symbols are fine.
 
 <p>
   <img src="./img/beam-1.png" alt="flag8thUp outer Example" width="290"/>
@@ -425,7 +433,7 @@ Used for **non-musical text elements** such as:
 
 ### barlineHeavy
 *(Called `barline_thick` in CVAT)*
-- Represents a **thick barline**, usually used at section endings
+- Represents a **thick barline**, usually used at section endings.
 
 <p>
   <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
@@ -445,40 +453,130 @@ Used for **non-musical text elements** such as:
 ---
 
 ### staff
-- shlukuje 5 linek
-- potřeba, aby sedělo přesně na rohy
-- těsný box čar
+- Groups together the **five staff lines** that form a complete staff.  
+- The bounding box should **fit tightly** around the lines.  
+- Ensure the box aligns **exactly with the corners** of the staff.
+
+<p>
+  <img src="./img/staff-1.png" alt="staff Example" width="800"/>
+</p>
 
 ---
 
 ### staffGrouping
-- abstraktní shlukovač
-- obskurnější staff grouping https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13698771 
-- pravidla ke staff grouping https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410 
+- An **abstract grouping class** for combining related staves or systems.
+
+**Note:**  
+If a system contains **multiple brackets, braces, and a barline**, annotate them as follows:
+- Each **barline** → `barlineSingle` 
+- Each **brace or bracket** → annotated individually as `brace` or `bracket`
+- Then create:
+  - **One long `staffGrouping`** spanning the entire barline, brace or bracket (covering all connected staves)  
+  - **Several shorter `staffGrouping` boxes**, each covering one brace or bracket
+
+- `staffGrouping` is usually annotated as a **rectangle or polygon** — not tightly around the line or brace. This means the **areas of multiple `staffGrouping` may overlap**, which is perfectly fine.
+
+In the example below, a **long `staffGrouping`** connects all staves via the main bracket,  
+while a **shorter `staffGrouping`** encloses the brace on the left side.
+
+<p>
+  <img src="./img/staff-grouping-1.png" alt="staffGrouping Example" width="200"/>
+</p>
+
+- Previous [CVAT staffGrouping rules](https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410)
+
+---
 
 ### measureSeparator
+- The `staffGrouping` symbols define which staves belong to the same **system** (or **subsystem**) - for example, multi-staff instruments like piano, or sectional groupings in orchestral scores.
+- ⚠️ At the **beginning of a system**, a `measureSeparator` should **not** be annotated, to avoid duplicating the final barline of the previous system.
+
+There should always be **exactly one continuous `measureSeparator` per system**,  
+regardless of how it appears visually:
+- It may be drawn as several **short individual barlines**,  
+- as one **long barline**,  
+- or a **combination** of both.
+
+The example below shows **four** `measureSeparator` **regions** (blue rectangles) spanning all staves, and **two** `staffGrouping` **boxes** at the start of the system.
+
+<p>
+  <img src="./img/measure-separator-1.png" alt="measureSeparator Example" width="600"/>
+</p>
+
+Similar case below (annotated in MuNG): The **fourth** `measureSeparator` should encompass **all four barlineHeavy** symbols that make up the double barlines.
+
+<p>
+  <img src="./img/measure-separator-2.png" alt="measureSeparator Example" width="700"/>
+</p>
+
+Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussions/24)
+
+---
 
 ### keySignature
+- A **container (parent) symbol** representing the entire key signature.
+- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
 
-### repetice se skládá z:
-#### repeat
-- maska
-#### bracket/barlineSingle/barlineHeavy
+<p>
+  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
+</p>
+
+---
+
+### Repeat structure
+A **repetition mark** is composed of several elements:
+
 #### repeatDot
+- The **two dots** next to the barline indicating the repeat.  
+  Each dot should be annotated individually as a separate `repeatDot`.
+
+#### bracket / barlineSingle / barlineHeavy
+- The **barline or bracket components** that form the vertical part of the repeat symbol.
+
+#### repeat
+- The **container mask** that encloses the entire repeat sign (as a convex hull).
+
+### TODO: když se vyskytne
+podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, volat výš, tohle je potřeba dořešit
+
+<p>
+  <img src="./img/strange-repetition.png" alt="TODO: how to annotate strange repetition" width="200"/>
+</p>
+
+
+---
 
 ### splitBarDivider
 - napojení taktu (ta vlnovka na konci)
 
-### repeat1Bar
-- CVAT repeat_measure_sign
+<p>
+  <img src="./img/split-bar-divider-1.png" alt="splitBarDivider Example" width="300"/>
+</p>
+
+---
+
+### repeatOneBar
+- in CVAT `repeat_measure_sign`
+- `%`
+
+---
 
 ### unclassified
-- TODO: rozseknout, jestli je tahle kategorie potřeba a při jekých situacích
-- CVAT ufo
-- prosaky není potřeba řešit, pokud vyloženě neiterferujíc s notací (tzn. člověk by si špatně mohl vyložit)
-- vlasy, rozlitý kafe, rozpláclý mouchy dělám jako ufo area (ale dávám to jen tam, kde to zasahuje do not/osnov, zkrátka do čtení textu)
-- NEZNAČIT: hřbety knih a notaci na sousední stránce, věci které nevím jak značit (pokud nevím, zeptat se), symboly z předchozích stránek
-- prosak, co nevypadá jako by byl v popředí (takový duch) - udělat screen: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a
+*(Called `ufo` in CVAT)*
+
+**TODO:** Vyřešit jestli je tahle třída opravdu potřeba.
+
+Use this class for **non-musical marks or noise** that appear on the page **only if they interfere with reading the notation**.
+
+- Examples include: stray hairs, spilled coffee, squashed insects, or other artifacts that overlap staves or notes.  
+- Do **NOT** annotate: book spines, notation on neighboring pages, symbols from previous pages, or anything you are unsure about — ask before labeling.
+
+- Marks that appear faintly in the background (like “ghost”  bleed-through) should NOT be annotated, only if they don't look like “ghosts”. 
+<p>
+  <img src="./img/bleed-through-1.png" alt="Bleed-through that should NOT be annotated" width="300"/>
+  <img src="./img/bleed-through-2.png" alt="Bleed-through that should NOT be annotated" width="320"/>
+</p>
+
 
 ### figuredBassText
 - konvexní obal skupinky
@@ -487,13 +585,5 @@ Used for **non-musical text elements** such as:
 - zatím pro to není třída
 
 ### TODO: “=”
-- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign!!! POTŘEBA VYŘEŠIT
+- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
 - dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem
-
-### TODO když se vyskytne
-repetice, takže vlnovky jako repeat_dot, šikmé dvojčárky možná jako "other" - taková ta divná repetice - voláme výš, tohle je potřeba dořešit
-
-`%` teď jsem našla, že asi Vojta to převádí ze CVATu do `repeatOneBar`
-
-
-další symboly co lze najít ve vyhledávání jsou pro kompatibilitu s jinýma datasetama - není pro anotátory - pokud tady není zaznačený znak, neznačit nějakým vymyšleným z možností, ale doptat se
