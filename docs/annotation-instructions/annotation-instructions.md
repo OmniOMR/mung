@@ -16,6 +16,13 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
 
+We differentiate `noteheadWhole` from `noteheadHalf` (below) because of downstream processing against the SMuFL standard,
+which does treat them as distinct symbols. While previous versions of MuNG had just a `noteheadEmpty` class, it introduces
+an extra step when trying to e.g. load the data for rendering with a SMuFL-compliant font, which may seem trivial (just 
+check for a stem!), but what if there is an error in the annotation? In the end it is just better to make the MuNG data
+itself as close to SMuFL as possible, to make the whole dataset easier to maintain and clean. (The same logic will apply
+in other places in the instructions, hence why we write so much about it here.)
+
 ![noteheadWhole](./img/notehead-whole-1.png)
 
 ---
