@@ -115,23 +115,31 @@ Clustering into sensible groups to organize the annotation instructions by:
 2764 noteheadHalf
 33342 noteheadFull
 
-# ???
+# augmentationDot (2122; 1.4%)
 2122 augmentationDot
+
+# stem (31343; 21.8%)
 31343 stem
-10266 legerLine
+
+# Flags (3799; 2.6%)
+1384 flag16thDown
+1349 flag8thDown
+997 flag8thUp
+62 flag16thUp
+4 flag32ndDown
+3 flag32ndUp
+
+# beam (8163; 5.7%)
 8163 beam
+
+# legerLine (10266; 7.1%)
+10266 legerLine
+
+# slur (2264; 1.5%)
 2264 slur
- 604 tie
 
-# Staves
-10435 staffLine
-2098 staff
-144 staffSpace
-
-# Barlines
-5856 barline
-146 barlineHeavy
-3863 measureSeparator
+# tie (604; 0.4%)
+604 tie
 
 # Rests (5998; 4.2%)
 2134 rest8th
@@ -150,66 +158,12 @@ Clustering into sensible groups to organize the annotation instructions by:
 1566 accidentalNatural
 3 double_sharp
 
-# Flags (3799; 2.6%)
-1384 flag16thDown
-1349 flag8thDown
-997 flag8thUp
-62 flag16thUp
-4 flag32ndDown
-3 flag32ndUp
-
-# Lyrics (2054; 1.4%)
-2054 lyricsText
-
-# Text (1571; 1.2%)
-1527 otherText
-44 text_form
-1 tempoText
-
-# Articulation (1699; 1.1%)
-1699 articulationAccent
-
 # Clefs (1076; 0.7%)
 586 gClef
 377 fClef
 113 cClef
 
-# Key signature (767; 0.5%)
-767 keySignature
-
-# UFO / Unclassified (1040; 0.7%)
-1040 unclassified
-
-# Staff Grouping (brackets and braces)
-676 staffGrouping
-3 brace
-
-# Dynamics
-765 dynamicsText
-191 dynamicCrescendoHairpin
-175 dynamicDiminuendoHairpin
-3 dynamicLetterP
-2 dynamicLetterF
-1 dynamicLetterM
-
-# Tuples
-539 tuple
-70 tupleBracket
-
-# Repeats
-337 repeatDot
-333 repeatOneBar
-64 repeat
-24 volta
-
-# Tremolo
-328 tremoloMark
-210 singleNoteTremolo
-
-# Figured bass
-285 figuredBassText
-
-# Time signature
+# Time signature (1121; 0.7%)
 358 numeral3
 276 timeSignature
 202 numeral4
@@ -227,6 +181,59 @@ Clustering into sensible groups to organize the annotation instructions by:
 1 numeral9
 1 numeral12
 
+# Key signature (767; 0.5%)
+767 keySignature
+
+# Lyrics (2054; 1.4%)
+2054 lyricsText
+
+# Text (1571; 1.2%)
+1527 otherText
+44 text_form
+1 tempoText
+
+# Staves (12677; 8.8%)
+10435 staffLine
+2098 staff
+144 staffSpace
+
+# Barlines (9865; 6.9%)
+5856 barline
+146 barlineHeavy
+3863 measureSeparator
+
+# Staff Grouping (brackets and braces)
+676 staffGrouping
+3 brace
+
+# Articulation (1699; 1.1%)
+1699 articulationAccent
+
+# Dynamics (1137; 0.8%)
+765 dynamicsText
+191 dynamicCrescendoHairpin
+175 dynamicDiminuendoHairpin
+3 dynamicLetterP
+2 dynamicLetterF
+1 dynamicLetterM
+
+# Repeats (758; 0.5%)
+337 repeatDot
+333 repeatOneBar
+64 repeat
+24 volta
+
+# Tuples (609; 0.4%)
+539 tuple
+70 tupleBracket
+
+# Tremolo (538; 0.3%)
+328 tremoloMark
+210 singleNoteTremolo
+
+# Figured bass (285; 0.1%)
+285 figuredBassText
+
 # Grace notes
 174 noteheadFullSmall
 3 noteheadHalfSmall
@@ -235,7 +242,7 @@ Clustering into sensible groups to organize the annotation instructions by:
 # Fermata
 124 fermataAbove
 
-# Other ornaments
+# Ornaments
 122 ornament
 
 # System divider
@@ -246,6 +253,9 @@ Clustering into sensible groups to organize the annotation instructions by:
 
 # Arpeggiato
 2 arpeggio
+
+# UFO / Unclassified (1040; 0.7%)
+1040 unclassified
 
 # Legacy MUSCIMA++ characters
 4 characterSmallP

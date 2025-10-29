@@ -27,13 +27,17 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 > If you encounter a symbol that is **not listed in this guide**, **do not annotate it using an improvised or similar class name**.
 > Instead, **ask for clarification** before proceeding.
 
+---
 
-## Classes
+**⬇️ Here begins the ontology ⬇️**
 
-This is the main body of this document. Go though the classes top-to-bottom and annotate them all on the page.
+---
 
 
-### noteheadWhole
+## Noteheads
+
+
+### `noteheadWhole`
 
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
@@ -49,7 +53,7 @@ This is the main body of this document. Go though the classes top-to-bottom and 
 ---
 
 
-### noteheadHalf
+### `noteheadHalf`
 
 - Always **leave out the center**. Don’t just outline the shape.
 
@@ -60,7 +64,8 @@ This is the main body of this document. Go though the classes top-to-bottom and 
 
 ---
 
-### noteheadBlack
+
+### `noteheadBlack`
 
 *(Previously in CVAT: `notehead_full`. You may find `noteheadFull` in MuNG, but **do NOT use it.**)*
 
@@ -71,7 +76,8 @@ This is the main body of this document. Go though the classes top-to-bottom and 
 
 ---
 
-### augmentationDot
+
+## `augmentationDot`
 
 *(Previously in CVAT: `duration_dot`)*
 
@@ -81,7 +87,9 @@ This is the main body of this document. Go though the classes top-to-bottom and 
 
 ---
 
-### stem
+
+## `stem`
+
 - The stem mask may **pass through the notehead and extend above it**. If it looks more like an irregular notehead (and not a visible overlap), you can **end the mask just below the head**.
 
 <p>
@@ -98,18 +106,21 @@ nožičky dobře disambiguují hlasy - prostě akord = společná nožička
 
 ---
 
-### flag(number)th(Up/Down)
+
+## Flags
+
+`flag(number)th(Up/Down)`
 
 Flags are divided into separate classes according to their type and direction:
 
-- **flag8thUp** / **flag8thDown**
+- **`flag8thUp`** / **`flag8thDown`**
 <p>
   <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="220"/>
 </p>
 
-- **flag16thUp** / **flag16thDown**  
+- **`flag16thUp`** / **`flag16thDown`**  
   ⚠️ *Be careful:* If a single note has **two flags**, the outer is **8th** and the inner is **16th** (and the same for three flags - 8th, 16th, 32nd... and so on).
-- **flag32ndUp** / **flag32ndDown**
+- **`flag32ndUp`** / **`flag32ndDown`**
 - *(and so on for higher flag counts)*
 
 ⚠️ flag8thUp, flag16thUp
@@ -120,7 +131,9 @@ Flags are divided into separate classes according to their type and direction:
 
 ---
 
-### beam
+
+## `beam`
+
 - Use the same rule as for `stem and notehead`: if the stem clearly continues past the beam, **draw it through**; if not, **end it below**. Overlaps between symbols are fine.
 
 <p>
@@ -129,7 +142,8 @@ Flags are divided into separate classes according to their type and direction:
 
 ---
 
-### legerLine
+
+## `legerLine`
 
 *(Not “ledger”, both variants are correct ([Wikipedia](https://en.wikipedia.org/wiki/Ledger_line)), but we use leger to stay compliant with SMuFL specification.)*
 
@@ -139,36 +153,8 @@ Flags are divided into separate classes according to their type and direction:
 
 ---
 
-### Grace note (composite)
-A grace note is composed of:
-- **noteheadWholeSmall / noteheadHalfSmall / noteheadBlackSmall**
-<p>
-  <img src="./img/notehead-black-small-1.png" alt="noteheadBlackSmall Example" width="350"/>
-</p>
 
-- Uses a standard **stem, flag(number)th(Up/Down), beam**
-
-<p>
-  <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
-</p>
-
-- The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
-
-<details>
-  <summary>Relevant discussions.</summary>
-
-  - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
-</details>
-
----
-
-### tremolo1
-- Following SMuFL notation: `tremolo1`
-- Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
-
----
-
-### slur
+## `slur`
 
 - Annotate even when the slur appears at the **end of a page** and it’s unclear whether it’s a slur or a tie (see [discussion](https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13986659)).
 - All annotated pages are available in the **Digital Library**, where you can browse the full document. If you want to check it yourself (for clefs or slurs), the links follow this format:
@@ -181,7 +167,8 @@ A grace note is composed of:
 
 ---
 
-### tie
+
+## `tie`
 
 <p>
   <img src="./img/tie-1.png" alt="tie Example" width="600"/>
@@ -189,8 +176,110 @@ A grace note is composed of:
 
 ---
 
-### accidentalSharp
-*(`sharp` in CVAT)*  
+
+## Rests
+
+
+### `restWhole`
+
+*(Previously in CVAT `rest_whole`)*
+
+<p>
+  <img src="./img/rest-whole-1.png" alt="restWhole Example" width="250"/>
+</p>
+
+---
+
+
+### `restHalf`
+
+*(Previously in CVAT `rest_half`)*
+
+TODO: image
+
+---
+
+
+### `restQuarter`
+
+*(Previously in CVAT `rest_quarter`)*
+
+<p>
+  <img src="./img/rest-quarter-1.png" alt="restQuarter Example" width="250"/>
+</p>
+
+---
+
+
+### `rest8th`
+
+*(Previously in CVAT `rest_8th`)*
+
+<p>
+  <img src="./img/rest-8th-1.png" alt="rest8th Example" width="200"/>
+</p>
+
+
+---
+
+### `rest16th`
+
+*(Previously in CVAT `rest_16th`)*
+
+<p>
+  <img src="./img/rest-16th-1.png" alt="rest16th Example" width="200"/>
+</p>
+
+---
+
+
+### `rest32nd`
+
+*(Previously in CVAT `rest_32-and-shorter`)*
+
+TODO: image
+
+---
+
+
+### `restLonga`
+
+*(Previously in CVAT `rest_longa`)*
+
+TODO: image
+
+---
+
+
+### `restBreve`
+
+*(Previously in CVAT `rest_breve`)*
+
+TODO: image
+
+---
+
+
+### `restHBar`
+
+*(Previously in CVAT `rest_multimeasure` and `multiMeasureRest` in MuNG)*
+
+> **🚧 Under construction.**
+
+TODO: image
+
+TODO: how to assign numbers to these + numbers can also be for longa and breve
+
+---
+
+
+## Accidentals
+
+
+### `accidentalSharp`
+
+*(Previously in CVAT `sharp`)*
+
 - Always **leave out the center!** Don’t just outline the shape.
 
 <p>
@@ -199,7 +288,11 @@ A grace note is composed of:
 
 ---
 
-### accidentalFlat
+
+### `accidentalFlat`
+
+*(Previously in CVAT `flat`)*
+
 - Always **leave out the center!** Don’t just outline the shape.
 
 <p>
@@ -208,7 +301,10 @@ A grace note is composed of:
 
 ---
 
-### accidentalNatural
+
+### `accidentalNatural`
+
+*(Previously in CVAT `natural`)*
 
 - Always **leave out the center!** Don’t just outline the shape.
 
@@ -218,31 +314,32 @@ A grace note is composed of:
 
 ---
 
-### fermataAbove / fermataBelow
 
-<p>
-  <img src="./img/fermata-above-1.png" alt="fermataAbove Example" width="200"/>
-  <img src="./img/fermata-below-1.png" alt="fermataBelow Example" width="183"/>
-</p>
+### `accidentalDoubleSharp`
 
----
+*(Previously in CVAT `double_sharp`)*
 
-### fClef
-
-<p>
-  <img src="./img/f-clef-1.png" alt="fClef Example" width="200"/>
-</p>
+TODO: image
 
 ---
 
-### fClefChange
-- Used when the **clef changes in the middle of the staff** to an F clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+
+### `accidentalDoubleFlat`
+
+*(Previously in CVAT `double_flat`)*
+
+TODO: image
 
 ---
 
-### gClef
+
+## Clefs
+
+
+### `gClef`
+
+*(Previously in CVAT `clef_g`)*
+
 - Always **leave out the center!** Don’t just outline the shape.
 
 <p>
@@ -252,14 +349,43 @@ A grace note is composed of:
 
 ---
 
-### gClefChange
+
+### `gClefChange`
+
 - Used when the **clef changes in the middle of the staff** to a G clef.
 - These symbols are typically **smaller in size** than standard clefs.
 - Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
 
+TODO: image
+
 ---
 
-### cClef
+
+### `fClef`
+
+*(Previously in CVAT `clef_f`)*
+
+<p>
+  <img src="./img/f-clef-1.png" alt="fClef Example" width="200"/>
+</p>
+
+---
+
+
+### `fClefChange`
+
+- Used when the **clef changes in the middle of the staff** to an F clef.
+- These symbols are typically **smaller in size** than standard clefs.
+- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+
+TODO: image
+
+---
+
+
+### `cClef`
+
+*(Previously in CVAT `clef_c`)*
 
 <p>
   <img src="./img/c-clef-1.png" alt="cClef Example" width="150"/>
@@ -267,14 +393,27 @@ A grace note is composed of:
 
 ---
 
-### cClefChange
+
+### `cClefChange`
+
 - Used when the **clef changes in the middle of the staff** to a C clef.
 - These symbols are typically **smaller in size** than standard clefs.
 - Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
 
+TODO: image
+
 ---
 
-### timeSig[Number 0-9]
+
+## Time Signatures
+
+
+### `timeSig[0..9]`
+
+*(Previously in CVAT `time_signature_element` and `numeral0..9` in MuNG)*
+
+Classes: `timeSig0`, `timeSig1`, `timeSig2`, ... `timeSig9`
+
 - Represents individual **digits** in the time signature (0–9).  
 - If the number is **greater than 9**, annotate each digit separately. (For example, a time signature of `10` should be split into **`timeSig1`** and **`timeSig0`**.)
 - **TODO:** vyřešit graf
@@ -285,17 +424,55 @@ A grace note is composed of:
 
 ---
 
-### timeSigFractionalSlash
+
+### `timeSigCommon`
+
+*(Previously in CVAT `time_signature_element`)*
+
+- The **C** symbol, meaning common time, i.e. 4/4
+
+TODO: image
+
+---
+
+
+### `timeSigCutCommon`
+
+*(Previously in CVAT `time_signature_element`)*
+
+- The slashed **C/** symbol, meaning cut-common time, i.e. 2/2
+
+TODO: image
+
+---
+
+
+### `timeSigFractionalSlash`
+
+> **🚧 Under construction.**
+
 - Represents the **horizontal line or slash** separating the upper and lower numbers of a time signature.
 
+TODO: image
+
 ---
 
-### timeSigFractionalEquals
+
+### `timeSigFractionalEquals`
+
+> **🚧 Under construction.**
+
 - Represents the **equals sign (“=”)** used in **fractional or complex time signatures**.
 
+TODO: image
+
 ---
 
-### timeSignature
+
+### `timeSignature`
+
+> **🚧 Under construction.** (describe the notation graph)
+
 - A **container class** for grouping all elements that form a complete time signature.
 - Use it to wrap **either a single object or multiple separate digits** (e.g., 3/4=6/10 as a compact symbol).
 - If the time signature appears **at the end of a staff line**, still annotate it as a full `timeSignature` object:
@@ -306,85 +483,31 @@ A grace note is composed of:
 
 ---
 
-### restWhole
+
+## `keySignature`
+
+- A **container (parent) symbol** representing the entire key signature.
+- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
+- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
 
 <p>
-  <img src="./img/rest-whole-1.png" alt="restWhole Example" width="250"/>
+  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
 </p>
 
 ---
 
-### restHalf
 
----
+## Text
 
-### restQuarter
-
-<p>
-  <img src="./img/rest-quarter-1.png" alt="restQuarter Example" width="250"/>
-</p>
-
----
-
-### rest8th
-
-<p>
-  <img src="./img/rest-8th-1.png" alt="rest8th Example" width="200"/>
-</p>
-
----
-
-### rest16th
-
-<p>
-  <img src="./img/rest-16th-1.png" alt="rest16th Example" width="200"/>
-</p>
-
----
-
-### artic(Something)
-- previously in CVAT `articulation_mark` for every articulation mark, now separated into classes.
-
-### articAccentAbove / articAccentBelow
-- Represents an **accent mark** placed **above or below** the notehead.
-
-### articStaccatoAbove / articStaccatoBelow
-- Represents **staccato dots** placed above or below the notehead.
-- **Do not use** the old class name `articulationStaccato`.
-
-### articTenutoAbove / articTenutoBelow
-### articMarcatoAbove
-### articMarcatoBelow
-
----
-
-### arpeggiato 
-*(Previously grouped under `ornament` in CVAT.)*  
-- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
-- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
-
----
-
-### ornamentTrill
-*(Previously grouped under `ornament` in CVAT.)*  
-- Used for the **“tr” text** symbol marking a **short trill**.
-- Do not use a simple convex hull. The annotation **must follow the exact shape** of the symbol. **TODO:** je toto pravda?
-
-<p>
-  <img src="./img/ornament-trill-1.png" alt="ornamentTrill Example" width="200"/>
-</p>
-
----
-
-### wiggleTrill
-- Represents the **wavy line** that typically **follows a trill mark**,  
-indicating the continuation of the trill.
-
----
+> **🚧 Under construction.**
 
 **TODO:** U textů bude potřeba vyřešit jestli texty přepisovat (podobně jako umožňoval CVAT - pozor na nečitelné texty).
 
-### lyricsText
+
+## `lyricsText`
+
+> **🚧 Under construction.**
+
 - Annotate **syllable by syllable or separate words**, so that each lyric segment can be correctly aligned with the notation graph.
 - It is sufficient to use a **convex hull (rough mask)** for lyrics — precise outlining is not required.
 
@@ -392,44 +515,26 @@ indicating the continuation of the trill.
   <img src="./img/lyrics-text-1.png" alt="lyricsText Example" width="400"/>
 </p>
 
-### dynamicsText
-- Represents a **textual region** covering one or more **dynamic marks**.
-- The **specific dynamic symbol** (e.g., `p`, `f`, `ff`) should be annotated **precisely** using its respective `dynamicXXX` class.  
-- The surrounding **text region** should then be annotated as `dynamicsText`, using a **convex hull** that encloses all relevant symbols.
+---
 
-**Examples:**
-- For a single “p” (piano), mark:
-  - `dynamicPiano` — exact symbol outline  
-  - `dynamicsText` — convex hull enclosing it
-- For “ff” (fortissimo), mark:
-  - Two symbols: `dynamicForte` + `dynamicForte`
-  - One `dynamicsText` area enclosing both
 
-### `dynamic<Symbol>` (precise masks)
-The following classes must be annotated **accurately (not convex)**:
-- `dynamicForte`
-- `dynamicMezzo`
-- `dynamicNiente`
-- `dynamicPiano`
-- `dynamicRinforzando`
-- `dynamicSforzando`
-- `dynamicZ`
+### `tempoText`
 
-Also remember to add a `dynamicsText` convex hull over these symbols.
-
-> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
-
-### tempoText
 - **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
 
-### metadataText
+---
+
+
+### `metadataText`
 
 > **🚧 Under construction.**
 
 - nadpisy, autoři (věci co souvisí s dílem, ne dokumentem (song, not doc)), jméno všech lidí (editor, etc.) (cokoliv co je zajímavé pro knihovníka)
 
+---
 
-### otherText
+
+### `otherText`
 
 > **🚧 Under construction.**
 
@@ -444,61 +549,14 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 
 ---
 
-### systemDivider
-*(Called `system_break` in CVAT)* 
 
----
+## Staves
 
 
-### brace
+### `staffLine`
 
-- Represents the **curly bracket `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).
-- Corresponds to `staff_bracket` in CVAT.
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
-- Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
-
-<p>
-  <img src="./img/brace-1.png" alt="brace Example" width="150"/>
-</p>
-
----
-
-
-### bracket
-
-- Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
-- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
-
-<p>
-  <img src="./img/bracket-1.png" alt="bracket Example" width="300"/>
-</p>
-
----
-
-### barlineSingle
-*(Called `thin_barline` in CVAT)*  
-- Represents a **single thin barline**.  
-- Annotate **precisely around the entire shape**.
-
-<p>
-  <img src="./img/barline-single-1.png" alt="barlineSingle Example" width="180"/>
-</p>
-
----
-
-### barlineHeavy
-*(Called `barline_thick` in CVAT)*
-- Represents a **thick barline**, usually used at section endings.
-
-<p>
-  <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
-</p>
-
----
-
-### staffLine
 *(Called `Staff line` in CVAT)*  
+
 - Represents a **single staff line**.
 - Annotate **precisely around the entire shape**.
 
@@ -514,7 +572,11 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 
 ---
 
-### staff
+
+### `staff`
+
+*(Called `Staff` in CVAT)*  
+
 - Groups together the **five staff lines** that form a complete staff.  
 - The bounding box should **fit tightly** around the lines.  
 - Ensure the box aligns **exactly with the corners** of the staff.
@@ -525,7 +587,103 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 
 ---
 
-### staffGrouping
+
+## Barlines
+
+
+### `barlineSingle`
+
+*(Called `thin_barline` in CVAT)*  
+
+- Represents a **single thin barline**.  
+- Annotate **precisely around the entire shape**.
+
+<p>
+  <img src="./img/barline-single-1.png" alt="barlineSingle Example" width="180"/>
+</p>
+
+---
+
+
+### `barlineHeavy`
+
+*(Called `barline_thick` in CVAT)*
+
+- Represents a **thick barline**, usually used at section endings.
+
+<p>
+  <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
+</p>
+
+---
+
+
+### `measureSeparator`
+
+*(Called `measure_separator` in CVAT)*
+
+- The `staffGrouping` symbols define which staves belong to the same **system** (or **subsystem**) - for example, multi-staff instruments like piano, or sectional groupings in orchestral scores.
+- ⚠️ At the **beginning of a system**, a `measureSeparator` should **not** be annotated, to avoid duplicating the final barline of the previous system.
+
+There should always be **exactly one continuous `measureSeparator` per system**,  
+regardless of how it appears visually:
+
+- It may be drawn as several **short individual barlines**,  
+- as one **long barline**,  
+- or a **combination** of both.
+
+The example below shows **four** `measureSeparator` **regions** (blue rectangles) spanning all staves, and **two** `staffGrouping` **boxes** at the start of the system.
+
+<p>
+  <img src="./img/measure-separator-1.png" alt="measureSeparator Example" width="600"/>
+</p>
+
+Similar case below (annotated in MuNG): The **fourth** `measureSeparator` should encompass **all four barlineHeavy** symbols that make up the double barlines.
+
+<p>
+  <img src="./img/measure-separator-2.png" alt="measureSeparator Example" width="700"/>
+</p>
+
+Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussions/24)
+
+---
+
+
+## Staff Grouping (brackets and braces)
+
+
+### `brace`
+
+*(Previously `staff_bracket` in CVAT, together with bracket)*
+
+- Represents the **curly brace `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
+- Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
+
+<p>
+  <img src="./img/brace-1.png" alt="brace Example" width="150"/>
+</p>
+
+---
+
+
+### `bracket`
+
+*(Previously `staff_bracket` in CVAT, together with brace)*
+
+- Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
+- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
+
+<p>
+  <img src="./img/bracket-1.png" alt="bracket Example" width="300"/>
+</p>
+
+
+---
+
+### `staffGrouping`
+
 - An **abstract grouping class** for combining related staves or systems.
 
 **Note:**  
@@ -549,44 +707,79 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 
 ---
 
-### measureSeparator
-- The `staffGrouping` symbols define which staves belong to the same **system** (or **subsystem**) - for example, multi-staff instruments like piano, or sectional groupings in orchestral scores.
-- ⚠️ At the **beginning of a system**, a `measureSeparator` should **not** be annotated, to avoid duplicating the final barline of the previous system.
 
-There should always be **exactly one continuous `measureSeparator` per system**,  
-regardless of how it appears visually:
-- It may be drawn as several **short individual barlines**,  
-- as one **long barline**,  
-- or a **combination** of both.
+## Articulation
 
-The example below shows **four** `measureSeparator` **regions** (blue rectangles) spanning all staves, and **two** `staffGrouping` **boxes** at the start of the system.
+*(previously in CVAT `articulation_mark` for every articulation mark, now separated into classes)*
 
-<p>
-  <img src="./img/measure-separator-1.png" alt="measureSeparator Example" width="600"/>
-</p>
 
-Similar case below (annotated in MuNG): The **fourth** `measureSeparator` should encompass **all four barlineHeavy** symbols that make up the double barlines.
+### `articAccentAbove` / `articAccentBelow`
 
-<p>
-  <img src="./img/measure-separator-2.png" alt="measureSeparator Example" width="700"/>
-</p>
+- Represents an **accent mark** placed **above or below** the notehead.
 
-Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussions/24)
 
----
+### `articStaccatoAbove` / `articStaccatoBelow`
 
-### keySignature
-- A **container (parent) symbol** representing the entire key signature.
-- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
+- Represents **staccato dots** placed **above or below** the notehead.
+- **Do not use** the old class name `articulationStaccato`.
 
-<p>
-  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
-</p>
+
+### `articTenutoAbove` / `articTenutoBelow`
+
+- Represents **tenuto line** placed **above or below** the notehead.
+
+### `articMarcatoAbove`
+
+- Represents **marcato hat** placed **above** the notehead.
+
+### `articMarcatoBelow`
+
+- Represents **marcato hat** placed **below** the notehead.
 
 ---
 
 
-### Repeat structure
+## Dynamics
+
+> **🚧 Under construction.**
+
+
+### `dynamic[Symbol]` (precise masks)
+
+The following classes must be annotated **accurately (not convex)**:
+- `dynamicForte`
+- `dynamicMezzo`
+- `dynamicNiente`
+- `dynamicPiano`
+- `dynamicRinforzando`
+- `dynamicSforzando`
+- `dynamicZ`
+
+Also remember to add a `dynamicsText` convex hull over these symbols.
+
+> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
+
+---
+
+
+### `dynamicsText`
+
+- Represents a **textual region** covering one or more **dynamic marks**.
+- The **specific dynamic symbol** (e.g., `p`, `f`, `ff`) should be annotated **precisely** using its respective `dynamicXXX` class.  
+- The surrounding **text region** should then be annotated as `dynamicsText`, using a **convex hull** that encloses all relevant symbols.
+
+**Examples:**
+- For a single “p” (piano), mark:
+  - `dynamicPiano` — exact symbol outline  
+  - `dynamicsText` — convex hull enclosing it
+- For “ff” (fortissimo), mark:
+  - Two symbols: `dynamicForte` + `dynamicForte`
+  - One `dynamicsText` area enclosing both
+
+---
+
+
+## Repeats
 
 > **🚧 Under construction.**
 
@@ -595,22 +788,25 @@ TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zav
 A **repetition mark** is composed of several elements:
 
 
-#### repeatDot
+### repeatDot
+
 - The **two dots** next to the barline indicating the repeat.  
   Each dot should be annotated individually as a separate `repeatDot`.
 
 
-#### bracket / barlineSingle / barlineHeavy
+### bracket / barlineSingle / barlineHeavy
+
 - The **barline or bracket components** that form the vertical part of the repeat symbol.
 
 
-#### repeat
+### repeat
 
 - The **container mask** that encloses the entire repeat sign (as a convex hull).
 - Back-to-back repeats share the two barlines, but are two distinct repeat (containers).
 
 
 ### TODO: když se vyskytne
+
 podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, volat výš, tohle je potřeba dořešit
 
 <p>
@@ -619,19 +815,11 @@ podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, v
 
 ODPOVĚĎ: ocasy nahoře/dole jsou barline, vlnovky jsou repeat dot, jinak barline
 
-
 ---
 
-### splitBarDivider
-- napojení taktu (ta vlnovka na konci)
-
-<p>
-  <img src="./img/split-bar-divider-1.png" alt="splitBarDivider Example" width="300"/>
-</p>
-
----
 
 ### repeat1Bar
+
 - in CVAT `repeat_measure_sign`
 - `%`
 
@@ -643,7 +831,180 @@ TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což
 
 ---
 
-### unclassified
+
+## Col violino unisono
+
+> **🚧 Under construction.**
+
+- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
+- dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem (note: to je pokračování unisona)
+- "col viol" https://github.com/orgs/OmniOMR/discussions/124 stejná věc (stejné precedenční hrany) (note: tohle je začátek unisona)
+
+nějakej "unisonoMark"
+
+nebo "col instruction" - text nebo něco
+
+dvě čárky = "dtto", stejně jako to předtím
+
+"interpretační pokyny = čti noty jinde"
+
+---
+
+
+## Tuples
+
+> **🚧 Under construction.**
+
+TODO: tuples
+
+---
+
+
+## Tremolo
+
+*(Previously `tremolo_beam` in CVAT)*
+
+- Following SMuFL notation: `tremolo1`
+- Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
+
+TODO: we still want to annotate tremolo beams (proper beams between notes) as something like `multipleNoteTremolo` or `tremoloBeam`. Must be defined here.
+
+---
+
+
+## Figured bass
+
+> **🚧 Under construction.**
+
+
+### `figuredBassText`
+
+> **🚧 Under construction.**
+
+- konvexní obal skupinky (NE, chceme to mít pořešené líp - SMUFL na to má třídy)
+- JE to v precedenčním grafu, protože ty symboly mají trvání (e.g. víc symbolů nad jednou celou notou)
+  - precedence JENOM mezi věcma co jsou u jedné noty
+- prohledat diskuze, pořešit s Adamem
+
+
+### TODO: `figured_bass_spanner`
+
+> **🚧 Under construction.**
+
+- zatím pro to není třída (ani SMuFL pro to nemá nic)
+
+---
+
+
+## Grace notes
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+A grace note is composed of:
+
+- `noteheadWholeSmall` / `noteheadHalfSmall` / `noteheadBlackSmall`
+
+<p>
+  <img src="./img/notehead-black-small-1.png" alt="noteheadBlackSmall Example" width="350"/>
+</p>
+
+- Uses a standard `stem`, `flag(number)th(Up/Down)`, `beam`
+
+<p>
+  <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
+</p>
+
+- The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
+
+<details>
+  <summary>Relevant discussions.</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
+</details>
+
+---
+
+
+## `fermataAbove` / `fermataBelow`
+
+<p>
+  <img src="./img/fermata-above-1.png" alt="fermataAbove Example" width="200"/>
+  <img src="./img/fermata-below-1.png" alt="fermataBelow Example" width="183"/>
+</p>
+
+---
+
+
+## Ornaments
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+
+### `ornamentTrill`
+
+*(Previously grouped under `ornament` in CVAT.)*
+
+- Used for the **“tr” text** symbol marking a **short trill**.
+- Do not use a simple convex hull. The annotation **must follow the exact shape** of the symbol. **TODO:** je toto pravda?
+
+<p>
+  <img src="./img/ornament-trill-1.png" alt="ornamentTrill Example" width="200"/>
+</p>
+
+---
+
+
+### `wiggleTrill`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/multi-segment-lines.html))*
+
+- Represents the **wavy line** that typically **follows a trill mark**,  
+indicating the continuation of the trill.
+
+---
+
+
+## `systemDivider`
+
+*(Called `system_break` in CVAT)* 
+
+TODO: image
+
+---
+
+
+## `splitBarDivider`
+
+- napojení taktu (ta vlnovka na konci)
+
+<p>
+  <img src="./img/split-bar-divider-1.png" alt="splitBarDivider Example" width="300"/>
+</p>
+
+---
+
+
+## Octaves
+
+> **🚧 Under construction.**
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/octaves.html))*
+
+TODO: the `horizontalSpanner` for ottava marking belongs here (but there's another one for figured bass sharing the class name)
+
+
+## `arpeggiato`
+
+*(Previously grouped under `ornament` in CVAT.)*  
+
+- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
+- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+
+---
+
+
+## `unclassified` / UFO
+
 *(Called `ufo` in CVAT)*
 
 > **🚧 Under construction.**
@@ -656,40 +1017,8 @@ Use this class for **non-musical marks or noise** that appear on the page **only
 - Do **NOT** annotate: book spines, notation on neighboring pages, symbols from previous pages, or anything you are unsure about — ask before labeling.
 
 - Marks that appear faintly in the background (like “ghost”  bleed-through) should NOT be annotated, only if they don't look like “ghosts”. 
+
 <p>
   <img src="./img/bleed-through-1.png" alt="Bleed-through that should NOT be annotated" width="300"/>
   <img src="./img/bleed-through-2.png" alt="Bleed-through that should NOT be annotated" width="320"/>
 </p>
-
-
-### figuredBassText
-
-> **🚧 Under construction.**
-
-- konvexní obal skupinky (NE, chceme to mít pořešené líp - SMUFL na to má třídy)
-- JE to v precedenčním grafu, protože ty symboly mají trvání (e.g. víc symbolů nad jednou celou notou)
-  - precedence JENOM mezi věcma co jsou u jedné noty
-- prohledat diskuze, pořešit s Adamem
-
-### TODO: figured_bass_spanner
-
-> **🚧 Under construction.**
-
-- zatím pro to není třída (ani SMuFL pro to nemá nic)
-
-
-### TODO: “=”
-
-> **🚧 Under construction.**
-
-- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
-- dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem
-- "col viol" https://github.com/orgs/OmniOMR/discussions/124 stejná věc (stejné precedenční hrany)
-
-nějakej "unisonoMark"
-
-nebo "col instruction" - text nebo něco
-
-dvě čárky = "dtto", stejně jako to předtím
-
-"interpretační pokyny = čti noty jinde"
