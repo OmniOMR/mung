@@ -6,7 +6,7 @@ This document is a guide for annotators on how to annotate a new document in the
 
 If you are starting out as a fresh annotator, then you should first read the introduction text above which describes the MuNG format in its context. This document is a reference to be used when doing routine annotation work - a companion to have on the side when annotating to remind you of how to annotate all the edge-case situations. For this reason this document tends to be rather short with words, full of images, to aid its navigation.
 
-The recommended way to use this document is to go through the class list in order and annotate object on the page class-by-class. The classes here are ordered roughly by their frequency in documents.
+The recommended way to use this document is to go through the class list in order and annotate object on the page class-by-class. The classes here are ordered roughly by their [frequency](class-frequencies.md) in documents.
 
 It is also advised to first annotate masks for all object, and only then go through the document again and annotate the syntax and precedece links.
 
