@@ -1,33 +1,56 @@
+# MuNG Annotation Instructions
+
+This document is a guide for annotators on how to annotate a new document in the MuNG format properly.
+
+> **📖 New here?** Read the [Introduction](annotation-introduction.md) text first.
+
+If you are starting out as a fresh annotator, then you should first read the introduction text above which describes the MuNG format in its context. This document is a reference to be used when doing routine annotation work - a companion to have on the side when annotating to remind you of how to annotate all the edge-case situations. For this reason this document tends to be rather short with words, full of images, to aid its navigation.
+
+The recommended way to use this document is to go through the class list in order and annotate object on the page class-by-class. The classes here are ordered roughly by their frequency in documents.
+
+It is also advised to first annotate masks for all object, and only then go through the document again and annotate the syntax and precedece links.
+
+> **🚧 Construction work:** These instructions constantly expand. If you find yourself needing to use a section denoted with this emoji (🚧), you should wait for the construction work to be finished before using it. Same applies to situations where the notation situation you are annotating is not covered here at all. In both cases, notify the administrators, ideally by creating a question in [github discussions](https://github.com/orgs/OmniOMR/discussions) and tagging `@Jirka-Mayer`.
+
+> **💔 Errata:** If you find a mistake in a document you are not annotating (e.g. while taking inspiration from others) and that document is supposed to be "completed" by now (i.e. is not currently being annotated by anyone), then please, report the mistake to the [Dataset Errata Repository](https://github.com/OmniOMR/dataset-errata).
+
 
 ## Tips
+
 - When creating a polygon, you can go **one point back** by **right-clicking**.
 - If you **finished a mask too early** but need to add more, simply **select the object** you want to modify and press `N`.
 Alternatively, select the object and click the “Edit nodes” icon (⬟) in the bottom panel.
 
-> **Note:**  
-> Some additional symbols that appear in the search list exist **only for compatibility with other datasets** - they are **not intended for annotators**.  
->  
-> If you encounter a symbol that is **not listed in this guide**, **do not annotate it using an improvised or similar class name**.  
+> **Note:**
+> Some additional symbols that appear in the search list (in MuNG Studio) exist **only for compatibility with other datasets** - they are **not intended for annotators**.
+>
+> If you encounter a symbol that is **not listed in this guide**, **do not annotate it using an improvised or similar class name**.
 > Instead, **ask for clarification** before proceeding.
+
 
 ## Classes
 
+This is the main body of this document. Go though the classes top-to-bottom and annotate them all on the page.
+
+
 ### noteheadWhole
+
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
 
-We differentiate `noteheadWhole` from `noteheadHalf` (below) because of downstream processing against the SMuFL standard,
-which does treat them as distinct symbols. While previous versions of MuNG had just a `noteheadEmpty` class, it introduces
-an extra step when trying to e.g. load the data for rendering with a SMuFL-compliant font, which may seem trivial (just 
-check for a stem!), but what if there is an error in the annotation? In the end it is just better to make the MuNG data
-itself as close to SMuFL as possible, to make the whole dataset easier to maintain and clean. (The same logic will apply
-in other places in the instructions, hence why we write so much about it here.)
-
 ![noteheadWhole](./img/notehead-whole-1.png)
+
+<details>
+  <summary>Why differentiate whole/half noteheads if they look identical?</summary>
+  
+  We differentiate `noteheadWhole` from `noteheadHalf` (below) because of downstream processing against the SMuFL standard, which does treat them as distinct symbols. While previous versions of MuNG had just a `noteheadEmpty` class, it introduces an extra step when trying to e.g. load the data for rendering with a SMuFL-compliant font, which may seem trivial (just check for a stem!), but what if there is an error in the annotation? In the end it is just better to make the MuNG data itself as close to SMuFL as possible, to make the whole dataset easier to maintain and clean. (The same logic will apply in other places in the instructions, hence why we write so much about it here.)
+</details>
 
 ---
 
+
 ### noteheadHalf
+
 - Always **leave out the center**. Don’t just outline the shape.
 
 <p>
@@ -65,7 +88,9 @@ in other places in the instructions, hence why we write so much about it here.)
   <img src="./img/stem-1.png" alt="stem Example" width="150"/>
 </p>
 
-**TODO:** Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku?
+**TODO:** Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku? JH: ANO!
+
+nožičky dobře disambiguují hlasy - prostě akord = společná nožička
 
 <p>
   <img src="./img/stem-2.png" alt="stem Example 2" width="150"/>
@@ -127,15 +152,19 @@ A grace note is composed of:
   <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
 </p>
 
-- **TODO:** přeškrtnutí zatím nejasné (ornament? předběžně rozseknuto na `graceNoteSlashStemUp`+`graceNoteSlashStemDown`) (tady stará diskuze ke cvatu - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887) 
+- The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
+
+<details>
+  <summary>Relevant discussions.</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
+</details>
 
 ---
 
 ### tremolo1
 - Following SMuFL notation: `tremolo1`
 - Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
-
-- **TODO:** Needs verification. Při převodu z CVAT použito: `tremoloMark`
 
 ---
 
@@ -393,11 +422,25 @@ Also remember to add a `dynamicsText` convex hull over these symbols.
 ### tempoText
 - **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
 
+### metadataText
+
+> **🚧 Under construction.**
+
+- nadpisy, autoři (věci co souvisí s dílem, ne dokumentem (song, not doc)), jméno všech lidí (editor, etc.) (cokoliv co je zajímavé pro knihovníka)
+
+
 ### otherText
+
+> **🚧 Under construction.**
+
 Used for **non-musical text elements** such as:
 - Page numbers  
-- Titles  
 - Verse numbers
+- Measure number
+- Rehersal marks
+- text jiných slok co není pod notami (např. v kancionálu), NE když je to aligned pod notami
+
+stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není už jiný text
 
 ---
 
@@ -406,9 +449,12 @@ Used for **non-musical text elements** such as:
 
 ---
 
+
 ### brace
-- Represents the **curly bracket `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).  
-- Corresponds to `staff_bracket` in CVAT.  
+
+- Represents the **curly bracket `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).
+- Corresponds to `staff_bracket` in CVAT.
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
 - Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
 
 <p>
@@ -417,8 +463,11 @@ Used for **non-musical text elements** such as:
 
 ---
 
+
 ### bracket
+
 - Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
 - ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
 
 <p>
@@ -448,7 +497,7 @@ Used for **non-musical text elements** such as:
 
 ---
 
-### staff1Line
+### staffLine
 *(Called `Staff line` in CVAT)*  
 - Represents a **single staff line**.
 - Annotate **precisely around the entire shape**.
@@ -456,6 +505,12 @@ Used for **non-musical text elements** such as:
 <p>
   <img src="./img/staff-1-line.png" alt="staff1Line Example" width="700"/>
 </p>
+
+<details>
+  <summary>Why not use staff1Line class of SMuFL?</summary>
+
+  The `staff1Line` class from SMuFL is intended for text-rendering. It is not used to actually render stafflines and thus means something slightly different semantically. Staff lines are more similar to beams, slurs, and ties, which cannot be rendered via a font, so aren't present in SMuFL. Therefore we decided to also introduce the class `staffLine` for this non-font-renderable symbol, just like we did with `beam`, `slur`, and `tie`.
+</details>
 
 ---
 
@@ -530,18 +585,30 @@ Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussio
 
 ---
 
+
 ### Repeat structure
+
+> **🚧 Under construction.**
+
+TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zavedeme
+
 A **repetition mark** is composed of several elements:
+
 
 #### repeatDot
 - The **two dots** next to the barline indicating the repeat.  
   Each dot should be annotated individually as a separate `repeatDot`.
 
+
 #### bracket / barlineSingle / barlineHeavy
 - The **barline or bracket components** that form the vertical part of the repeat symbol.
 
+
 #### repeat
+
 - The **container mask** that encloses the entire repeat sign (as a convex hull).
+- Back-to-back repeats share the two barlines, but are two distinct repeat (containers).
+
 
 ### TODO: když se vyskytne
 podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, volat výš, tohle je potřeba dořešit
@@ -549,6 +616,8 @@ podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, v
 <p>
   <img src="./img/strange-repetition.png" alt="TODO: how to annotate strange repetition" width="200"/>
 </p>
+
+ODPOVĚĎ: ocasy nahoře/dole jsou barline, vlnovky jsou repeat dot, jinak barline
 
 
 ---
@@ -562,14 +631,22 @@ podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, v
 
 ---
 
-### repeatOneBar
+### repeat1Bar
 - in CVAT `repeat_measure_sign`
 - `%`
+
+TODO: nad tímhle může být text (stejně jako nad multi-measure rets / whole rest), ten se linkuje v precedenčním grafu (na to je nějaká diskuze někde)
+
+TODO: někdy se používá pro repeat půl-taktu, to je v pohodě, je to pořád tento symbol
+
+TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což je jen ten slash bez teček a někdy to opakuje půl-takt
 
 ---
 
 ### unclassified
 *(Called `ufo` in CVAT)*
+
+> **🚧 Under construction.**
 
 **TODO:** Vyřešit jestli je tahle třída opravdu potřeba.
 
@@ -586,11 +663,33 @@ Use this class for **non-musical marks or noise** that appear on the page **only
 
 
 ### figuredBassText
-- konvexní obal skupinky
+
+> **🚧 Under construction.**
+
+- konvexní obal skupinky (NE, chceme to mít pořešené líp - SMUFL na to má třídy)
+- JE to v precedenčním grafu, protože ty symboly mají trvání (e.g. víc symbolů nad jednou celou notou)
+  - precedence JENOM mezi věcma co jsou u jedné noty
+- prohledat diskuze, pořešit s Adamem
 
 ### TODO: figured_bass_spanner
-- zatím pro to není třída
+
+> **🚧 Under construction.**
+
+- zatím pro to není třída (ani SMuFL pro to nemá nic)
+
 
 ### TODO: “=”
+
+> **🚧 Under construction.**
+
 - TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
 - dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem
+- "col viol" https://github.com/orgs/OmniOMR/discussions/124 stejná věc (stejné precedenční hrany)
+
+nějakej "unisonoMark"
+
+nebo "col instruction" - text nebo něco
+
+dvě čárky = "dtto", stejně jako to předtím
+
+"interpretační pokyny = čti noty jinde"
