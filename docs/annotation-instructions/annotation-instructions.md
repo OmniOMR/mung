@@ -1092,6 +1092,16 @@ TODO: image
 
 TODO: the `horizontalSpanner` for ottava marking belongs here (but there's another one for figured bass sharing the class name)
 
+TODO: the first example document below also contains pedal markings
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+</details>
+
+---
+
 
 ## `arpeggiato`
 
