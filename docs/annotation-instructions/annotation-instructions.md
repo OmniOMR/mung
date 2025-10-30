@@ -712,31 +712,57 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 
 ## Articulation
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/articulation.html))*
+
 *(previously in CVAT `articulation_mark` for every articulation mark, now separated into classes)*
 
 
 ### `articAccentAbove` / `articAccentBelow`
 
 - Represents an **accent mark** placed **above or below** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the accent.
 
 
 ### `articStaccatoAbove` / `articStaccatoBelow`
 
 - Represents **staccato dots** placed **above or below** the notehead.
 - **Do not use** the old class name `articulationStaccato`.
+- <kbd>🔴 syntax</kbd> link from the notehead to the staccato.
 
 
 ### `articTenutoAbove` / `articTenutoBelow`
 
 - Represents **tenuto line** placed **above or below** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the tenuto.
+
+
+### `articStaccatissimoAbove`
+
+- Represent the **staccatissimo stroke** placed **above** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the staccatissimo.
+
+<img src="img/articStaccatissimoAbove-0.png" height="150"/>
+<img src="img/articStaccatissimoAbove-1.png" height="200"/>
+<img src="img/articStaccatissimoAbove-syntax-1.png" height="200"/>
+
+
+### `articStaccatissimoBelow`
+
+- Represent the **staccatissimo stroke** placed **below** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the staccatissimo.
+
+<img src="img/articStaccatissimoBelow-0.png" height="150"/>
+
 
 ### `articMarcatoAbove`
 
 - Represents **marcato hat** placed **above** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the marcato.
 
 ### `articMarcatoBelow`
 
 - Represents **marcato hat** placed **below** the notehead.
+- <kbd>🔴 syntax</kbd> link from the notehead to the marcato.
 
 ---
 
