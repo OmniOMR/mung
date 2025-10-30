@@ -741,9 +741,11 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 - Represent the **staccatissimo stroke** placed **above** the notehead.
 - <kbd>🔴 syntax</kbd> link from the notehead to the staccatissimo.
 
-<img src="img/articStaccatissimoAbove-0.png" height="150"/>
-<img src="img/articStaccatissimoAbove-1.png" height="200"/>
-<img src="img/articStaccatissimoAbove-syntax-1.png" height="200"/>
+<p>
+  <img src="img/articStaccatissimoAbove-0.png" height="150"/>
+  <img src="img/articStaccatissimoAbove-1.png" height="200"/>
+  <img src="img/articStaccatissimoAbove-syntax-1.png" height="200"/>
+</p>
 
 
 ### `articStaccatissimoBelow`
@@ -751,7 +753,9 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 - Represent the **staccatissimo stroke** placed **below** the notehead.
 - <kbd>🔴 syntax</kbd> link from the notehead to the staccatissimo.
 
-<img src="img/articStaccatissimoBelow-0.png" height="150"/>
+<p>
+  <img src="img/articStaccatissimoBelow-0.png" height="150"/>
+</p>
 
 
 ### `articMarcatoAbove`
