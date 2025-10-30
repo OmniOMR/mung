@@ -380,7 +380,15 @@ TODO: image
 - These symbols are typically **smaller in size** than standard clefs.
 - Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
 
-TODO: image
+<p>
+  <img src="img/fClefChange-1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
 
 ---
 
@@ -402,7 +410,15 @@ TODO: image
 - These symbols are typically **smaller in size** than standard clefs.
 - Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
 
-TODO: image
+<p>
+  <img src="img/cClefChange-1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
 
 ---
 
@@ -747,6 +763,12 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
   <img src="img/articStaccatissimoAbove-syntax-1.png" height="200"/>
 </p>
 
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
+
 
 ### `articStaccatissimoBelow`
 
@@ -790,6 +812,12 @@ The following classes must be annotated **accurately (not convex)**:
 Also remember to add a `dynamicsText` convex hull over these symbols.
 
 > Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
 
 ---
 
@@ -901,6 +929,12 @@ TODO: tuples
 
 TODO: we still want to annotate tremolo beams (proper beams between notes) as something like `multipleNoteTremolo` or `tremoloBeam`. Must be defined here.
 
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
+
 ---
 
 
@@ -992,6 +1026,40 @@ A grace note is composed of:
 
 - Represents the **wavy line** that typically **follows a trill mark**,  
 indicating the continuation of the trill.
+
+---
+
+
+### `ornamentTurn`
+
+*(Previously grouped under `ornament` in CVAT.)*
+
+- <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
+
+<p>
+  <img src="./img/ornamentTurn-0.png" height="100"/>
+</p>
+
+---
+
+
+### `ornamentTurnInverted`
+
+*(Previously grouped under `ornament` in CVAT.)*
+
+- <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
+
+<p>
+  <img src="./img/ornamentTurnInverted-0.png" height="100"/>
+  <img src="./img/ornamentTurnInverted-1.png" height="100"/>
+  <img src="./img/ornamentTurnInverted-syntax-1.png" height="100"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
 
 ---
 
