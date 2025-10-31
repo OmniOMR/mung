@@ -38,6 +38,9 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 
 ## Noteheads
 
+- There are many <kbd>🔴 syntax</kbd> links going from noteheads to other symbols. Because there are so many, they are mentioned at those other smybols (e.g. `stem`, accidentals, flags), instead of here.
+- Noteheads participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
+
 
 ### `noteheadWhole`
 
@@ -83,28 +86,161 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 
 *(Previously in CVAT: `duration_dot`)*
 
+Augmentation dot makes a note (or rest) longer by 50% (+ ½) of its natural duration. If there are two dots, it is by 75% (+ ½ + ¼) longer. More dots add an eighth, sixteenth, etc. to the duration.
+
+- <kbd>🔴 syntax</kbd> link must lead from the notehead to the augmentation dot.
+- Multiple noteheads in a chord have multiple augmentation dots, each its own with its own <kbd>🔴 syntax</kbd> link.
+- Note can have multiple augmentation dots, in which case both are linked to the notehead with a <kbd>🔴 syntax</kbd> link.
+- **Rests** can also have augmentation dots and behave exactly like noteheads.
+
 <p>
-  <img src="./img/augmentation-dot-1.png" alt="augmentationDot Example" width="200"/>
+  <img src="./img/augmentationDot-1.png" height="200"/>
+  <img src="./img/augmentationDot-2.png" height="200"/>
+  <img src="./img/augmentationDot-3.png" height="200"/>
+  <img src="./img/augmentationDot-4.png" height="200"/>
 </p>
+
+<p>
+  <img src="./img/augmentationDot-5.png" height="200"/>
+</p>
+
+> **⚠️ Warning:** Not to be confused with a staccato dot, which looks similar, but is placed above/below the notehead and is usually slightly smaller.
+
+TODO: what about chords with differing number of dots and noteheads?
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Simple dots & simple chords
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+  - Rest augmentation dots
+    - First beat: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/d9fede70-b9f0-11ea-b68c-005056827e52_2f8490c5-7e84-426e-8628-2bc938f47260
+  - Multiple augmentation dots per note
+    - First system, first measure: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
 
 ## `stem`
 
-- The stem mask may **pass through the notehead and extend above it**. If it looks more like an irregular notehead (and not a visible overlap), you can **end the mask just below the head**.
+*(`stem` is not part of SMuFL, because music notation tools cannot render stems via a music notation font - and SMuFL is a font-layout (FL) standard)*
+
+- Stem is the line attached to all notes shorter than the whole note.
+- Stem can be pointing up or down, but it has no effect on the annotation (no difference in class name, no difference in the graph).
+- <kbd>🔴 syntax</kbd> link must lead from the notehead to the stem.
 
 <p>
-  <img src="./img/stem-1.png" alt="stem Example" width="150"/>
+  <img src="./img/stem-simple-1.png" height="150"/>
+  <img src="./img/stem-mask-detail.png" height="150"/>
+  <img src="./img/stem-simple-syntax-link.png" height="150"/>
+</p>
+<p>
+  <img src="./img/stem-simple-2.png" height="150"/>
+  <img src="./img/stem-simple-3.png" height="150"/>
 </p>
 
-**TODO:** Zvalidovat: Jan Hajič, [6.řádek, 3.takt](https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_4a7de812-b895-4c1b-b785-d4c82f4e243a) - značit jako jednu nožičku? JH: ANO!
+- Stem can have multiple noteheads attached, forming a **chord**.
+- All noteheads in the chord have a <kbd>🔴 syntax</kbd> link from the notehead to the stem.
 
-nožičky dobře disambiguují hlasy - prostě akord = společná nožička
+<details>
+  <summary>🤔 What is a chord?</summary>
+
+  Musically speaking, chord is a group of notes played at the same time to form harmony. But that's too vague for us. Also, we annotate **music notation**, not the sound. So for us, *chord* is a group of *noteheads* that share a *stem*.
+
+  This definition is still not complete and does not cover some edge-cases. For example, a chord composed entirely of whole notes does not have a stem, but is still considered a chord (as opposed to 4 or 6 separate voices).
+</details>
 
 <p>
-  <img src="./img/stem-2.png" alt="stem Example 2" width="150"/>
+  <img src="./img/stem-chord-1.png" height="150"/>
+  <img src="./img/stem-chord-2.png" height="150"/>
+  <img src="./img/stem-chord-3.png" height="150"/>
 </p>
+
+- When the notes are **one chord**, the **stem is one object** to indicate that it is in fact one chord. Even when it's drawn with mulitple strokes:
+
+<details>
+  <summary>🤔 Isn't it weird that one stem consists of multiple separate lines?</summary>
+
+  Yes, but it's the lesser evil and the problems this poses for object detectors and the synthesizer can be resolved:
+
+  1. Splitting the stem into many parts poses way more problems for the MuNG to MusicXML converter. We get explosion of voices, incorrect chord semantics etc...
+  2. These weird cases can be filtered out via connected-component analysis and omited from the synthesizer and object detector training if needed.
+  3. Split-stem chords below are even more weird, but still form a single object.
+  4. F-clefs are also disjoint, yet form a singular symbol.
+  5. Some stylistic variants of the `accidentalNatural` are also disjoint.
+</details>
+
+<p>
+  <img src="./img/stem-chord-multipart-1.png" height="200"/>
+  <img src="./img/stem-chord-multipart-2.png" height="200"/>
+  <img src="./img/stem-chord-multipart-3.png" height="200"/>
+</p>
+
+- The stem mask may **pass through another object and extend above it** (beam, notehead, etc.). In this case, annotate the stem through the crossed object:
+
+<p>
+  <img src="./img/stem-through-beam-1.png" height="200"/>
+  <img src="./img/stem-through-notehead-1.png" height="200"/>
+</p>
+
+- A single notehead can have **two stems**. This is a situation, when two voices play the same note at the same time. The notehead should have two <kbd>🔴 syntax</kbd> links, one to each stem.
+- If the stem is drawn as a single stroke, is still **must be split into two**, otherwise the presence of the second voice is lost (it is neccessary for proper interpretation of the graph).
+
+<p>
+  <img src="./img/stem-two-voices-1.png" height="150"/>
+  <img src="./img/stem-two-voices-2.png" height="150"/>
+</p>
+<p>
+  <img src="./img/stem-two-voices-3.png" height="300"/>
+</p>
+
+- Stems often disambiguate between a chord with two notes and two separate voices:
+
+<p>
+  <img src="./img/stem-voice-chord-comparison.png" height="300"/>
+</p>
+
+- In split-stem chords, the split stem is still just a single stem (just like in disjoint stems in chords above):
+
+<p>
+  <img src="./img/stem-split-stem-chord-1.png" height="200"/>
+</p>
+
+- Sometimes, the writer is very sloppy with writing chords. The image could be understood as either two voices or one chord. Here, consider the rest of the document and what the author meant in the situation:
+
+<p>
+  <img src="./img/stem-voice-chord-disambiguation.png" width="620"/>
+</p>
+
+<p>
+  <img src="./img/stem-two-voices-point-away.png" width="620"/>
+</p>
+
+- ⚠️ The rule with stem directions (above) is a good guideline, but breaks down in situations where you have 3 or more voices. There, use your best judgement. Imagine how you would transcribe the piece to MuseScore and define voices/chords in that way.
+
+- Sometimes it is hard to tell, to which voice (which stem) a notehead belongs. Below are few examples of 3 noteheads and 2 voices. Use hints, such as duration, stems, or ties. When there are no further hints (e.g. the first image), look at the voices around the noteheads and decide to which voice the center notehead likely belongs.
+
+<p>
+  <img src="./img/stem-note-assignment-disambiguation.png" width="620"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Simple stems
+    - Typeset: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/82ab6fe0-ea75-11ed-9f31-5ef3fc9bb22f_689af144-8232-4e60-af78-eb04fa023656
+    - Sharpie: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - Chords
+    - Last system, first staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_375c6850-f593-11e7-b30f-5ef3fc9ae867
+    - Piano bass: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+    - System 3, last measure: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_61b8fc9e-39f2-4783-876f-9d15fa63ddc2
+  - Two voices with one notehead
+    - Alto part (12th staff): https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+    - Last system, piano bass: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+  - Voices and chords intermingling complicatedly
+    - Second system, first measure, piano: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+</details>
 
 ---
 
@@ -272,6 +408,13 @@ TODO: image
 
 TODO: how to assign numbers to these + numbers can also be for longa and breve
 
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - 7th staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
+
 ---
 
 
@@ -358,7 +501,7 @@ TODO: image
 - These symbols are typically **smaller in size** than standard clefs.
 - Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
 
-TODO: image
+TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
 
 ---
 
@@ -388,6 +531,7 @@ TODO: image
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
 </details>
 
 ---
@@ -472,6 +616,12 @@ TODO: image
 - Represents the **horizontal line or slash** separating the upper and lower numbers of a time signature.
 
 TODO: image
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
 
 ---
 
@@ -933,6 +1083,7 @@ TODO: we still want to annotate tremolo beams (proper beams between notes) as so
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - Second staff in the middle: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
 </details>
 
 ---
@@ -986,6 +1137,12 @@ A grace note is composed of:
   <summary>Relevant discussions.</summary>
 
   - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
 </details>
 
 ---
@@ -1132,3 +1289,17 @@ Use this class for **non-musical marks or noise** that appear on the page **only
   <img src="./img/bleed-through-1.png" alt="Bleed-through that should NOT be annotated" width="300"/>
   <img src="./img/bleed-through-2.png" alt="Bleed-through that should NOT be annotated" width="320"/>
 </p>
+
+---
+
+
+## Precedence graph
+
+TODO ...
+
+- primary rule: when two durables meet (end-start), link is there
+- secondary rule: minimize links in-between separate voices (staffs, parts)
+- lemma: between chords, it's all-to-all connections
+
+Here, there is a missing eighth rest, first system, last measure, bottom staff, onset 1.5 beats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+(this breaks the central assumption for precedence links, what to do about it?)
