@@ -1,0 +1,7 @@
+from typing import Iterable, TypeVar
+
+
+T = TypeVar("T")
+
+def flatten(xss: Iterable[Iterable[T]]) -> list[T]:
+    return [x for xs in xss for x in xs]
