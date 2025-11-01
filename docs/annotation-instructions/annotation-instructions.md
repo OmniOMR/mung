@@ -127,8 +127,8 @@ TODO: what about chords with differing number of dots and noteheads?
 *(`stem` is not part of SMuFL, because music notation tools cannot render stems via a music notation font - and SMuFL is a font-layout (FL) standard)*
 
 <p>
-  <img src="./img/stem-0.png" height="150"/>
-  <img src="./img/stem-syntax-simple.png" height="150"/>
+  <img src="./img/stem-0.png" height="200"/>
+  <img src="./img/stem-syntax-simple.png" height="200"/>
 </p>
 
 - Stem is the line attached to all notes shorter than the whole note.
@@ -157,7 +157,7 @@ TODO: what about chords with differing number of dots and noteheads?
 </details>
 
 <p>
-  <img src="./img/stem-syntax-chord.png" height="150"/>
+  <img src="./img/stem-syntax-chord.png" height="200"/>
   <img src="./img/stem-chord-1.png" height="150"/>
   <img src="./img/stem-chord-2.png" height="150"/>
   <img src="./img/stem-chord-3.png" height="150"/>
@@ -194,7 +194,7 @@ TODO: what about chords with differing number of dots and noteheads?
 - If the stem is drawn as a single stroke, is still **must be split into two**, otherwise the presence of the second voice is lost (it is neccessary for proper interpretation of the graph).
 
 <p>
-  <img src="./img/stem-syntax-two-stems.png" height="150"/>
+  <img src="./img/stem-syntax-two-stems.png" height="200"/>
   <img src="./img/stem-two-voices-1.png" height="150"/>
   <img src="./img/stem-two-voices-2.png" height="150"/>
 </p>
@@ -255,6 +255,14 @@ TODO: what about chords with differing number of dots and noteheads?
 ## Flags
 
 `flag(number)th(Up/Down)`
+
+<p>
+  <img src="./img/flags-0.png" height="200"/>
+</p>
+<p>
+  <img src="./img/flags-1.png" height="200"/>
+  <img src="./img/flags-syntax.png" height="200"/>
+</p>
 
 Flags are divided into separate classes according to their type and direction:
 
