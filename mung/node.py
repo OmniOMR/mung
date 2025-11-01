@@ -775,14 +775,17 @@ class Node(object):
         return node_el
 
     def __repr__(self) -> str:
+        """Format the Node as string representation. See the documentation
+        of :module:`mung.io` for details."""
         root_el = self.to_xml()
         etree.indent(root_el, space="\t")
         return etree.tostring(root_el, encoding="utf-8", xml_declaration=True).decode("utf-8")
 
     def ___str__(self):
-        """Format the Node as string representation. See the documentation
-        of :module:`mung.io` for details."""
-        return repr(self)
+        """
+        Returns a string with node class name and its id.
+        """
+        return f"Node({self.class_name}, {self.id})"
 
     def encode_mask(self, mode: str = 'rle') -> str:
         """Encode a binary array ``mask`` as a string, compliant
