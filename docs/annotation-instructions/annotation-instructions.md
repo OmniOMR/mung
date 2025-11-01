@@ -322,6 +322,15 @@ Flags are divided into separate classes according to their type and direction:
 
 ## `slur`
 
+<p>
+  <img src="./img/slur-0.png" height="200"/>
+  <img src="./img/tie-or-slur-edge-dillemma.png" height="200"/>
+</p>
+<p>
+  <img src="./img/slur-syntax.png" height="200"/>
+  <img src="./img/slur-tie-edge-syntax.png" height="200"/>
+</p>
+
 - Annotate even when the slur appears at the **end of a page** and it’s unclear whether it’s a slur or a tie (see [discussion](https://github.com/orgs/OmniOMR/discussions/108#discussioncomment-13986659)).
 - All annotated pages are available in the **Digital Library**, where you can browse the full document. If you want to check it yourself (for clefs or slurs), the links follow this format:
 
@@ -331,14 +340,28 @@ Flags are divided into separate classes according to their type and direction:
   <img src="./img/slur-1.png" alt="slur Example" width="300"/>
 </p>
 
+TODO: How do I tell apart (in MuNG) an edge slur (continuing to the next line) from a slur that ends on the last note of the system?
+
 ---
 
 
 ## `tie`
 
 <p>
+  <img src="./img/tie-0.png" height="200"/>
+  <img src="./img/tie-or-slur-edge-dillemma.png" height="200"/>
+</p>
+<p>
+  <img src="./img/tie-syntax.png" height="200"/>
+  <img src="./img/tie-syntax-chord.png" height="200"/>
+  <img src="./img/slur-tie-edge-syntax.png" height="200"/>
+</p>
+
+<p>
   <img src="./img/tie-1.png" alt="tie Example" width="600"/>
 </p>
+
+TODO: ties between chords? Syntax? Is that correct? What if notes not add up?
 
 ---
 
@@ -447,6 +470,11 @@ TODO: how to assign numbers to these + numbers can also be for longa and breve
 
 
 ## Accidentals
+
+<p>
+  <img src="./img/accidentals-0.png" height="200"/>
+  <img src="./img/accidentals-syntax.png" height="200"/>
+</p>
 
 
 ### `accidentalSharp`
