@@ -21,10 +21,13 @@ class TestWrapperGraphScheduling(unittest.TestCase):
         def get_neighbors(x):
             return [v for u, v in edges if u == x]
 
-        def get_start_and_duration(x: T) -> tuple[int | Fraction, int | Fraction]:
-            return durations[x]
+        def get_start(x: T) -> int | Fraction:
+            return durations[x][0]
+        
+        def get_duration(x: T) -> int | Fraction:
+            return durations[x][1]
 
-        return WrapperGraph.build_graph(objects, get_neighbors, get_start_and_duration)
+        return WrapperGraph.build_graph(objects, get_neighbors, get_start, get_duration)
 
     def test_single_node(self):
         nodes = self.build_graph([], {"A": (0, 3)})

@@ -3,7 +3,7 @@ from parameterized import parameterized
 from itertools import product
 import numpy as np
 
-from mung import Node, NotationGraph
+from mung import NotationGraph
 from mung.constants import ClassNamesConstants as C
 from mung2musicxml.preprocessing.multistem import MultistemResolver
 from ..utils import DummyNode
