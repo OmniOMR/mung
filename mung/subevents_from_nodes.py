@@ -17,7 +17,8 @@ def form_chords(noteheads: list[Node], graph: NotationGraph) -> list[list[Node]]
                        "should have been resolved earlier")
         if len(s) == 0:
             logger.warning(f"{node.class_name} {node.id} should have exactly one stem. "
-                            "Working with notehead as if it was alone on a stem")
+                           f"Has {len(s)}. "
+                           "Working with notehead as if it was alone on a stem")
             output.append([node])
         stems.extend(s)
 
