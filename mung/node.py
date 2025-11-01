@@ -781,7 +781,7 @@ class Node(object):
         etree.indent(root_el, space="\t")
         return etree.tostring(root_el, encoding="utf-8", xml_declaration=True).decode("utf-8")
 
-    def ___str__(self):
+    def __str__(self):
         """
         Returns a string with node class name and its id.
         """
