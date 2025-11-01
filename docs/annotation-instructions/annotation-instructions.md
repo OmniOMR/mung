@@ -50,7 +50,7 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 ![noteheadWhole](./img/notehead-whole-1.png)
 
 <details>
-  <summary>Why differentiate whole/half noteheads if they look identical?</summary>
+  <summary>🤔 Why differentiate whole/half noteheads if they look identical?</summary>
   
   We differentiate `noteheadWhole` from `noteheadHalf` (below) because of downstream processing against the SMuFL standard, which does treat them as distinct symbols. While previous versions of MuNG had just a `noteheadEmpty` class, it introduces an extra step when trying to e.g. load the data for rendering with a SMuFL-compliant font, which may seem trivial (just check for a stem!), but what if there is an error in the annotation? In the end it is just better to make the MuNG data itself as close to SMuFL as possible, to make the whole dataset easier to maintain and clean. (The same logic will apply in other places in the instructions, hence why we write so much about it here.)
 </details>
@@ -287,11 +287,18 @@ Flags are divided into separate classes according to their type and direction:
 
 ## `beam`
 
-- Use the same rule as for `stem and notehead`: if the stem clearly continues past the beam, **draw it through**; if not, **end it below**. Overlaps between symbols are fine.
-
+<p>
+  <img src="./img/beam-0.png" height="200"/>
+</p>
+<p>
+  <img src="./img/beam-syntax.png" height="200"/>
+</p>
 <p>
   <img src="./img/beam-1.png" alt="flag8thUp outer Example" width="290"/>
 </p>
+
+- If the beams intersects other symbols (e.g. stems), mark the mask through the intersected section. Pixels can be shared between multiple objects.
+- ⚠️ If the **noteheads are empty** you might be looking at a **tremolo beam**, check out the annotation instructions on tremolos (TODO: add link) to make sure you don't accidentally annotate multi-note tremolos as beams.
 
 ---
 
@@ -300,6 +307,12 @@ Flags are divided into separate classes according to their type and direction:
 
 *(Not “ledger”, both variants are correct ([Wikipedia](https://en.wikipedia.org/wiki/Ledger_line)), but we use leger to stay compliant with SMuFL specification.)*
 
+<p>
+  <img src="./img/legerLine-0.png" height="200"/>
+</p>
+<p>
+  <img src="./img/legerLine-syntax.png" height="200"/>
+</p>
 <p>
   <img src="./img/leger-line-1.png" alt="legerLine Example" width="450"/>
 </p>
@@ -748,7 +761,7 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 </p>
 
 <details>
-  <summary>Why not use staff1Line class of SMuFL?</summary>
+  <summary>🤔 Why not use staff1Line class of SMuFL?</summary>
 
   The `staff1Line` class from SMuFL is intended for text-rendering. It is not used to actually render stafflines and thus means something slightly different semantically. Staff lines are more similar to beams, slurs, and ties, which cannot be rendered via a font, so aren't present in SMuFL. Therefore we decided to also introduce the class `staffLine` for this non-font-renderable symbol, just like we did with `beam`, `slur`, and `tie`.
 </details>
