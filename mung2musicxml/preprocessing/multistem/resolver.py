@@ -173,27 +173,6 @@ class MultistemResolver:
         logger.info(f"Split {len(to_split)} symbols "
                     f"between original node {original.id} and ghost node {ghost.id}")
     
-    def _form_chords(self, noteheads: list[Node]) -> list[list[Node]]:
-        """
-        Sorts a list of noteheads into chords by looking at shared stems.
-        """
-        output = []
-        stems: list[Node] = []
-        for node in noteheads:
-            s = self._graph.children(node, class_filter=C.STEM)
-            assert len(s) < 2, "Every possible double stemmed notehead should have been resolved earlier"
-            if len(s) == 0:
-                logger.warning(f"{node.class_name} {node.id} should have exactly one stem. "
-                               "Working with notehead as if it was alone on a stem")
-                output.append([node])
-            stems.extend(s)
-
-        # find unique stems
-        stems_unique = set(stems)
-        # resolve to notehead groups
-        return output + [self._graph.parents(s, class_filter=I.NONGRACE_NOTEHEAD_CLASS_NAMES) 
-                for s in stems_unique]
-        
     def _resolve_incoming_precedence_edges(self, original: Node, ghost: Node) -> None:
         original_staff = self._graph.children(original, class_filter=C.STAFF)[0]
         preceding_same_staff = [
