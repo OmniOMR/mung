@@ -16,7 +16,7 @@ class PitchInferenceEngineWrapper:
         self._engine = PitchInferenceEngine(strategy)
 
     def __call__(
-        self, graph: NotationGraph, add_data_to_nodes: bool = False
+        self, graph: NotationGraph, add_data_to_nodes: bool = True
     ) -> dict[int, Pitch]:
         """
         Infers pitches for all notes inside the graph.
