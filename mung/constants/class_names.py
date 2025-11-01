@@ -73,6 +73,8 @@ class ClassNamesConstants:
 
     LETTER_OTHER = "characterOther"
 
+    TREMOLO_MARK = "tremoloMark"
+
     @staticmethod
     def rest_name_to_duration(rest_name: str) -> Fraction:
         """
