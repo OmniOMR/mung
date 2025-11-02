@@ -1,10 +1,11 @@
 from typing import Optional
 from mung2midi.inference import PitchInferenceEngine, PitchInferenceStrategy, Pitch
 from mung import NotationGraph
+from enum import StrEnum
 
 
-class PitchDataConstants:
-    PITCH: str = "pitch"
+class PitchDataConstants(StrEnum):
+    PITCH = "pitch"
 
 
 class PitchInferenceEngineWrapper:
