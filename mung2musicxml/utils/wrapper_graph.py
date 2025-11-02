@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, Generic, Self, Optional
+from typing import Callable, TypeVar, Generic, Self, Optional, Iterable
 from collections import defaultdict, deque
 from fractions import Fraction
 from queue import PriorityQueue
@@ -6,6 +6,7 @@ from typing import Any
 from enum import Enum
 from pathlib import Path
 import numpy as np
+import itertools
 
 from .topological_sort import topological_sort
 from ..logger import logger
@@ -55,6 +56,14 @@ class WrapperGraph:
     
     def __len__(self) -> int:
         return len(self._nodes)
+
+    def __str__(self) -> str:
+        edges = ', '.join(itertools.chain.from_iterable((f'({parent}, {child})' for child in parent.children) for parent in self))
+        return (
+            f"{self.__class__.__name__}"
+            f"(nodes=[{', '.join([str(x) for x in self])}], "
+            f"edges=[{edges}])"
+        )
     
     @classmethod
     def from_other_graph(
@@ -148,6 +157,10 @@ class WrapperGraph:
     
     def topological_sort(self) -> list[WrapperNode]:
         return topological_sort(self._nodes, lambda p, c: c in p.children)
+    
+    def add_edge(self, parent: WrapperNode, child: WrapperNode) -> None:
+        child.parents.append(parent)
+        parent.children.append(child)
 
     def schedule_and_find_width(self) -> list[WrapperNode]:
         """
@@ -178,7 +191,7 @@ class WrapperGraph:
                 assert isinstance(other, Event)
                 return (self.onset, self.e_type) < (other.onset, other.e_type)
             
-            def __str__(self) -> str:
+            def __repr__(self) -> str:
                 return f"Event({self.onset}, {self.e_type.value}, {self.node})"
 
 
@@ -256,14 +269,38 @@ class WrapperGraph:
     
     def assign_voices(
             self,
+            groups: Optional[Iterable[Iterable[WrapperNode]]] = None,
             output_file: Optional[Path | str] = None,
             fps: int = 1
         ) -> dict[WrapperNode, int]:
-        return assign_voices(self, output_file, fps)
+        return assign_voices(
+            self,
+            groups=groups,
+            output_file=output_file,
+            fps=fps
+        )
+
+
+def build_groupmates_map(groups: Iterable[Iterable[T]]) -> defaultdict[T, set[T]]:
+    """
+    Given a list of groups (each a list of objects), return a dictionary where
+    each key is an object, and its value is a list of all other objects that 
+    appear with it in the same group(s).
+    """
+    groupmates = defaultdict(set)
+    
+    for group in groups:
+        for obj in group:
+            # add all others from the same group except itself
+            others = set(group) - {obj}
+            groupmates[obj].update(others)
+
+    return groupmates
 
 
 def assign_voices(
         graph: WrapperGraph,
+        groups: Optional[Iterable[Iterable[WrapperNode]]] = None,
         output_file: Optional[Path | str] = None,
         fps: int = 1
 ) -> dict[WrapperNode, int]:
@@ -274,42 +311,69 @@ def assign_voices(
     and then propagates voices from these nodes to others using a greedy
     approach. The node with the lowest voice propagates first.
 
-    :param graph: A graph instance
+    Groups specified will have the same voice assigned.
+    Every two nodes in a group must not be parallel.
+
+    :param graph: A graph instance.
+    :param groups: List of groups of notes the must have the same voice.
+    :param output_file: If specified, the visualization is saved to this file as GIF.
+    :param fps: Output GIF fps count.
     :return: dict[node] -> assigned voice id.
     """
-    voices: dict[WrapperNode, int] = {}
-    
-    widest_nodes = graph.schedule_and_find_width()
-    widest_sorted = sorted(widest_nodes, key=lambda n: (n.priority, id(n)))
-    for i, node in enumerate(widest_sorted, start=1):
-        voices[node] = i
-
-    q: PriorityQueue[tuple[int, int, WrapperNode]] = PriorityQueue()
-    for node in widest_sorted:
-        q.put((voices[node], id(node), node))
-
-    start_node = WrapperNode("__START__", duration=0, priority=-1)
-    
-    start_node.children = graph.get_sources()
-    new_graph = WrapperGraph(graph._nodes + [start_node])
-    
     def compute_next_voice(
             nodes: list[WrapperNode],
             voices: dict[WrapperNode, int],
             base_voice: int
-        ) -> int:
+    ) -> int:
         max_voice = max([node_voice + 1 for node in nodes if (node_voice := voices.get(node)) is not None], default=base_voice)
         return max(base_voice, max_voice)
     
-    parents: defaultdict[WrapperNode, list[WrapperNode]] = defaultdict(list)
-    for node in new_graph:
-        for n in node.children:
-            parents[n].append(node)
-
+    # setup algorithm helper structures
+    voices: dict[WrapperNode, int] = {}
+    if groups is None:
+        groups = [[]]
+    
     operations: list[tuple[str, dict[WrapperNode, int], tuple[WrapperNode, WrapperNode], str]] = []
+    group_mapping = build_groupmates_map(groups)
+    
+    # find widest place in graph
+    widest_nodes = graph.schedule_and_find_width()
+    widest_sorted = sorted(widest_nodes, key=lambda n: (n.priority, id(n)))
+
+    def process_group_member(group_member: WrapperNode, current_node_voice: int) -> None:
+        if group_member not in voices:
+            logger.debug(f"Extending voice {current_node_voice} to {group_member}, group member")
+            voices[group_member] = current_node_voice
+            q.put((current_node_voice, id(group_member), group_member))
+            operations.append((
+                f"Assign {group_member} -> voice {voices[group_member]}",
+                voices.copy(),
+                (node, group_member),
+                "green"
+            ))
+    
+    q: PriorityQueue[tuple[int, int, WrapperNode]] = PriorityQueue()
+    for voice_id, node in enumerate(widest_sorted, start=1):
+        voices[node] = voice_id
+        q.put((voice_id, id(node), node))
+        for group_member in group_mapping[node]:
+            process_group_member(group_member, voice_id)
+    
+    # connect all possible components with a start node
+    # add it to graph
+    start_node = WrapperNode("__START__", duration=0, priority=-1)
+    for source in  graph.get_sources():
+        graph.add_edge(start_node, source)
+    new_graph = WrapperGraph(graph._nodes + [start_node])
+    
 
     while not q.empty():
         current_node_voice, _, node = q.get()
+
+        # process group members
+        for group_member in group_mapping[node]:
+            process_group_member(group_member, current_node_voice)
+        
         # process children, forward
         c_children = sorted(node.children, key=lambda n: n.priority)
         children_voice = compute_next_voice(c_children, voices, current_node_voice)
@@ -326,7 +390,7 @@ def assign_voices(
                 children_voice += 1
         
         # process parents, backward
-        c_parents = sorted(parents[node], key=lambda n: n.priority)
+        c_parents = sorted(node.parents, key=lambda n: n.priority)
         parents_voice = compute_next_voice(c_parents, voices, current_node_voice)
         for parent in c_parents:
             if parent not in voices:
@@ -561,4 +625,4 @@ if __name__ == "__main__":
     g = WrapperGraph(graph3)
 
     width, times, widest = g.schedule_and_find_width()
-    voices = assign_voices(g, "schedule.gif")
+    voices = assign_voices(g, output_file="schedule.gif")
