@@ -128,11 +128,9 @@ class TestAssignVoicesGroups(TestCase):
         """
         # connected B and C
         g = make_branching_graph()
-        print(g)
         a, b, c, d = g._nodes
 
         voices_bc = g.assign_voices(groups=[[b, c]])
-        print(voices_bc)
 
         self.assertEqual(len(voices_bc), len(g))
 
@@ -142,7 +140,6 @@ class TestAssignVoicesGroups(TestCase):
 
         # connected B and D
         g = make_branching_graph()
-        print(g)
         a, b, c, d = g._nodes
         voices_bd = g.assign_voices(groups=[[b, d]])
 
