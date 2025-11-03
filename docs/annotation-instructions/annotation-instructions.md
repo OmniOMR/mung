@@ -384,7 +384,9 @@ TODO: ties between chords? Syntax? Is that correct? What if notes not add up?
 
 *(Previously in CVAT `rest_half`)*
 
-TODO: image
+<p>
+  <img src="./img/rest-half-1.png" alt="restHalf Example" width="900"/>
+</p>
 
 ---
 
