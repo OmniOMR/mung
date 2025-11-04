@@ -1029,6 +1029,20 @@ Also remember to add a `dynamicsText` convex hull over these symbols.
 
 ---
 
+### `dynamicCrescendoHairpin`
+
+TODO: image
+
+---
+
+### `dynamicDiminuendoHairpin`
+
+<p>
+  <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
+</p>
+
+---
+
 
 ### `dynamicsText`
 
