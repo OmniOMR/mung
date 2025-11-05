@@ -386,7 +386,9 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_half`)*
 
-TODO: image
+<p>
+  <img src="./img/rest-half-1.png" alt="restHalf Example" width="900"/>
+</p>
 
 ---
 
@@ -1026,6 +1028,20 @@ Also remember to add a `dynamicsText` convex hull over these symbols.
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
 </details>
+
+---
+
+### `dynamicCrescendoHairpin`
+
+TODO: image
+
+---
+
+### `dynamicDiminuendoHairpin`
+
+<p>
+  <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
+</p>
 
 ---
 
