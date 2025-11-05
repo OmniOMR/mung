@@ -363,6 +363,8 @@ TODO: How do I tell apart (in MuNG) an edge slur (continuing to the next line) f
 
 TODO: ties between chords? Syntax? Is that correct? What if notes not add up?
 
+TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+
 ---
 
 
@@ -1114,6 +1116,9 @@ dvě čárky = "dtto", stejně jako to předtím
 
 "interpretační pokyny = čti noty jinde"
 
+Samples:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+
 ---
 
 
@@ -1121,7 +1126,58 @@ dvě čárky = "dtto", stejně jako to předtím
 
 > **🚧 Under construction.**
 
+*(also called "tuplets", e.g. in SMuFL)*
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/tuplets.html))*
+
 TODO: tuples
+
+Ended my search for example documents at:
+4a7b3f30-00bf-11f0-9859-005056827e52_91c54772-8a3f-48b2-a813-aa0be22ecbc1
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Implicit tuplets
+    - First piano staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - Explicit triplets, no braces
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36758ac0-f593-11e7-b30f-5ef3fc9ae867
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_0d96bc22-8611-4e3a-86c0-29bea5b395a6
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - Explicit triplets, with braces
+    - Round braces: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+</details>
+
+
+### `tuplet[0..9]`
+
+TODO...
+
+---
+
+
+### `tupletColon`
+
+TODO...
+
+---
+
+
+### `tupleBracket`
+
+*(previously `tuple-spanner`)*
+
+TODO...
+
+---
+
+
+### `tuple`
+
+TODO: container class, specify syntax link rules
 
 ---
 
@@ -1140,6 +1196,7 @@ TODO: we still want to annotate tremolo beams (proper beams between notes) as so
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
   - Second staff in the middle: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - staff 4, 7, 8: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
 </details>
 
 ---
@@ -1199,6 +1256,7 @@ A grace note is composed of:
   <summary>🔗 Example documents</summary>
 
   - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
 </details>
 
 ---
@@ -1311,6 +1369,7 @@ TODO: the first example document below also contains pedal markings
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
 </details>
 
 ---
@@ -1322,6 +1381,12 @@ TODO: the first example document below also contains pedal markings
 
 - Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
 - Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+</details>
 
 ---
 
