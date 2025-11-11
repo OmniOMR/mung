@@ -677,11 +677,13 @@ TODO: image
 
 TODO: image
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
 </details>
+-->
 
 ---
 
@@ -732,7 +734,7 @@ TODO: image
 **TODO:** U textů bude potřeba vyřešit jestli texty přepisovat (podobně jako umožňoval CVAT - pozor na nečitelné texty).
 
 
-## `lyricsText`
+### `lyricsText`
 
 > **🚧 Under construction.**
 
@@ -1023,11 +1025,13 @@ Also remember to add a `dynamicsText` convex hull over these symbols.
 
 > Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
 </details>
+-->
 
 ---
 
@@ -1138,67 +1142,182 @@ Samples:
 ---
 
 
-## Tuples
+## Tuplets
 
-> **🚧 Under construction.**
-
-*(also called "tuplets", e.g. in SMuFL)*
+*(also called "tuple", "tuples" previously; however, SMuFL uses "tuplet", "tuplets")*
 
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/tuplets.html))*
 
-TODO: tuples
+<p>
+  <img src="./img/tuplets-overview.png" width="620"/>
+</p>
 
-Ended my search for example documents at:
-4a7b3f30-00bf-11f0-9859-005056827e52_91c54772-8a3f-48b2-a813-aa0be22ecbc1
+Tuplets are notes whose duration is modified relative to the regular duration of the note. In the example above, you can see triplets, where three triplet eight notes take up time of exactly two eight notes (you play three in the space of two). You can read more about tuplets in [MuseScore](https://musescore.org/en/handbook/3/tuplets) and on [Wikipedia](https://en.wikipedia.org/wiki/Tuplet).
+
+There are a number of ways how a tuplet can be writen down:
+
+- With a number above the group (e.g. **3** for triplets)
+- With a number and a square bracket (modern notation)
+- With a number and a round bracket (older notation, easy to confuse with a slur)
+- With a ratio **3:2** instead of a number (three in two)
+  - (note, sometimes the order is reversed despite meaning the same thing)
+- With **no visible notation**, these are called **implicit tuplets** and are often used when a given tuplet continues within the piece
+  - (e.g. the first tuplet is notated explicitly, and then it is expected to continue)
+  - (must be infered from the context - too many notes within the number of beats)
+  - (see the example documents below)
+- Most tuplets are triplets (3 in 2), however there are also other numbers, such as duplets (2 in 3), quintuplets (5 in 4), sextuplets (6 in 4), or septuplets (7 in 4/6/8 depending on the context).
+
+**How to annotate:**
+
+- Annotate the visual glyphs according to their classes (e.g. `tuplet3`, `tupletBracket`), see the classes below.
+- Connect numbers and colons left-to-right via <kbd>🟢 precedence</kbd> links (see the `tuplet` class).
+- Create a container `tuplet` that contains affected notes and rests and the tuplet notation glyphs.
+  - Affected noteheads <kbd>🔴 syntax</kbd> link to the `tuplet` container.
+  - The `tuplet` container <kbd>🔴 syntax</kbd> links to tuplet glyphs.
+  - Annotate *implicit tuplets* with the `tuplet` container as well.
+
+See the individual classes below and the `tuplet` container class to learn more.
 
 <details>
   <summary>🔗 Example documents</summary>
 
-  - Implicit tuplets
-    - First piano staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - Implicit tuplets (must be infered from context)
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
     - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
-  - Explicit triplets, no braces
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+  - Explicit triplets, only number, no brackets
     - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36758ac0-f593-11e7-b30f-5ef3fc9ae867
-    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
-    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_0d96bc22-8611-4e3a-86c0-29bea5b395a6
-    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
-    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
-  - Explicit triplets, with braces
-    - Round braces: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+    - <!-- TODO: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf -->
+  - Explicit triplets, with round brackets
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+    - <!-- TODO: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_5fbc84f2-6a4b-4f2c-b6fc-2403453c1e3d -->
+    - <!-- TODO: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750 -->
+  - Explicit triplets, with square brackets
+    - To be encountered...
+  - Other than 3-tuplets
+    - <!-- TODO: 2-tuplets (last system, first measure): https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089 -->
+    - <!-- TODO: WTF? Needs complete revision! 6-tuplets: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb -->
+    - 7-tuplets: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
 </details>
 
 
 ### `tuplet[0..9]`
 
-TODO...
+<p>
+  <img src="./img/tupletN-0.png" height="200"/>
+  <img src="./img/tupletN-syntax.png" height="200"/>
+  <img src="./img/tuplet-text-precedence.png" height="200"/>
+</p>
+
+- Classes `tuplet0`, `tuplet1`, ..., `tuplet9` are individual numbers that denote a tuplet.
+- Mark the mask **precisely** around the number.
+- Annotate the numbers only if they are written in the score. If missing, there is nothing to annotate.
+- Sometimes the number is hard to read (e.g. `3` looks like `ↄ`), infer the number from context and annotate it according to its meaning (e.g. `tuplet3`).
+- Each number has an incomming <kbd>🔴 syntax</kbd> link from the `tuplet` container class.
+- If a tuplet is marked by multiple numbers (e.g. `12` or `3:2`), mark each number **separately** as individual elements and join all of them **left-to-right** via <kbd>🟢 precedence</kbd> links.
+
+<p>
+  <img src="./img/tuplet3-1.png" height="200"/>
+  <img src="./img/tuplet3-2.png" height="200"/>
+  <img src="./img/tuplet6-1.png" height="200"/>
+  <img src="./img/tuplet7-1.png" height="200"/>
+</p>
+
 
 ---
 
 
 ### `tupletColon`
 
-TODO...
+<p>
+  <img src="./img/tupletColon-0.png" height="200"/>
+  <img src="./img/tupletColon-syntax.png" height="200"/>
+  <img src="./img/tuplet-text-precedence.png" height="200"/>
+</p>
+
+- A colon `:` may sometimes be used among tuplet numbers. Treat it just like the `tuplet[0..9]` numbers above.
+- Mark the mask **precisely** around the colon.
+- The colon has an incomming <kbd>🔴 syntax</kbd> link from the `tuplet` container class.
+- The colon participates in the <kbd>🟢 precedence</kbd> links that link multiple tuplet numbers together **left-to-right**.
 
 ---
 
 
-### `tupleBracket`
+### `tupletBracket`
 
-*(previously `tuple-spanner`)*
+*(previously `tuple-spanner` or `tupleBracket`)*
 
-TODO...
+<p>
+  <img src="./img/tupletBracket-0.png" height="200"/>
+  <img src="./img/tupletBracket-syntax.png" height="200"/>
+</p>
+
+- A tuplet group may contain a bracket that defines exactly where the group begins and ends. This is often used, when the notes do not share a beam (because of half notes or rests).
+- The bracket is a **single object** `tupletBracket`. Even if it is drawn as **multiple segments**.
+- Modern notation uses square brackets (two halves) to make tuplets easily recognizable.
+- Older notation uses round brackets that look like slurs. **Be careful and do not confuse slurs with tuplet brackets!** When in doubt, ask. See the example documents above to get a feel.
+- The tuplet bracket has an incomming <kbd>🔴 syntax</kbd> link from the `tuplet` container class.
+- Tuplet brackets **do NOT** participate in <kbd>🟢 precedence</kbd> links that link tuplet numbers together. Those are only for the text.
+
+<p>
+  <img src="./img/tupletBracket-1.png" height="200"/>
+</p>
 
 ---
 
 
-### `tuple`
+### `tuplet`
 
-TODO: container class, specify syntax link rules
+*(previously `tuple`)*
+
+<p>
+  <img src="./img/tuplet-syntax.png" height="200"/>
+</p>
+
+- A **container class** for grouping all elements that mark a tuplet note group.
+- It container has three purposes:
+  - Group noteheads and rests that participate in the tuplet.
+  - Group the tuplet notation primitives (bracket and numbers) for the tuplet group.
+  - Link the two groups above together.
+
+This is what the syntax hierarchy for the `tuplet` container looks like:
+
+<p>
+  <img src="./img/tuplet-syntax-hierarchy.png" height="400"/>
+</p>
+
+- Affected noteheads and rests have <kbd>🔴 syntax</kbd> links to the `tuplet` container.
+- Tuplet notation primitives (bracket and numbers) are <kbd>🔴 syntax</kbd> linked from the `tuplet` container.
+
+- The pixel-mask for the `tuplet` container is only present to make the container visible in MuNG Studio. **Draw a polygon shape that encapsulates the entire tuplet group** with all notes, tuplet bracket, numbers and stems and beams.
+- Do **NOT** make the mask too tight, too small, or disjoint. It makes the review process more difficult and does not help with anything.
+
+<p>
+  <img src="./img/tuplet-dont-annotate-too-close.png" width="620"/>
+</p>
+
+Here is an example triplet with `tuplet3` number, round `tupletBracket` and the `tuplet` container. The container <kbd>🔴 syntax</kbd> links to the number and bracket and the three affected noteheads link to the container:
+
+<p>
+  <img src="./img/tuplet-1.png" height="200"/>
+  <img src="./img/tuplet-1-links.png" height="200"/>
+</p>
+
+Here are **implicit tuplets** (no numbers, no brackets). The time meter is `4/4` because of the two half notes on the lower staff, which means these eight notes must be triplets (three per beat). The only annotation is the `tuplet` container and <kbd>🔴 syntax</kbd> links from noteheads:
+
+<p>
+  <img src="./img/tuplet-implicit.png" height="200"/>
+  <img src="./img/tuplet-implicit-links.png" height="200"/>
+</p>
+
+See *🔗 Example documents* above at the end of [Tuplets](#tuplets) section.
 
 ---
 
 
 ## Tremolo
+
+> **🚧 Under construction.**
 
 *(Previously `tremolo_beam` in CVAT)*
 
@@ -1207,13 +1326,21 @@ TODO: container class, specify syntax link rules
 
 TODO: we still want to annotate tremolo beams (proper beams between notes) as something like `multipleNoteTremolo` or `tremoloBeam`. Must be defined here.
 
+<!--
+TODO: docs:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+-->
+
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
   - Second staff in the middle: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
   - staff 4, 7, 8: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
 </details>
+-->
 
 ---
 
@@ -1244,6 +1371,8 @@ TODO: we still want to annotate tremolo beams (proper beams between notes) as so
 
 ## Grace notes
 
+> **🚧 Under construction.**
+
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
 A grace note is composed of:
@@ -1268,17 +1397,21 @@ A grace note is composed of:
   - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
 </details>
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
 </details>
+-->
 
 ---
 
 
 ## `fermataAbove` / `fermataBelow`
+
+> **🚧 Under construction.**
 
 <p>
   <img src="./img/fermata-above-1.png" alt="fermataAbove Example" width="200"/>
@@ -1295,6 +1428,8 @@ A grace note is composed of:
 
 ### `ornamentTrill`
 
+> **🚧 Under construction.**
+
 *(Previously grouped under `ornament` in CVAT.)*
 
 - Used for the **“tr” text** symbol marking a **short trill**.
@@ -1304,15 +1439,27 @@ A grace note is composed of:
   <img src="./img/ornament-trill-1.png" alt="ornamentTrill Example" width="200"/>
 </p>
 
+<!--
+TODO: docs:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+-->
+
 ---
 
 
 ### `wiggleTrill`
 
+> **🚧 Under construction.**
+
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/multi-segment-lines.html))*
 
 - Represents the **wavy line** that typically **follows a trill mark**,  
 indicating the continuation of the trill.
+
+<!--
+TODO: docs:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+-->
 
 ---
 
@@ -1353,6 +1500,8 @@ indicating the continuation of the trill.
 
 ## `systemDivider`
 
+> **🚧 Under construction.**
+
 *(Called `system_break` in CVAT)* 
 
 TODO: image
@@ -1361,6 +1510,8 @@ TODO: image
 
 
 ## `splitBarDivider`
+
+> **🚧 Under construction.**
 
 - napojení taktu (ta vlnovka na konci)
 
@@ -1381,28 +1532,34 @@ TODO: the `horizontalSpanner` for ottava marking belongs here (but there's anoth
 
 TODO: the first example document below also contains pedal markings
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
 </details>
+-->
 
 ---
 
 
 ## `arpeggiato`
 
+> **🚧 Under construction.**
+
 *(Previously grouped under `ornament` in CVAT.)*  
 
 - Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
 - Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
 </details>
+-->
 
 ---
 
