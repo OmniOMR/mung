@@ -1170,7 +1170,7 @@ There are a number of ways how a tuplet can be writen down:
 **How to annotate:**
 
 - Annotate the visual glyphs according to their classes (e.g. `tuplet3`, `tupletBracket`), see the classes below.
-- Connect numbers and colons left-to-right via <kbd>🟢 precedence</kbd> links (see the `tuplet` class).
+- Connect numbers and colons left-to-right via <kbd>🟢 precedence</kbd> links (see the `tuplet[0..9]` classes).
 - Create a container `tuplet` that contains affected notes and rests and the tuplet notation glyphs.
   - Affected noteheads <kbd>🔴 syntax</kbd> link to the `tuplet` container.
   - The `tuplet` container <kbd>🔴 syntax</kbd> links to tuplet glyphs.
@@ -1275,7 +1275,7 @@ See the individual classes below and the `tuplet` container class to learn more.
 </p>
 
 - A **container class** for grouping all elements that mark a tuplet note group.
-- It container has three purposes:
+- It has three purposes:
   - Group noteheads and rests that participate in the tuplet.
   - Group the tuplet notation primitives (bracket and numbers) for the tuplet group.
   - Link the two groups above together.
