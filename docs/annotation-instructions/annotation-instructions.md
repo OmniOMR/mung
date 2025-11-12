@@ -463,12 +463,15 @@ TODO: image
 
 TODO: how to assign numbers to these + numbers can also be for longa and breve
 
+<!--
 <details>
   <summary>🔗 Example documents</summary>
 
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/02636110-aad4-4118-bc5f-da8c4bcef115_d3767b0a-a554-4a3b-bee1-85a021c29010
   - 7th staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
 </details>
+-->
 
 ---
 
@@ -629,20 +632,68 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 
 ## Time Signatures
 
+<p>
+  <img src="./img/timeSig-overview.png" height="200"/>
+</p>
+
+Time signature specifies how the rhythm is counted in the song. It consists of the upper number, stating how many beats there are per measure and the lower number, which specifies which note duration (half, quarter, eighth) will represent one beat.
+
+- See the types time signatures in [Dorico documentation](https://www.steinberg.help/r/dorico-pro/5.1/en/dorico/topics/notation_reference/notation_reference_time_signatures/notation_reference_time_signatures_types_r.html).
+- And more extensive description of these on [Wikipedia](https://en.wikipedia.org/wiki/Time_signature).
+
+Time signatures appear:
+
+- at the beginning of the score
+- at the start of a measure for which the signature changes
+- at the end of a staff if the signature changes on the first measure of the next line
+
 
 ### `timeSig[0..9]`
 
 *(Previously in CVAT `time_signature_element` and `numeral0..9` in MuNG)*
 
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
+
+<p>
+  <img src="./img/timeSigN-0.png" height="200"/>
+  <img src="./img/timeSigN-syntax.png" height="200"/>
+</p>
+
 Classes: `timeSig0`, `timeSig1`, `timeSig2`, ... `timeSig9`
 
-- Represents individual **digits** in the time signature (0–9).  
+- Represents individual **digits** in the time signature (0-9).
 - If the number is **greater than 9**, annotate each digit separately. (For example, a time signature of `10` should be split into **`timeSig1`** and **`timeSig0`**.)
-- **TODO:** vyřešit graf
+- Annotate mask pixels **precisely**.
+- Each number has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- For <kbd>🟢 precedence</kbd> see the [`timeSignature` container](#timesignature).
+
+<p>
+  <img src="./img/timeSig2-1.png" height="200"/>
+  <img src="./img/timeSig2-2.png" height="200"/>
+  <img src="./img/timeSig5-1.png" height="200"/>
+  <img src="./img/timeSig8-1.png" height="200"/>
+</p>
+
+Time signature may appear at the end of a staff or even after the end:
 
 <p>
   <img src="./img/time-sig-1.png" alt="timeSig 6 and 8 Example" width="350"/>
 </p>
+
+Sometimes the lower number is very ornamented. This is because there aren't that many options for its value (2, 4, 8, 16, 32) and it's mostly just 4. Here we can see the first measure has 3 quarter (1/4) notes, so the lower number must be 4. We annotate it as such:
+
+<p>
+  <img src="./img/timeSig4-ornamented.png" height="200"/>
+</p>
+
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+</details>
 
 ---
 
@@ -651,9 +702,32 @@ Classes: `timeSig0`, `timeSig1`, `timeSig2`, ... `timeSig9`
 
 *(Previously in CVAT `time_signature_element`)*
 
-- The **C** symbol, meaning common time, i.e. 4/4
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
 
-TODO: image
+<p>
+  <img src="./img/timeSigCommon-0.png" height="200"/>
+  <img src="./img/timeSigCommon-syntax.png" height="200"/>
+</p>
+
+- The **C** symbol, meaning common time, i.e. 4/4
+- Must be placed inside a [`timeSignature` container](#timesignature), even when it stands alone.
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Has no <kbd>🟢 precedence</kbd> links (because it's always alone).
+
+<p>
+  <img src="./img/timeSigCommon-1.png" height="200"/>
+  <img src="./img/timeSigCommon-2.png" height="200"/>
+</p>
+
+TODO: What about C with a dot inside?
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/030e4212-477f-4eae-9cf7-fc2c4d918b0e_fec3ef88-8fe3-4565-a102-fcb0c7e598c1
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36758ac0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
@@ -662,16 +736,40 @@ TODO: image
 
 *(Previously in CVAT `time_signature_element`)*
 
-- The slashed **C/** symbol, meaning cut-common time, i.e. 2/2
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
 
-TODO: image
+<p>
+  <img src="./img/timeSigCutCommon-0.png" height="200"/>
+  <img src="./img/timeSigCutCommon-syntax.png" height="200"/>
+</p>
+
+- The slashed **C/** symbol, meaning cut-common time, i.e. 2/2
+- Must be placed inside a [`timeSignature` container](#timesignature), even when it stands alone.
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Has no <kbd>🟢 precedence</kbd> links (because it's always alone).
+
+<p>
+  <img src="./img/timeSigCutCommon-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
 
 ---
 
 
-### `timeSigFractionalSlash`
+### `timeSigSlash`
 
 > **🚧 Under construction.**
+
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures-supplement.html))*
+
+*(previously `timeSigDivider`)*
+
+TODO: this is NOT fractional slash, just time signature slash
 
 - Represents the **horizontal line or slash** separating the upper and lower numbers of a time signature.
 
@@ -681,18 +779,40 @@ TODO: image
 <details>
   <summary>🔗 Example documents</summary>
 
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - 2/4, 3/4: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/02636110-aad4-4118-bc5f-da8c4bcef115_d3767b0a-a554-4a3b-bee1-85a021c29010
+  - 3/8 https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - 12/8 https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
 </details>
 -->
 
 ---
 
 
-### `timeSigFractionalEquals`
+### `timeSigFractionalSlash`
 
 > **🚧 Under construction.**
 
-- Represents the **equals sign (“=”)** used in **fractional or complex time signatures**.
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
+
+---
+
+
+### `timeSigPlus`
+
+> **🚧 Under construction.**
+
+- Represents the **plus sign (“+”)** used in [additive meters](https://en.wikipedia.org/wiki/Time_signature#Additive_meters).
+
+---
+
+
+### `timeSigEquals`
+
+> **🚧 Under construction.**
+
+- Represents the **equals sign (“=”)** used in time signatures.
 
 TODO: image
 
@@ -706,6 +826,8 @@ TODO: image
 - A **container class** for grouping all elements that form a complete time signature.
 - Use it to wrap **either a single object or multiple separate digits** (e.g., 3/4=6/10 as a compact symbol).
 - If the time signature appears **at the end of a staff line**, still annotate it as a full `timeSignature` object:
+
+TODO: precedence graph - link symbols in the order in which they are read
 
 <p>
   <img src="./img/time-signature-1.png" alt="timeSignature Example" width="300"/>
@@ -1348,6 +1470,10 @@ TODO: docs:
 ## Figured bass
 
 > **🚧 Under construction.**
+
+<!--
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+-->
 
 
 ### `figuredBassText`
