@@ -8,7 +8,7 @@ If you are starting out as a fresh annotator, then you should first read the int
 
 The recommended way to use this document is to go through the class list in order and annotate object on the page class-by-class. The classes here are ordered roughly by their [frequency](class-frequencies.md) in documents.
 
-It is also advised to first annotate masks for all object, and only then go through the document again and annotate the syntax and precedece links.
+It is also advised to first annotate masks for all objects, and only then go through the document again and annotate the syntax and precedece links.
 
 > **🚧 Construction work:** These instructions constantly expand. If you find yourself needing to use a section denoted with this emoji (🚧), you should wait for the construction work to be finished before using it. Same applies to situations where the notation situation you are annotating is not covered here at all. In both cases, notify the administrators, ideally by creating a question in [github discussions](https://github.com/orgs/OmniOMR/discussions) and tagging `@Jirka-Mayer`.
 
@@ -638,7 +638,7 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 
 Time signature specifies how the rhythm is counted in the song. It consists of the upper number, stating how many beats there are per measure and the lower number, which specifies which note duration (half, quarter, eighth) will represent one beat.
 
-- See the types time signatures in [Dorico documentation](https://www.steinberg.help/r/dorico-pro/5.1/en/dorico/topics/notation_reference/notation_reference_time_signatures/notation_reference_time_signatures_types_r.html).
+- See the types of time signatures in [Dorico documentation](https://www.steinberg.help/r/dorico-pro/5.1/en/dorico/topics/notation_reference/notation_reference_time_signatures/notation_reference_time_signatures_types_r.html).
 - And more extensive description of these on [Wikipedia](https://en.wikipedia.org/wiki/Time_signature).
 
 Time signatures appear:
@@ -657,6 +657,7 @@ Time signatures appear:
 <p>
   <img src="./img/timeSigN-0.png" height="200"/>
   <img src="./img/timeSigN-syntax.png" height="200"/>
+  <img src="./img/timeSigN-precedence.png" height="200"/>
 </p>
 
 Classes: `timeSig0`, `timeSig1`, `timeSig2`, ... `timeSig9`
@@ -665,25 +666,26 @@ Classes: `timeSig0`, `timeSig1`, `timeSig2`, ... `timeSig9`
 - If the number is **greater than 9**, annotate each digit separately. (For example, a time signature of `10` should be split into **`timeSig1`** and **`timeSig0`**.)
 - Annotate mask pixels **precisely**.
 - Each number has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
-- For <kbd>🟢 precedence</kbd> see the [`timeSignature` container](#timesignature).
+- Time signature elements are linked via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-down).
 
 <p>
   <img src="./img/timeSig2-1.png" height="200"/>
   <img src="./img/timeSig2-2.png" height="200"/>
   <img src="./img/timeSig5-1.png" height="200"/>
   <img src="./img/timeSig8-1.png" height="200"/>
+  <img src="./img/timeSigN-links.png" height="200"/>
 </p>
 
 Time signature may appear at the end of a staff or even after the end:
 
 <p>
-  <img src="./img/time-sig-1.png" alt="timeSig 6 and 8 Example" width="350"/>
+  <img src="./img/time-sig-1.png" width="200"/>
 </p>
 
 Sometimes the lower number is very ornamented. This is because there aren't that many options for its value (2, 4, 8, 16, 32) and it's mostly just 4. Here we can see the first measure has 3 quarter (1/4) notes, so the lower number must be 4. We annotate it as such:
 
 <p>
-  <img src="./img/timeSig4-ornamented.png" height="200"/>
+  <img src="./img/timeSig4-ornamented.png" height="300"/>
 </p>
 
 
@@ -717,16 +719,37 @@ Sometimes the lower number is very ornamented. This is because there aren't that
 <p>
   <img src="./img/timeSigCommon-1.png" height="200"/>
   <img src="./img/timeSigCommon-2.png" height="200"/>
+  <img src="./img/timeSigCommon-links.png" height="200"/>
 </p>
-
-TODO: What about C with a dot inside?
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/030e4212-477f-4eae-9cf7-fc2c4d918b0e_fec3ef88-8fe3-4565-a102-fcb0c7e598c1
 
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36758ac0-f593-11e7-b30f-5ef3fc9ae867
+</details>
+
+---
+
+
+#### `mensuralProlationCombiningDot`
+
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/medieval-and-renaissance-prolations.html))*
+
+<p>
+  <img src="./img/mensuralProlation5-0.png" height="150"/>
+  <img src="./img/mensuralProlationCombiningDot-1.png" height="150"/>
+</p>
+
+In mensural notation, there is a time signature symbol that looks like **C** with a dot inside. This symbol should not be used in modern notation, however we encountered it in one of the documents. Since in that document, the time is 4/4, we decided to annotate the **C** as `timeSigCommon` and the dot in the middle as a `mensuralProlationCombiningDot` (which does exist in SMuFL). If you come across this again and the 4/4 time will hold, annotate it the same way, otherwise notify us.
+
+- Has an incomming <kbd>🔴 syntax</kbd> link from the `timeSigCommon`, **NOT** the `timeSignature` container.
+- Has no <kbd>🟢 precedence</kbd> links.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/030e4212-477f-4eae-9cf7-fc2c4d918b0e_fec3ef88-8fe3-4565-a102-fcb0c7e598c1
 </details>
 
 ---
@@ -763,74 +786,128 @@ https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/030e4212-477f
 
 ### `timeSigSlash`
 
-> **🚧 Under construction.**
-
 *(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures-supplement.html))*
 
 *(previously `timeSigDivider`)*
 
-TODO: this is NOT fractional slash, just time signature slash
+<p>
+  <img src="./img/timeSigSlash-0.png" height="200"/>
+  <img src="./img/timeSigSlash-syntax.png" height="200"/>
+  <img src="./img/timeSigSlash-precedence.png" height="200"/>
+</p>
 
 - Represents the **horizontal line or slash** separating the upper and lower numbers of a time signature.
+- Not to be confused with `timeSigFractionalSlash` (see below), which represents the slash in a fraction used within the top number.
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Time signature elements are linked via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-down).
 
-TODO: image
+<p>
+  <img src="./img/timeSigSlash-1.png" height="200"/>
+  <img src="./img/timeSigSlash-2.png" height="200"/>
+  <img src="./img/timeSigSlash-links.png" height="200"/>
+</p>
 
-<!--
+Sometimes the slash is ornamented:
+
+<p>
+  <img src="./img/timeSigSlash-ornamented.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
-  - 2/4, 3/4: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/02636110-aad4-4118-bc5f-da8c4bcef115_d3767b0a-a554-4a3b-bee1-85a021c29010
-  - 3/8 https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
-  - 12/8 https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
 </details>
--->
 
 ---
 
 
 ### `timeSigFractionalSlash`
 
-> **🚧 Under construction.**
-
 *(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
+
+<p>
+  <img src="./img/timeSigFractionalSlash-0.png" height="200"/>
+  <img src="./img/timeSigFractionalSlash-precedence.png" height="200"/>
+</p>
+
+Used in non-whole measure sizes, e.g. one measure is two-and-a-half beats long.
+
+- Represents the slash inside a fraction inside the time signature.
+- Not to be confused with `timeSigSlash` (see above), which separates the two halves of the time signature.
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Time signature elements are linked via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-down).
 
 ---
 
 
 ### `timeSigPlus`
 
-> **🚧 Under construction.**
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
+
+<p>
+  <img src="./img/timeSigPlus-0.png" height="200"/>
+  <img src="./img/timeSigPlus-precedence.png" height="200"/>
+</p>
+
+Used to communicate the semantic grouping of beats within a measure. The example above corresponds to 5/8 with 5 being understood as 2+3.
 
 - Represents the **plus sign (“+”)** used in [additive meters](https://en.wikipedia.org/wiki/Time_signature#Additive_meters).
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Time signature elements are linked via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-down).
 
 ---
 
 
 ### `timeSigEquals`
 
-> **🚧 Under construction.**
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/time-signatures.html))*
+
+<p>
+  <img src="./img/timeSigEquals-0.png" height="200"/>
+  <img src="./img/timeSigEquals-precedence.png" height="200"/>
+</p>
 
 - Represents the **equals sign (“=”)** used in time signatures.
-
-TODO: image
+- Has an incomming <kbd>🔴 syntax</kbd> link from the [`timeSignature` container](#timesignature).
+- Time signature elements are linked via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-down).
 
 ---
 
 
 ### `timeSignature`
 
-> **🚧 Under construction.** (describe the notation graph)
-
-- A **container class** for grouping all elements that form a complete time signature.
-- Use it to wrap **either a single object or multiple separate digits** (e.g., 3/4=6/10 as a compact symbol).
-- If the time signature appears **at the end of a staff line**, still annotate it as a full `timeSignature` object:
-
-TODO: precedence graph - link symbols in the order in which they are read
+*(`timeSignature` is not part of SMuFL, because it is a container class)*
 
 <p>
-  <img src="./img/time-signature-1.png" alt="timeSignature Example" width="300"/>
+  <img src="./img/timeSignature-0.png" height="200"/>
+</p>
+
+- A **container class** for grouping all elements that form a time signature (see the elements listed above).
+- Create one container for the whole time signature.
+- There is one <kbd>🔴 syntax</kbd> going from the container to each of the elements making up the time signature (numbers, slashes, plus, equals).
+- The elements inside the time signature are linked together via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-to-bottom). See the precedence diagrams above.
+
+This is what the syntax and precerence graph hierarchy for the time signature container looks like:
+
+<p>
+  <img src="./img/timeSignature-syntax-hierarchy.png" height="400"/>
+</p>
+
+Examples:
+
+<p>
+  <img src="./img/timeSigSlash-links.png" height="200"/>
+  <img src="./img/timeSigN-links.png" height="200"/>
+  <img src="./img/timeSigCommon-links.png" height="200"/>
+</p>
+
+When two time signatures are written next to each other, they represent an **alternating time signature**. It means that first measure uses the first signature, the second measure uses the second signature, and then it alternates measure by measure. We annotate this kind of signature as two separate `timeSignature` objects:
+
+<p>
+  <img src="./img/timeSignature-alternating.png" height="200"/>
 </p>
 
 ---
