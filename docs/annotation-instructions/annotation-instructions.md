@@ -44,15 +44,24 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 
 ### `noteheadWhole`
 
+<p>
+  <img src="./img/noteheadWhole-0.png" height="200"/>
+  <img src="./img/noteheadWhole-1.png" height="200"/>
+</p>
+
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
-
-![noteheadWhole](./img/notehead-whole-1.png)
 
 <details>
   <summary>🤔 Why differentiate whole/half noteheads if they look identical?</summary>
   
   We differentiate `noteheadWhole` from `noteheadHalf` (below) because of downstream processing against the SMuFL standard, which does treat them as distinct symbols. While previous versions of MuNG had just a `noteheadEmpty` class, it introduces an extra step when trying to e.g. load the data for rendering with a SMuFL-compliant font, which may seem trivial (just check for a stem!), but what if there is an error in the annotation? In the end it is just better to make the MuNG data itself as close to SMuFL as possible, to make the whole dataset easier to maintain and clean. (The same logic will apply in other places in the instructions, hence why we write so much about it here.)
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
 </details>
 
 ---
@@ -124,7 +133,7 @@ TODO: what about chords with differing number of dots and noteheads?
 
 ## `stem`
 
-*(`stem` is not part of SMuFL, because music notation tools cannot render stems via a music notation font - and SMuFL is a font-layout (FL) standard)*
+*(`stem` is not part of SMuFL, because it cannot be rendered using a notation font)*
 
 <p>
   <img src="./img/stem-0.png" height="200"/>
@@ -286,6 +295,8 @@ Flags are divided into separate classes according to their type and direction:
 
 
 ## `beam`
+
+*(`beam` is not part of SMuFL, because it cannot be rendered using a notation font)*
 
 <p>
   <img src="./img/beam-0.png" height="200"/>
@@ -984,6 +995,8 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 
 ### `staffLine`
 
+*(`staffLine` is not part of SMuFL, because it cannot be rendered using a notation font)*
+
 *(Called `Staff line` in CVAT)*  
 
 - Represents a **single staff line**.
@@ -1223,6 +1236,9 @@ The following classes must be annotated **accurately (not convex)**:
 Also remember to add a `dynamicsText` convex hull over these symbols.
 
 > Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
+
+- the `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links
+- link characters together via <kbd>🟢 precedence</kbd> links left-to-right
 
 <!--
 <details>
@@ -1516,30 +1532,79 @@ See *🔗 Example documents* above at the end of [Tuplets](#tuplets) section.
 
 ## Tremolo
 
-> **🚧 Under construction.**
+Learn more about tremolos on [Wikipedia](https://en.wikipedia.org/wiki/Tremolo).
 
-*(Previously `tremolo_beam` in CVAT)*
+> TL;DR: A note (or two notes) should be quickly repeated in the time span of the apparent note, with the speed based on the number of tremolo strokes (or beams), which correspond to the beams that the short played notes would have if notated explicitly.
 
-- Following SMuFL notation: `tremolo1`
-- Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.  (Similar to the `flag` hierarchy.)
 
-TODO: we still want to annotate tremolo beams (proper beams between notes) as something like `multipleNoteTremolo` or `tremoloBeam`. Must be defined here.
+### `tremolo[1..5]`
 
-<!--
-TODO: docs:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
--->
+*(see the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/tremolos.html))*
 
-<!--
+*(Previously `tremolo_beam` in CVAT and `singleNoteTremolo` in MuNG)*
+
+<p>
+  <img src="./img/tremoloN-0.png" height="200"/>
+  <img src="./img/tremoloN-syntax.png" height="200"/>
+</p>
+
+Strokes present on a note, when that note should be repeated quickly within its duration. The three example notes above correspond to playing eight-notes, sixteenth-notes, and thirty-second notes within the duration of a quarter note each.
+
+- Multiple tremolo strokes are labeled from **outer to inner** as `tremolo1`, `tremolo2`, `tremolo3`, etc.
+  - Analogous to the `flag` hierarchy but we do NOT distinguish up/down orientation, since they look identical.
+- All noteheads of a chord have <kbd>🔴 syntax</kbd> links to all tremolo strokes for the chord.
+- Tremolo strokes can also be present for **whole notes**, they are drawn where the stem would be (but there is no stem).
+
+<p>
+  <img src="./img/tremolo1-1.png" height="200"/>
+  <img src="./img/tremolo3-1.png" height="200"/>
+  <img src="./img/tremolo1-2.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
-  - Second staff in the middle: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
-  - staff 4, 7, 8: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
 </details>
--->
+
+
+### `tremoloBeam`
+
+*(`tremoloBeam` is not part of SMuFL, because it cannot be rendered using a notation font)*
+
+*(Previously `tremolo_beam` in CVAT and `tremoloMark` in MuNG)*
+
+<p>
+  <img src="./img/tremoloBeam-0.png" height="200"/>
+  <img src="./img/tremoloBeam-syntax.png" height="200"/>
+  <img src="./img/tremoloBeam-precedence.png" height="200"/>
+</p>
+
+Tremolo beams are shorter beams that represent quick alteration between two notes. They are analogous to tremolo strokes above, but for 2 pitches (notes) instead. In the examples above, you have two sixteenth-notes (2-beams) alternating in the space of one quarter note; and the other example is two thirty-second notes (1 beam + 2 tremolo beams) alternating in the space of one eighth note (1 beam). Note that even though there are visibly two quarter/eighth notes, the whole tremolo group only takes up the time of one.
+
+- Each notehead has <kbd>🔴 syntax</kbd> links to all of its tremolo beams.
+- Both noteheads have <kbd>🟢 precedence</kbd> link between them, like any other noteheads.
+  - (this is analogous to how [MusicXML](https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/tremolo-element-double/) treats them as two notes after each other with half as long duration)
+- Tremolo beams can also be present between **whole notes**, they are drawn in the same place as a beam, but there are no stems.
+
+Half notes can afford to have the tremolo beams connected to the stem (since half notes do not have any beam by itself). Therefore all of these variants below can appear. In all of these cases, there are only **tremolo beams**, no regular beams:
+
+<p>
+  <img src="./img/tremoloBeam-halfNotes.png" height="200"/>
+</p>
+
+<p>
+  <img src="./img/tremoloBeam-1.png" height="200"/>
+  <img src="./img/tremoloBeam-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
 
 ---
 
