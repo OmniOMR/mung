@@ -943,6 +943,8 @@ When two time signatures are written next to each other, they represent an **alt
 
 **TODO:** U textů bude potřeba vyřešit jestli texty přepisovat (podobně jako umožňoval CVAT - pozor na nečitelné texty).
 
+<!-- diskuze k textum: https://github.com/orgs/OmniOMR/discussions/107 -->
+
 
 ### `lyricsText`
 
@@ -1221,48 +1223,17 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 
 > **🚧 Under construction.**
 
+https://w3c.github.io/smufl/latest/tables/dynamics.html
 
-### `dynamic[Symbol]` (precise masks)
-
-The following classes must be annotated **accurately (not convex)**:
-- `dynamicForte`
-- `dynamicMezzo`
-- `dynamicNiente`
-- `dynamicPiano`
-- `dynamicRinforzando`
-- `dynamicSforzando`
-- `dynamicZ`
-
-Also remember to add a `dynamicsText` convex hull over these symbols.
-
-> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object.
-
-- the `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links
-- link characters together via <kbd>🟢 precedence</kbd> links left-to-right
-
-<!--
-<details>
-  <summary>🔗 Example documents</summary>
-
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
-</details>
--->
-
----
-
-### `dynamicCrescendoHairpin`
-
-TODO: image
-
----
-
-### `dynamicDiminuendoHairpin`
-
-<p>
-  <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
-</p>
-
----
+Závěr rozmýšlení 2025-11-14:
+- dynamics se budou vždy zabalovat do `dynamicsText`
+  - když je tam text typu "pp.", "pno", "forte:" apod., tak se to jen přepíše do textového přepisu objektu `dynamicsText`
+  - když jsou tam hezké symboly "f", "p", "m" apod. včetně kombinací "mp", "sfz" apod., tak je budeme jednotlivě označit jako `dynamicForte` apod. a napojit syntakticky a provázat precedenčně. Nesmí tam ale být symboly navíc (tečka, dvojtečka apod.) a musí to být opravdu poznat, že se o tyhle symboly jedná.
+  - (čili vlastně buď dělám hrubou anotaci kde jen udělám obal a přepíšu text a nebo dělám přesnou anotaci a nepřepisuju text ale anotuju konkrétní symboly a slepuju do grafu)
+- text "crescendo" a "diminuendo" (i ve zkrácených a roztahaných variantách) označíme třídou `dynamicCrescendo` a `dynamicDiminuendo`, a nemusíme přepisovat text, význam je jasný z třídy. Stačí hrubá maska.
+- pokud mají texty spanner, tak dostane třídu `dynamicCrescendoSpanner` / `dynamicDiminuendoSpanner` a bude na něj odkázáno syntaxem z textu "cresc" nebo "dim"; pokud jsou roztahané, tak jsou celé brané jako text, pokud je spanner přes víc řádků (TODO: stejně jako jiné spannery)
+- text "ritardando" a "accelerando" se bude chovat stejně, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
+- hairpins jsou v pohodě, zachovat z MUSCIMA++ a zdokumentovat
 
 
 ### `dynamicsText`
@@ -1278,6 +1249,54 @@ TODO: image
 - For “ff” (fortissimo), mark:
   - Two symbols: `dynamicForte` + `dynamicForte`
   - One `dynamicsText` area enclosing both
+
+---
+
+
+### `dynamic[Symbol]`
+
+The following classes must be annotated **accurately (not convex)**:
+- `dynamicForte`
+- `dynamicMezzo`
+- `dynamicNiente`
+- `dynamicPiano`
+- `dynamicRinforzando`
+- `dynamicSforzando`
+- `dynamicZ`
+
+Also remember to add a `dynamicsText` convex hull over these symbols.
+
+> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object. (IS THIS TURE? Maybe `dynamicOther`? With text transcription?)
+
+- the `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links
+- link characters together via <kbd>🟢 precedence</kbd> links left-to-right
+
+<!--
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
+  - sforzando & ritardando: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - pno, fo: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+-->
+
+---
+
+### `dynamicCrescendoHairpin`
+
+TODO: image
+
+---
+
+### `dynamicDiminuendoHairpin`
+
+<p>
+  <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
+</p>
 
 ---
 
