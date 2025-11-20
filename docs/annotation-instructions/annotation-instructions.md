@@ -1221,82 +1221,238 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 
 ## Dynamics
 
-> **🚧 Under construction.**
+TODO:
+- projít example dokumenty a do-anotovat
+- nafotit obrázky do instrukcí z examplů
+- přidat dynamics třídy do MS ontologie
+- založit nadpisy v AI pro:
+  - text "ritardando" a "accelerando" se bude chovat stejně jako crescendo a diminuendo, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
 
-https://w3c.github.io/smufl/latest/tables/dynamics.html
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
 
-Závěr rozmýšlení 2025-11-14:
-- dynamics se budou vždy zabalovat do `dynamicsText`
-  - když je tam text typu "pp.", "pno", "forte:" apod., tak se to jen přepíše do textového přepisu objektu `dynamicsText`
-  - když jsou tam hezké symboly "f", "p", "m" apod. včetně kombinací "mp", "sfz" apod., tak je budeme jednotlivě označit jako `dynamicForte` apod. a napojit syntakticky a provázat precedenčně. Nesmí tam ale být symboly navíc (tečka, dvojtečka apod.) a musí to být opravdu poznat, že se o tyhle symboly jedná.
-  - (čili vlastně buď dělám hrubou anotaci kde jen udělám obal a přepíšu text a nebo dělám přesnou anotaci a nepřepisuju text ale anotuju konkrétní symboly a slepuju do grafu)
-- text "crescendo" a "diminuendo" (i ve zkrácených a roztahaných variantách) označíme třídou `dynamicCrescendo` a `dynamicDiminuendo`, a nemusíme přepisovat text, význam je jasný z třídy. Stačí hrubá maska.
-- pokud mají texty spanner, tak dostane třídu `dynamicCrescendoSpanner` / `dynamicDiminuendoSpanner` a bude na něj odkázáno syntaxem z textu "cresc" nebo "dim"; pokud jsou roztahané, tak jsou celé brané jako text, pokud je spanner přes víc řádků (TODO: stejně jako jiné spannery)
-- text "ritardando" a "accelerando" se bude chovat stejně, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
-- hairpins jsou v pohodě, zachovat z MUSCIMA++ a zdokumentovat
+Dynamics are all the symbols and text that indicate how loud the piece should be played. Read more on [Wikipedia](https://en.wikipedia.org/wiki/Dynamics_(music)).
 
 
 ### `dynamicsText`
 
-- Represents a **textual region** covering one or more **dynamic marks**.
-- The **specific dynamic symbol** (e.g., `p`, `f`, `ff`) should be annotated **precisely** using its respective `dynamicXXX` class.  
-- The surrounding **text region** should then be annotated as `dynamicsText`, using a **convex hull** that encloses all relevant symbols.
+*(`dynamicsText` is not part of SMuFL, because it is a container class and also a text class)*
 
-**Examples:**
-- For a single “p” (piano), mark:
-  - `dynamicPiano` — exact symbol outline  
-  - `dynamicsText` — convex hull enclosing it
-- For “ff” (fortissimo), mark:
-  - Two symbols: `dynamicForte` + `dynamicForte`
-  - One `dynamicsText` area enclosing both
+<p>
+  <img src="img/dynamicsText-0.png" width="620"/>
+  <img src="img/dynamicsText-syntax.png" width="620"/>
+</p>
+
+- Represents a **textual region** covering one or more **dynamic marks** ("p", "f", "mp") or **dynamic text** ("forte", "pno.", "p.").
+- It does NOT cover crescendo and diminuendo text, these are separate classes [`dynamicCrescendo`](#dynamiccrescendo) and [`dynamicDiminuendo`](#dynamicdiminuendo).
+- The mask is a **convex hull**, not a precise mask.
+- It is a **text node** so the text inside the node must be [transcribed](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text). It should be transcribed even when it consists only of marks ("ff", "sfz").
+- The dynamic change starts on a specific note (onset). The `dynamicsText` must be <kbd>🔴 syntax</kbd> linked from one notehead/rest with this onset (the one closest, that makes the most sense).
+
+Subdivision to dynamic marks:
+
+- If the individual marks can be reasonably separated, they should also be annotated as separate nodes and <kbd>🔴 syntax</kbd> linked from `dynamicsText`.
+- The `dynamicsText` then becomes a **container object**.
+- If the marks cannot be separated, or there is just plain text ("pno.", "p."), do NOT annotate the individual characters, just the container + text transcription.
+- When subdividing to marks, <kbd>🟢 precedence</kbd> links must connect them left-to-right.
+
+<p>
+  <img src="img/dynamic-marks-vs-dynamic-text.png" width="620"/>
+  <img src="img/dynamic-marks-graph-hierarchy.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Dynamic text + marks
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - Dynamic text only
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+</details>
 
 ---
 
 
-### `dynamic[Symbol]`
+#### `dynamic[Mark]`
 
-The following classes must be annotated **accurately (not convex)**:
-- `dynamicForte`
-- `dynamicMezzo`
-- `dynamicNiente`
-- `dynamicPiano`
-- `dynamicRinforzando`
-- `dynamicSforzando`
-- `dynamicZ`
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
 
-Also remember to add a `dynamicsText` convex hull over these symbols.
+<p>
+  <img src="img/dynamicMark-0.png" width="620"/>
+</p>
 
-> Combined markings such as `po` or `p:` should be annotated as a **single** `dynamicPiano` object. (IS THIS TURE? Maybe `dynamicOther`? With text transcription?)
+This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicForte`, `dynamicRinforzando`,`dynamicSforzando`, `dynamicZ`, `dynamicNiente`.
 
-- the `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links
-- link characters together via <kbd>🟢 precedence</kbd> links left-to-right
+- These must always belong to a `dynamicsText` container, even when they stand alone. The container must have a [text transcription](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text).
+- The mask must be **precise**.
+- The `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links.
+- Marks inside the container link left-to-right together via <kbd>🟢 precedence</kbd> links.
 
-<!--
+<details>
+  <summary>🤔 Why do we annotate marks in more detail than other dynamic text?</summary>
+
+  Dynamic marks have specific appearance and it is therefore useful to have their precise shape annotated for possible future use. This may be either just classification, but also data synthesis. But there is also a lot of "messy" dynamics text that is in no way special and so we only annotate that as any other text - by transcribing it.
+</details>
+
+<details>
+  <summary>😕 I'm looking at "p.", should I annotate the "p" as a mark?</summary>
+
+  If you're unsure, just annote it as text. Especially in cases such as "p.", you could in theory annotate just the "p" as a mark and ignore the dot. But that's not worth the struggle. When in doubt, annotate just text. When the marks are nice and distinct, annotate those as well.
+</details>
+
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
 </details>
-  - sforzando & ritardando: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
-  - pno, fo: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
--->
 
 ---
+
+
+### `dynamicCrescendo`
+
+*(`dynamicCrescendo` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="img/dynamicCrescendo-0.png" width="620"/>
+  <img src="img/dynamicCrescendo-syntax.png" width="620"/>
+</p>
+
+- The mask is a **convex hull**, not a precise mask.
+- It is a **text node** so the text inside the node must be [transcribed](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text).
+- The dynamic change starts on a specific note (onset). The `dynamicCrescendo` must be <kbd>🔴 syntax</kbd> linked from one notehead/rest with this onset (the one closest, that makes the most sense).
+- If it spans an explicit time (either with a spanner or being stretched-out), then there is an onset when it terminates. This onset should be marked with a second <kbd>🔴 syntax</kbd> inlink from a notehead/rest.
+- A specific time span can be represented by a visual spanner line. This line is a separate node with class `dynamicCrescendoSpanner` and a **convex hull** mask. It is <kbd>🔴 syntax</kbd> linked from the parent `dynamicCrescendo`.
+- When crescendo spanner continues to the next line, it should start with another `dynamicCrescendo` text and so can be treated as a separate `dynamicCrescendo` instance with a spanner. If the text is not present, then this second spanner should be linked from the first `dynamicCrescendo` (it will have two children - two spanners).
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+</details>
+
+---
+
+
+### `dynamicDiminuendo`
+
+*(`dynamicDiminuendo` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="img/dynamicDiminuendo-0.png" height="200"/>
+</p>
+
+> TL;DR: Same rules as for crescendo above.
+
+- The mask is a **convex hull**, not a precise mask.
+- It is a **text node** so the text inside the node must be [transcribed](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text).
+- The dynamic change starts on a specific note (onset). The `dynamicDiminuendo` must be <kbd>🔴 syntax</kbd> linked from one notehead/rest with this onset (the one closest, that makes the most sense).
+- If it spans an explicit time (either with a spanner or being stretched-out), then there is an onset when it terminates. This onset should be marked with a second <kbd>🔴 syntax</kbd> inlink from a notehead/rest.
+- A specific time span can be represented by a visual spanner line. This line is a separate node with class `dynamicDiminuendoSpanner` and a **convex hull** mask. It is <kbd>🔴 syntax</kbd> linked from the parent `dynamicDiminuendo`.
+- When crescendo spanner continues to the next line, it should start with another `dynamicDiminuendo` text and so can be treated as a separate `dynamicDiminuendo` instance with a spanner. If the text is not present, then this second spanner should be linked from the first `dynamicDiminuendo` (it will have two children - two spanners).
+
+---
+
 
 ### `dynamicCrescendoHairpin`
 
-TODO: image
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
+
+<p>
+  <img src="img/dynamicCrescendoHairpin-0.png" height="200"/>
+  <img src="img/dynamicCrescendoHairpin-syntax.png" height="200"/>
+</p>
+
+- Use a **precise** mask.
+- <kbd>🔴 syntax</kbd> inlinks are from the starting and ending onset of the hairpin. Pick any (closest) note or rest with the proper onset.
+- Hairpins can sometimes be written above the staff.
+
+<details>
+  <summary>🤔 Previously (MUSCIMA++) we annotated inlinks from all noteheads, why the change?</summary>
+
+  The hairpin affects a time span for a system or staff. It always affects all the notes (within the staff). It makes no sense to annotate every single notehead if only two are needed to infer the time span. Annotating all the links just makes the graph hard to read and annotation process tedious.
+
+  For a backwards-compatible parsing algorithm, simply take all the inlinks from durables (notes and rests), compute their onsets, and get the min and max values to get the time span.
+</details>
+
+<details>
+  <summary>🤔 For slurs we link all the noteheads, why not here?</summary>
+
+  A slur can only affect a single voice within a staff. You can have two slurs for two voices existing simultaneously and having opposite orientations. Hairpins, on the other hand, always affect all voices and so require less information to interpret correctly.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
 
 ---
 
+
 ### `dynamicDiminuendoHairpin`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
+
+<p>
+  <img src="img/dynamicDiminuendoHairpin-0.png" height="200"/>
+  <img src="img/dynamicDiminuendoHairpin-syntax.png" height="200"/>
+</p>
+
+> TL;DR: Same rules as for the crescendo hairpin above.
+
+- Use a **precise** mask.
+- <kbd>🔴 syntax</kbd> inlinks are from the starting and ending onset of the hairpin. Pick any (closest) note or rest with the proper onset.
+- Hairpins can sometimes be written above the staff.
 
 <p>
   <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
+
+---
+
+
+### `dynamicNiente`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
+
+<p>
+  <img src="img/dynamicNiente-0.png" height="200"/>
+</p>
+
+The `dynamicNiente` symbol is listed above in [`dynamic[Mark]` section](#dynamicmark), here we clarify its role and syntax.
+
+Niente means "nothing", so zero volume. But it's often used at the start of crescendo or end of diminuendo hairpins. In MuNG, **it has no special relationship to the hairpin**.
+
+How to annotate:
+
+- Annotate precisely the `dynamicNiente` dynamic mark.
+- Wrap the mark in `dynamicsText` container and <kbd>🔴 syntax</kbd> link it from the container. The container should have text transcription of "n".
+- <kbd>🔴 syntax</kbd> link the `dynamicsText` object from the starting notehead.
+- Annotate the `dynamicCrescendoHairpin` precisely.
+- <kbd>🔴 syntax</kbd> link the `dynamicCrescendoHairpin` object from the starting and ending noteheads.
+
+So we end up with:
+
+- The starting notehead <kbd>🔴 syntax</kbd> links to both the `dynamicsText` and the `dynamicCrescendoHairpin`.
+- There is **NO link** between the hairpin and the dynamics text (or the niente symbol).
+
+If you want to interpret the graph and want to decide whether the niente symbol belongs to the hairpin, simply see if they share the starting notehead (or the ending one for diminuendos).
+
+The niente dynamics text can also sometimes be written as text, e.g. "n." or "niente". In this case annotate it **only as `dynamicsText`** with text transcription. There will be NO `dynamicNiente` object. This is consistent with the way textual dynamics ("forte", "pno.") are annotated.
 
 ---
 
@@ -1503,6 +1659,8 @@ See the individual classes below and the `tuplet` container class to learn more.
 ### `tuplet`
 
 *(previously `tuple`)*
+
+*(`tuplet` is not part of SMuFL, because it is a container class)*
 
 <p>
   <img src="./img/tuplet-syntax.png" height="200"/>
@@ -1845,6 +2003,7 @@ TODO: the first example document below also contains pedal markings
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
 </details>
 -->
 
