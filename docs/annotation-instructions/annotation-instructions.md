@@ -964,6 +964,25 @@ When two time signatures are written next to each other, they represent an **alt
 
 - **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
 
+TODO:
+- text "ritardando" a "accelerando" se bude chovat stejně jako crescendo a diminuendo, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
+
+TODO: nespadá sem interpretace (dolce, zefiroso, staccato), to bude interpretation text (myslím, ještě zkontrolovat)
+
+<!--
+"staccato" example:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+
+zefiroso example:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+
+andante, adagio, dolce piano example:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+
+ritardando example:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+-->
+
 ---
 
 
@@ -1221,13 +1240,6 @@ while a **shorter `staffGrouping`** encloses the brace on the left side.
 
 ## Dynamics
 
-TODO:
-- projít example dokumenty a do-anotovat
-- nafotit obrázky do instrukcí z examplů
-- přidat dynamics třídy do MS ontologie
-- založit nadpisy v AI pro:
-  - text "ritardando" a "accelerando" se bude chovat stejně jako crescendo a diminuendo, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
-
 *(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
 
 Dynamics are all the symbols and text that indicate how loud the piece should be played. Read more on [Wikipedia](https://en.wikipedia.org/wiki/Dynamics_(music)).
@@ -1248,6 +1260,12 @@ Dynamics are all the symbols and text that indicate how loud the piece should be
 - It is a **text node** so the text inside the node must be [transcribed](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text). It should be transcribed even when it consists only of marks ("ff", "sfz").
 - The dynamic change starts on a specific note (onset). The `dynamicsText` must be <kbd>🔴 syntax</kbd> linked from one notehead/rest with this onset (the one closest, that makes the most sense).
 
+<p>
+  <img src="img/dynamicsText-1.png" height="200"/>
+  <img src="img/dynamicsText-2.png" height="200"/>
+  <img src="img/dynamicsText-3.png" height="200"/>
+</p>
+
 Subdivision to dynamic marks:
 
 - If the individual marks can be reasonably separated, they should also be annotated as separate nodes and <kbd>🔴 syntax</kbd> linked from `dynamicsText`.
@@ -1258,6 +1276,12 @@ Subdivision to dynamic marks:
 <p>
   <img src="img/dynamic-marks-vs-dynamic-text.png" width="620"/>
   <img src="img/dynamic-marks-graph-hierarchy.png" height="200"/>
+</p>
+
+<p>
+  <img src="img/dynamicsText-marks-1.png" height="200"/>
+  <img src="img/dynamicsText-marks-2.png" height="200"/>
+  <img src="img/dynamicsText-marks-3.png" height="200"/>
 </p>
 
 <details>
@@ -1290,6 +1314,14 @@ This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicFort
 - The mask must be **precise**.
 - The `dynamicsText` container links to all of its members via <kbd>🔴 syntax</kbd> links.
 - Marks inside the container link left-to-right together via <kbd>🟢 precedence</kbd> links.
+
+<p>
+  <img src="img/dynamicPiano-1.png" height="200"/>
+  <img src="img/dynamicPiano-2.png" height="200"/>
+  <img src="img/dynamicPiano-3.png" height="200"/>
+  <img src="img/dynamicForte-1.png" height="200"/>
+  <img src="img/dynamicZ-1.png" height="200"/>
+</p>
 
 <details>
   <summary>🤔 Why do we annotate marks in more detail than other dynamic text?</summary>
@@ -1329,6 +1361,12 @@ This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicFort
 - If it spans an explicit time (either with a spanner or being stretched-out), then there is an onset when it terminates. This onset should be marked with a second <kbd>🔴 syntax</kbd> inlink from a notehead/rest.
 - A specific time span can be represented by a visual spanner line. This line is a separate node with class `dynamicCrescendoSpanner` and a **convex hull** mask. It is <kbd>🔴 syntax</kbd> linked from the parent `dynamicCrescendo`.
 - When crescendo spanner continues to the next line, it should start with another `dynamicCrescendo` text and so can be treated as a separate `dynamicCrescendo` instance with a spanner. If the text is not present, then this second spanner should be linked from the first `dynamicCrescendo` (it will have two children - two spanners).
+
+<p>
+  <img src="img/dynamicCrescendo-1.png" height="200"/>
+  <img src="img/dynamicCrescendo-2.png" height="200"/>
+  <img src="img/dynamicCrescendo-3.png" height="200"/>
+</p>
 
 <details>
   <summary>🔗 Example documents</summary>
@@ -1373,6 +1411,11 @@ This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicFort
 - <kbd>🔴 syntax</kbd> inlinks are from the starting and ending onset of the hairpin. Pick any (closest) note or rest with the proper onset.
 - Hairpins can sometimes be written above the staff.
 
+<p>
+  <img src="img/dynamicCrescendoHairpin-1.png" height="200"/>
+  <img src="img/dynamicCrescendoHairpin-2.png" height="200"/>
+</p>
+
 <details>
   <summary>🤔 Previously (MUSCIMA++) we annotated inlinks from all noteheads, why the change?</summary>
 
@@ -1413,7 +1456,8 @@ This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicFort
 - Hairpins can sometimes be written above the staff.
 
 <p>
-  <img src="./img/diminuendo-1.png" alt="Diminuendo Example" width="400"/>
+  <img src="img/dynamicDiminuendoHairpin-1.png" height="200"/>
+  <img src="img/dynamicDiminuendoHairpin-2.png" height="200"/>
 </p>
 
 <details>
@@ -1453,6 +1497,25 @@ So we end up with:
 If you want to interpret the graph and want to decide whether the niente symbol belongs to the hairpin, simply see if they share the starting notehead (or the ending one for diminuendos).
 
 The niente dynamics text can also sometimes be written as text, e.g. "n." or "niente". In this case annotate it **only as `dynamicsText`** with text transcription. There will be NO `dynamicNiente` object. This is consistent with the way textual dynamics ("forte", "pno.") are annotated.
+
+---
+
+
+## `dynamicNienteForHairpin`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
+
+<p>
+  <img src="img/dynamicNienteForHairpin-0.png" height="200"/>
+</p>
+
+Another way how to mark a hairping going to/from zero volume (niente) is by drawing a small circle at the end of the hairpin. This circle is a separate object called `dynamicNienteForHairpin`.
+
+- Annotate the mask **precisely**.
+- Hollow out the center.
+- Add a <kbd>🔴 syntax</kbd> link from the hairpin object the circle object.
+
+This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 
 ---
 
