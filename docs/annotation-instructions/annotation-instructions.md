@@ -381,13 +381,28 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 ## Rests
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
+- Rests participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
+
 
 ### `restWhole`
 
 *(Previously in CVAT `rest_whole`)*
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
 <p>
-  <img src="./img/rest-whole-1.png" alt="restWhole Example" width="250"/>
+  <img src="./img/restWhole-0.png" height="200"/>
+</p>
+
+- Represents a pause for 4 beats.
+- Even if it does not hang from a line precisely, if it takes up 4 beats, annotate it as a whole rest.
+- When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it hangs from. 
+- Can be part of a rest cluster, see [`restText`](#resttext) for more info.
+
+<p>
+  <img src="./img/restWhole-1.png" height="200"/>
 </p>
 
 ---
@@ -397,8 +412,18 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_half`)*
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
 <p>
-  <img src="./img/rest-half-1.png" alt="restHalf Example" width="900"/>
+  <img src="./img/restHalf-0.png" height="200"/>
+</p>
+
+- Represents a pause for 2 beats.
+- Even if it does not sit on a line precisely, if it takes up 2 beats, annotate it as a whole rest.
+- When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it sits on. 
+
+<p>
+  <img src="./img/restHalf-1.png" width="620"/>
 </p>
 
 ---
@@ -408,9 +433,29 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_quarter`)*
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
 <p>
-  <img src="./img/rest-quarter-1.png" alt="restQuarter Example" width="250"/>
+  <img src="./img/restQuarter-0.png" height="200"/>
 </p>
+
+- Represents a pause for 1 beat.
+- Has a large number of appearances and styles. If there's a rest and you're unsure what it is, it likely is a quarter rest.
+
+<p>
+  <img src="./img/restQuarter-1.png" height="200"/>
+  <img src="./img/restQuarter-2.png" height="200"/>
+  <img src="./img/restQuarter-3.png" height="200"/>
+  <img src="./img/restQuarter-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+</details>
 
 ---
 
@@ -419,8 +464,16 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_8th`)*
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
 <p>
-  <img src="./img/rest-8th-1.png" alt="rest8th Example" width="200"/>
+  <img src="./img/rest8th-0.png" height="200"/>
+</p>
+
+- Represents a pause for 1/2 beat.
+
+<p>
+  <img src="./img/rest8th-1.png" height="200"/>
 </p>
 
 
@@ -430,8 +483,16 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_16th`)*
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
 <p>
-  <img src="./img/rest-16th-1.png" alt="rest16th Example" width="200"/>
+  <img src="./img/rest16th-0.png" height="200"/>
+</p>
+
+- Represents a pause for 1/4 beat.
+
+<p>
+  <img src="./img/rest16th-1.png" height="200"/>
 </p>
 
 ---
@@ -441,7 +502,13 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 *(Previously in CVAT `rest_32-and-shorter`)*
 
-TODO: image
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
+<p>
+  <img src="./img/rest32nd-0.png" height="200"/>
+</p>
+
+- Represents a pause for 1/8 beat.
 
 ---
 
@@ -450,16 +517,62 @@ TODO: image
 
 *(Previously in CVAT `rest_longa`)*
 
-TODO: image
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
+<p>
+  <img src="./img/restLonga-0.png" height="200"/>
+</p>
+
+- Represents a pause for 16 beats (4 whole rests).
+- Often represents a rest longer than one measure.
+- Can be part of a rest cluster, see [`restText`](#resttext) for more info.
+
+<p>
+  <img src="./img/restLonga-1.png" height="200"/>
+  <img src="./img/restLonga-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
 
 ---
 
 
-### `restBreve`
+### `restDoubleWhole`
 
-*(Previously in CVAT `rest_breve`)*
+*(Previously in CVAT `rest_breve` and `restBreve` in MuNG)*
 
-TODO: image
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
+
+<p>
+  <img src="./img/restDoubleWhole-0.png" height="200"/>
+</p>
+
+- Represents a pause for 8 beats (2 whole rests).
+- Often represents a rest longer than one measure.
+- Can be part of a rest cluster, see [`restText`](#resttext) for more info.
+
+<p>
+  <img src="./img/restDoubleWhole-1.png" height="200"/>
+  <img src="./img/restDoubleWhole-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🤔 Why `restDoubleWhole` and not `restBreve`?</summary>
+
+  Because [SMuFL](https://w3c.github.io/smufl/latest/tables/rests.html). I don't like it either, but it's the standard.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+</details>
 
 ---
 
@@ -468,21 +581,63 @@ TODO: image
 
 *(Previously in CVAT `rest_multimeasure` and `multiMeasureRest` in MuNG)*
 
-> **🚧 Under construction.**
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
 
-TODO: image
+<p>
+  <img src="./img/restHBar-0.png" height="200"/>
+  <img src="./img/restHBar-precedence.png" height="200"/>
+</p>
 
-TODO: how to assign numbers to these + numbers can also be for longa and breve
+- Represents a rest for a given number of measures (the number of measures is written above)
+- The number above the HBar is a `restText`, [see below](#resttext).
+- The HBar symbol participates in the <kbd>🟢 precedence</kbd> graph like any other rest.
 
-<!--
+<p>
+  <img src="./img/restHBar-1.png" height="200"/>
+  <img src="./img/restHBar-2.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/02636110-aad4-4118-bc5f-da8c4bcef115_d3767b0a-a554-4a3b-bee1-85a021c29010
-  - 7th staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+</details>
+
+---
+
+
+### `restText`
+
+*(`restText` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="./img/restText-0.png" height="200"/>
+  <img src="./img/restText-syntax.png" height="200"/>
+  <img src="./img/rest-cluster-precedence.png" height="200"/>
+</p>
+
+- Represents the numbers written above or below a longer rest. This rest may either be a **HBar** or a **rest cluster**. The number indicates the number of measures the pause takes. For HBars, this number must be present, for rest clusters it's optional and is only used for faster reading of the rest cluster.
+- Use a **convex hull** mask.
+- It is a **text node** so the text inside the node must be [transcribed](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text).
+- The text sometimes contains a dot, e.g. `6.`, transcribe the dot as well.
+- The individual digits are NOT annotated as separate object, only transcribed.
+- Add a <kbd>🔴 syntax</kbd> link from each rest (or HBar) to the `restText` object.
+- The rest cluster consists of individual rest objects, which participate in the <kbd>🟢 precedence</kbd> graph as usual.
+
+<p>
+  <img src="./img/restText-1.png" height="200"/>
+  <img src="./img/restText-2.png" height="200"/>
+  <img src="./img/restText-3.png" height="200"/>
+  <img src="./img/restText-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/02636110-aad4-4118-bc5f-da8c4bcef115_d3767b0a-a554-4a3b-bee1-85a021c29010
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
 </details>
--->
 
 ---
 
@@ -1513,7 +1668,7 @@ Another way how to mark a hairping going to/from zero volume (niente) is by draw
 
 - Annotate the mask **precisely**.
 - Hollow out the center.
-- Add a <kbd>🔴 syntax</kbd> link from the hairpin object the circle object.
+- Add a <kbd>🔴 syntax</kbd> link from the hairpin object to the circle object.
 
 This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 
@@ -1912,6 +2067,7 @@ A grace note is composed of:
   - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
 </details>
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
 -->
 
 ---
