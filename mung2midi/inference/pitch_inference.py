@@ -678,7 +678,6 @@ class PitchInferenceEngine(object):
             output.append(po.to_tuple_repr())
         if with_pitch_object:
             output.append(po)
-
         return tuple(output)
 
     def staffline_delta(self, notehead: Node):
@@ -687,7 +686,7 @@ class PitchInferenceEngine(object):
         (or any other symbol connected to a staffline/staffspace).
         Accounts for leger lines.
         """
-        current_staff = self.__children(notehead, ['staff'])[0]
+        current_staff = self.__children(notehead, [C.STAFF])[0]
         staffline_objects = self.__children(notehead,
                                             I.STAFFLINE_CLASS_NAMES)
 
