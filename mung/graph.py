@@ -1303,6 +1303,21 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
                             ' objects!'.format(node.id))
 
 
+def infer_stem_orientation(stem: Node, graph: NotationGraph) -> int:
+    """
+    Computes the orientation of the given stem based on its
+    center's cumulative distance from attached noteheads.
+
+    `+1` means that the stem is oriented upwards,
+    `-1` downwards.
+    """
+    noteheads = graph.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
+    distance = sum(n.vertical_center - stem.vertical_center for n in noteheads)
+    if distance < 0:
+        return -1
+    return 1
+
+
 ##############################################################################
 
 def _nodes_or_graph_to_graph(nodes_or_graph: Iterable[Node] | NotationGraph) -> NotationGraph:
@@ -1371,6 +1386,78 @@ def group_by_system_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[
     for i, measure in enumerate(measures):
         logger.debug(f"Found system measure {i}: {[x.id for x in measure]}")
     
+    return measures
+
+
+def group_by_system_measure_and_system(nodes_or_graph: list[Node] | NotationGraph) -> list[list[list[Node]]]:
+    """
+    Groups the objects into system measures.
+
+    Keeps the systems structure in tact.
+    Returns the system measures grouped by systems.
+
+    If no measure separators are found, assumes everything belongs
+    to one measure.
+
+    :returns: A list of lists of of lists of nodes that belong to the same system measure,
+        sorted from top left to bottom right.
+    """
+    graph = _nodes_or_graph_to_graph(nodes_or_graph)
+    
+    systems = group_staffs_into_systems(graph.vertices)
+
+    def get_all_separators_from_system(staffs: list[Node], graph: NotationGraph) -> set[Node]:
+        """
+        Finds all measure separators inside a system defined by a list of staffs.
+        """
+        output: set[Node] = set()
+        for staff in staffs:
+            output.update(graph.parents(staff, class_filter=C.MEASURE_SEPARATOR))
+        
+        return output
+    
+    def get_all_in_measure_symbols_from_system(staffs: list[Node], graph: NotationGraph) -> list[Node]:
+        output: list[Node] = []
+        for staff in staffs:
+            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE):
+                if symbol in output:
+                    logger.warning(f"Symbol {symbol.class_name} {symbol.id} assigned to multiple staffs in the same system")
+                else:
+                    output.append(symbol)
+        return output
+
+    measures: list[list[list[Node]]] = []
+    for system in systems:
+        separators = sorted(get_all_separators_from_system(system, graph), key=lambda n: n.horizontal_center)
+        symbols = get_all_in_measure_symbols_from_system(system, graph)
+        if len(symbols) == 0:
+            measures.append([[]])
+            continue
+        
+        bins = [[] for _ in range(len(separators) + 1)]
+
+        for x in symbols:
+            for i, upper in enumerate(separators):
+                if x.horizontal_center <= upper.horizontal_center:
+                    bins[i].append(x)
+                    break
+            else:
+                bins[-1].append(x)
+
+        # remove last bin, if it is empty
+        # (there might be an unclosed measure)
+        if len(bins[-1]) == 0:
+            bins = bins[:-1]
+        
+        measures.append(bins)
+    
+    # debug prints
+    i = 0
+    for system in measures:
+        for measure in system:
+            logger.debug(f"Found system measure {i}: {[x.id for x in measure]}")
+            i += 1
+        
     return measures
 
 

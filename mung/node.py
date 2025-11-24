@@ -777,6 +777,7 @@ class Node(object):
     def __repr__(self) -> str:
         """Format the Node as string representation. See the documentation
         of :module:`mung.io` for details."""
+        return str(self)
         root_el = self.to_xml()
         etree.indent(root_el, space="\t")
         return etree.tostring(root_el, encoding="utf-8", xml_declaration=True).decode("utf-8")
