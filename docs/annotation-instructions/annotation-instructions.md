@@ -796,6 +796,19 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 ---
 
 
+## `keySignature`
+
+- A **container (parent) symbol** representing the entire key signature.
+- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
+- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
+
+<p>
+  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
+</p>
+
+---
+
+
 ## Time Signatures
 
 <p>
@@ -1074,19 +1087,6 @@ When two time signatures are written next to each other, they represent an **alt
 
 <p>
   <img src="./img/timeSignature-alternating.png" height="200"/>
-</p>
-
----
-
-
-## `keySignature`
-
-- A **container (parent) symbol** representing the entire key signature.
-- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
-- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
-
-<p>
-  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
 </p>
 
 ---
