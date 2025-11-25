@@ -1092,6 +1092,197 @@ When two time signatures are written next to each other, they represent an **alt
 ---
 
 
+## Lyrics
+
+*(See the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/lyrics.html))*
+
+- Lyrics are the text that the singer sings in the song.
+- They are visually aligned with the music and situated below the staff.
+- See lyrics in [MuseScore](https://musescore.org/en/handbook/3/lyrics).
+
+
+### `lyricsText`
+
+*(`lyricsText` is not part of SMuFL, because it is a text class)*
+
+- Use **convex hull** mask.
+- [Transcribe text](https://github.com/OmniOMR/mung-studio/blob/main/docs/user-manual/user-manual.md#transcribing-text) if readable, leave empty if unreadable. **When not sure, leave empty.**
+- Align with noteheads via <kbd>🔴 syntax</kbd> links (see more below).
+- Connect left-to-right via <kbd>🟢 precedence</kbd> links (see more below).
+
+**In modern typeset documents:**
+
+- Lyrics are already sliced up into syllables and aligned with noteheads.
+- Annotate each syllable as a separate object.
+- Syllables that **do not end the word** are terminated with a hyphen `-`. The hyphen is part of the syllable and **is transcribed**. The last syllable of the word does not have the hyphen. Do **not transcribe** the space before the hyphen, even if it is in the document.
+  - Example: `biology` will be written in the score as as `bi-` `o-` `lo-` `gy`.
+  - Each syllable is aligned with a note. There is a <kbd>🔴 syntax</kbd> link from the notehead to the syllable. If it's a chord, create a link from each of the noteheads.
+
+<p>
+  <img src="./img/lyricsText-hyphens-0.png" height="200"/>
+  <img src="./img/lyricsText-hyphens-syntax.png" height="200"/>
+  <img src="./img/lyricsText-hyphens-1.png" height="200"/>
+</p>
+
+- Lyrics within one line are connected left-to-right via <kbd>🟢 precedence</kbd> links.
+- Two lyrics objects are connected even when they don't follow each other immediately (when there's a rest). For lyrics, <kbd>🟢 precedence</kbd> links encode ordering, not duration.
+- There are NO <kbd>🟢 precedence</kbd> links across different systems.
+
+<p>
+  <img src="./img/lyricsText-precedence.png" height="200"/>
+  <img src="./img/lyricsText-precedence-over-rest.png" height="200"/>
+</p>
+
+- If one syllable is sung across multiple notes (stretched), an underscore is used with its length stretching across the affected notes. This is called a **melisma**. Transcribe the underscore as one character `_`, regardless of its length.
+  - Example: `pater` sung as `paaaaaaa-ter` will be written as `pa_` `ter`.
+  - Add <kbd>🔴 syntax</kbd> links from all affected noteheads to the syllable.
+
+<p>
+  <img src="./img/lyricsText-melisma-0.png" height="200"/>
+  <img src="./img/lyricsText-melisma-syntax.png" height="200"/>
+  <img src="./img/lyricsText-melisma-1.png" height="200"/>
+  <img src="./img/lyricsText-melisma-2.png" height="200"/>
+</p>
+
+- If two syllables are sung within one note (tied together), an undertie is used to join them. This is called an **elision**. Transcribe the undertie as this undertie character `‿` ([U+203F](https://www.compart.com/en/unicode/U+203F)) and treat the whole thing as a single syllable.
+
+> Copy the undertie character from here: `‿`
+
+<p>
+  <img src="./img/lyricsText-elision-0.png" height="200"/>
+</p>
+
+- Sometimes two words are sung as one syllable without the elision undertie being used. They are annotated as a single `lyricsText` object, since they are sung in one beat for that one note. The transcription text contains the space.
+
+<p>
+  <img src="./img/lyricsText-multiword-0.png" height="200"/>
+  <img src="./img/lyricsText-multiword-1.png" height="200"/>
+</p>
+
+**In older typeset documents:**
+
+- Words sometimes aren't explicitly split into syllables despite being over multiple notes. In these cases **do NOT split the word artificially**. We transcribe what is in the score, not what we want to see there. Annotate the whole word as single `lyricsText` element and <kbd>🔴 syntax</kbd> link it from both (all) notes.
+
+<p>
+  <img src="./img/lyricsText-unbroken-0.png" height="200"/>
+  <img src="./img/lyricsText-unbroken-syntax.png" height="200"/>
+  <img src="./img/lyricsText-unbroken-1.png" height="200"/>
+</p>
+
+- Hyphens `-`, underscores `_` and equal signs `=` may be interchanged in their usage. **Annotate the character you see** (e.g. `=`), not the one that would be used in modern notation in that meaning (e.g. `-`).
+
+<p>
+  <img src="./img/lyricsText-equal-sign-1.png" height="200"/>
+</p>
+
+- The text is often **hard to read**. In that case, **do NOT transcribe** the text, unless you are sure what's written there.
+
+**In handwritten documents:**
+
+- Words have very weak alignment with notes and are almost never split up with hypehns into syllables. Annotate individual words as separate `lyricsText` objects and <kbd>🔴 syntax</kbd> link each from all of its notes.
+
+<p>
+  <img src="./img/lyricsText-handwritten-1.png" height="200"/>
+</p>
+
+- If the handwritten word is split up, e.g. with *melisma* or hyphen, then DO split it into two `lyricsText` objects.
+
+<p>
+  <img src="./img/lyricsText-handwritten-hyphen-1.png" height="200"/>
+</p>
+
+- The text is often **hard to read**. In that case, **do NOT transcribe** the text, unless you are sure what's written there.
+
+<p>
+  <img src="./img/lyricsText-unreadable-1.png" height="200"/>
+  <img src="./img/lyricsText-unreadable-2.png" height="200"/>
+</p>
+
+**Multiple verses:**
+
+- Sometimes there are multiple verses underneath each other. Annotate each verse as if it was standing alone.
+- The clustering of notes into `lyricsText` objects may be different between verses, based on the text phasing. See the second verse `ky-` below.
+- The verse number is a [`verseNumber`](#versenumber) object (see below).
+
+<p>
+  <img src="./img/lyricsText-multiple-verses-1.png" height="200"/>
+</p>
+
+- If the text of additional verses is somewhere else on the page and not aligned with the music, annotate it as `otherText`.
+
+**What not to do:**
+
+- Do not annotate hyphens alone as standalone `lyricsText` objects. Hyphen always belongs to the syllable that precedes it.
+
+<p>
+  <img src="./img/lyricsText-no-standalone-hyphens.png" height="200"/>
+</p>
+
+- Do not break (handwritten) words into syllables artificially. Annotate it as one object and link it from multiple noteheads instead.
+
+<p>
+  <img src="./img/lyricsText-no-word-breaking.png" height="200"/>
+</p>
+
+- When in doubt about the transcription, then **do NOT transcribe** the text. It's ok to leave the transcription box empty.
+
+<p>
+  <img src="./img/lyricsText-no-unsure-transcription.png" height="200"/>
+</p>
+
+- Use convex masks to help the reviewer to see elements easily. Do not split the mask into two parts.
+
+<p>
+  <img src="./img/lyricsText-no-disjoint-masks.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Typeset modern
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_c98a8dd2-1141-48c8-a594-ee15db270b02
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+  - Typeset old
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/334c2e20-cadf-4b30-8c21-8426a686b950_2405cebe-37f0-4a60-932c-f443027246e6
+  - Handwritten
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_38de73a6-8f92-4876-bda7-c71925d04dcd
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_47f48e77-9fbc-41bb-9fb0-8c6ed0876d04
+</details>
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/74
+</details>
+
+---
+
+
+### `verseNumber`
+
+*(`lyricsText` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="./img/lyricsText-multiple-verses-1.png" height="200"/>
+</p>
+
+- When lyrics begin with a verse number, this text is annotated as `verseNumber`.
+- Use **convex hull** mask, because it's a text node.
+- Transcribe the text contained.
+- Add <kbd>🔴 syntax</kbd> link from the first `lyricsText` object to the `verseNumber` object.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
+
+---
+
+
 ## Text
 
 > **🚧 Under construction.**
@@ -1101,20 +1292,6 @@ When two time signatures are written next to each other, they represent an **alt
 <!-- diskuze k textum: https://github.com/orgs/OmniOMR/discussions/107 -->
 
 
-### `lyricsText`
-
-> **🚧 Under construction.**
-
-- Annotate **syllable by syllable or separate words**, so that each lyric segment can be correctly aligned with the notation graph.
-- It is sufficient to use a **convex hull (rough mask)** for lyrics — precise outlining is not required.
-
-<p>
-  <img src="./img/lyrics-text-1.png" alt="lyricsText Example" width="400"/>
-</p>
-
----
-
-
 ### `tempoText`
 
 - **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
@@ -1122,7 +1299,14 @@ When two time signatures are written next to each other, they represent an **alt
 TODO:
 - text "ritardando" a "accelerando" se bude chovat stejně jako crescendo a diminuendo, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
 
-TODO: nespadá sem interpretace (dolce, zefiroso, staccato), to bude interpretation text (myslím, ještě zkontrolovat)
+<!--
+- rallentado (rall.) je pdobné ritardando
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+- acelerando, ritardando, a tempo in one document:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+-->
+
+TODO: nespadá sem interpretace (dolce, zefiroso, staccato, tranquillo, poco appassionato), to bude interpretation text (myslím, ještě zkontrolovat)
 
 <!--
 "staccato" example:
@@ -1147,6 +1331,32 @@ https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1
 
 - nadpisy, autoři (věci co souvisí s dílem, ne dokumentem (song, not doc)), jméno všech lidí (editor, etc.) (cokoliv co je zajímavé pro knihovníka)
 
+"lidová", "piáno", název partu
+
+TODO: text před začátkem partu - název nástroje / role partu (a jestli to je název písničky, je mi to jedno, nebudou to metadata, je to před začátkem partu)
+A nebo metadata? Nevím?
+
+Staré inline: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+Vs nové hezké: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/53307830-00c8-11f0-9b34-5ef3fc9bb22f_8da7d206-4466-4ee4-ac26-80d8e3243a87
+
+---
+
+
+### `measureNumber`
+
+> **🚧 Under construction.**
+
+TODO: čísla taktů, pokud je jasné že je to číslo taktu. Jinak other text.
+
+---
+
+
+### `pageNumber`
+
+> **🚧 Under construction.**
+
+TODO: čísla stránek, pokud je jasné že je to číslo stránky. Pokud si nejsem jistý, tak other text
+
 ---
 
 
@@ -1155,9 +1365,6 @@ https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1
 > **🚧 Under construction.**
 
 Used for **non-musical text elements** such as:
-- Page numbers  
-- Verse numbers
-- Measure number
 - Rehersal marks
 - text jiných slok co není pod notami (např. v kancionálu), NE když je to aligned pod notami
 
@@ -1681,6 +1888,13 @@ This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 
 TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zavedeme
 
+<!--
+https://w3c.github.io/smufl/latest/tables/repeats.html
+Serpent segno examples:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
+- https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/
+-->
+
 A **repetition mark** is composed of several elements:
 
 
@@ -1724,6 +1938,10 @@ TODO: nad tímhle může být text (stejně jako nad multi-measure rets / whole 
 TODO: někdy se používá pro repeat půl-taktu, to je v pohodě, je to pořád tento symbol
 
 TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což je jen ten slash bez teček a někdy to opakuje půl-takt
+
+<!--
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+-->
 
 ---
 
@@ -2055,7 +2273,7 @@ A grace note is composed of:
 - The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
 
 <details>
-  <summary>Relevant discussions.</summary>
+  <summary>🧵 Relevant discussions</summary>
 
   - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
 </details>
@@ -2106,6 +2324,8 @@ A grace note is composed of:
 <!--
 TODO: docs:
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
 -->
 
 ---
