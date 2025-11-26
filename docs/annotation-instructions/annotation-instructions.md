@@ -1283,92 +1283,357 @@ When two time signatures are written next to each other, they represent an **alt
 ---
 
 
-## Text
+## Tempo
 
-> **🚧 Under construction.**
-
-**TODO:** U textů bude potřeba vyřešit jestli texty přepisovat (podobně jako umožňoval CVAT - pozor na nečitelné texty).
-
-<!-- diskuze k textum: https://github.com/orgs/OmniOMR/discussions/107 -->
+- This category contains text elements that determine the tempo of the song. It is analogous to [dynamics](#dynamics), which control the volume of the song.
+- Read more on [Wikipedia](https://en.wikipedia.org/wiki/Tempo).
 
 
 ### `tempoText`
 
-- **TODO:** Define rules for tempo markings (e.g. “Pochodem”, “Allegro”, etc.)
+*(`tempoText` is not part of SMuFL, because it is a text class)*
 
-TODO:
-- text "ritardando" a "accelerando" se bude chovat stejně jako crescendo a diminuendo, nespadá pod dynamics, spadá pod tempo, není třeba přepisovat, může mít spanner. Třídy něco jako `tempoRitardando` a `tempoAccelerando`
+- Tempo text is usually at the beginning of a song and specifies how fast the song should be played.
+- Annotate with **convex hull mask** and **transcribe its content**.
+- There is one <kbd>🔴 syntax</kbd> link from any notehead or rest at which the tempo starts having effect (usually the first note in the song). This is identical to how [`dynamicsText`](#dynamicstext) is linked to noteheads.
+- Do not confuse it with [`interpretationText`](#interpretationtext) which says "how" the music should be played (e.g. dolce = sweet).
 
-<!--
-- rallentado (rall.) je pdobné ritardando
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
-- acelerando, ritardando, a tempo in one document:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
--->
+Here are examples of what a tempo text can say (Italian):
 
-TODO: nespadá sem interpretace (dolce, zefiroso, staccato, tranquillo, poco appassionato), to bude interpretation text (myslím, ještě zkontrolovat)
+```
+Grave Largo Lento Adagio Andante Moderato
+Allegretto Allegro Vivace Presto
+```
 
-<!--
-"staccato" example:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+It can be altered to get variants:
 
-zefiroso example:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+```
+Larghissimo
+Allegro moderato
+Con moto
+```
 
-andante, adagio, dolce piano example:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+It can be written in a different language (German, French, Czech):
 
-ritardando example:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
--->
+```
+Langsam Schnell Mäßig Kräftig Rasch
+Moins Modéré Vif Très Vite Rapide
+Rychle Volně
+```
+
+It can also contain explicit tempo BPM, in which case transcribe it as-is and copy the note character from here:
+
+```
+Allegro (𝅘𝅥 = 120)
+```
+
+Note text characters:
+
+```
+U+1D15D: 𝅝
+U+1D15E: 𝅗𝅥
+U+1D15F: 𝅘𝅥
+U+1D160: 𝅘𝅥𝅮
+U+1D161: 𝅘𝅥𝅯
+```
+
+If you see some text and are unsure whether it's a tempo text, try looking it up in the [Wikipedia page](https://en.wikipedia.org/wiki/Tempo) or on Google if it has direct tempo meaning (not some vague feeling meaning). If unsure, annotate it as `interpretationText` since it may not describe ONLY tempo, but also the feel. If still unsure about that, annotate it as `otherText`.
+
+<p>
+  <img src="./img/tempoText-1.png" height="200"/>
+  <img src="./img/tempoText-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+</details>
+
+---
+
+
+### `tempoRitardando`
+
+*(`tempoRitardando` is not part of SMuFL, because it is a text class)*
+
+- An instruction to slow down the tempo gradually.
+- Can appear in the middle of a part.
+- Can have a spanner, which should be annotated as `tempoRitardandoSpanner`.
+- Annotation rules are IDENTICAL to [`dynamicCrescendo`](#dynamiccrescendo), just with different clsss names. See that part of annotation instructions to learn more.
+
+<p>
+  <img src="./img/tempoRitardando-1.png" height="200"/>
+  <img src="./img/tempoRitardando-2.png" height="200"/>
+</p>
+
+- A vaiation of ritardando is "Rallentado" often written as "rall.". Annotate it as `tempoRitardando` and transcribe the text appropriately.
+
+<p>
+  <img src="./img/tempoRitardando-3.png" height="200"/>
+  <img src="./img/tempoRitardando-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+</details>
+
+---
+
+
+### `tempoAccelerando`
+
+*(`tempoAccelerando` is not part of SMuFL, because it is a text class)*
+
+- An instruction to speed up the tempo gradually.
+- Can appear in the middle of a part.
+- Can have a spanner, which should be annotated as `tempoAccelerandoSpanner`.
+- Annotation rules are IDENTICAL to [`dynamicCrescendo`](#dynamiccrescendo), just with different clsss names. See that part of annotation instructions to learn more.
+
+<p>
+  <img src="./img/tempoAccelerando-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+</details>
+
+---
+
+
+### `tempoATempo`
+
+*(`tempoATempo` is not part of SMuFL, because it is a text class)*
+
+- An instruction to return back to the default tempo after a ritardando or accelerando. Means "in tempo".
+- Can appear in the middle of a part.
+- There is one <kbd>🔴 syntax</kbd> link from any notehead or rest at which the tempo returns to normal. This is identical to how [`dynamicsText`](#dynamicstext) is linked to noteheads.
+
+<p>
+  <img src="./img/tempoATempo-1.png" height="200"/>
+  <img src="./img/tempoATempo-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+</details>
+
+---
+
+
+## Text
+
+- This category contains texts that are present on the page, surrounding the music notation, with very weak to no connection to the music notation.
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/107
+</details>
+
+
+### `interpretationText`
+
+*(`interpretationText` is not part of SMuFL, because it is a text class)*
+
+- Interpretation text is usually at the beginning of a song and specifies in what feel the song should be played.
+- Annotate with **convex hull mask** and **transcribe its content**.
+- There is one <kbd>🔴 syntax</kbd> link from any notehead or rest at which the interpretation starts having effect (usually the first note in the song). This is identical to how [`dynamicsText`](#dynamicstext) is linked to noteheads.
+- Do not confuse it with [`tempoText`](#tempo) which says "how fast" the music should be played and [`dynamicsText`](#dynamicstext) which says "how loud" the music should be played.
+
+Here are examples of what an interpretation text can say (Italian):
+
+```
+Dolce
+Zefiroso
+Tranquillo
+Poco appasionato
+Con Brio
+Con grazia
+Con moto
+Furioso
+Lamentoso
+Maestoso
+Subito
+```
+
+It can also be instruction on how to play the instrument (e.g. pluck the violin or use the bow):
+
+```
+pizz
+Pizzicato
+arco
+una corda
+```
+
+Or it can be text-written articulation instruction:
+
+```
+Staccato
+Tenuto
+ten ten
+```
+
+It can be in other language (English, German, Czech, French):
+
+```
+Pochodem
+Pathetisch
+dlouhé tahy smyčcem
+Palm-muted
+```
+
+If unsure when deciding between `tempoText` and `interpretationText`, choose `interpretationText` for cases where the the tempo is not THE ONLY thing the term describes. For example, "Andante" ONLY says how fast to play so it is `tempoText`, whereas "Furioso" *may* mean to play fast, but also aggressively, so it is an `interpretationText`. Also you can imagine playing slow AND furious, which means "Furioso" does NOT really specify the tempo.
+
+If unsure what the text means, try Googling its meaning. If still unsure about the text categorization, use `otherText`.
+
+<p>
+  <img src="./img/interpretationText-1.png" height="200"/>
+  <img src="./img/interpretationText-2.png" height="200"/>
+  <img src="./img/interpretationText-3.png" height="200"/>
+  <img src="./img/interpretationText-4.png" height="200"/>
+  <img src="./img/interpretationText-5.png" height="200"/>
+  <img src="./img/interpretationText-6.png" height="200"/>
+  <img src="./img/interpretationText-7.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/334c2e20-cadf-4b30-8c21-8426a686b950_2405cebe-37f0-4a60-932c-f443027246e6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
 
 ---
 
 
 ### `metadataText`
 
-> **🚧 Under construction.**
+*(`metadataText` is not part of SMuFL, because it is a text class)*
 
-- nadpisy, autoři (věci co souvisí s dílem, ne dokumentem (song, not doc)), jméno všech lidí (editor, etc.) (cokoliv co je zajímavé pro knihovníka)
+- Text that is interesting to the librarian, which names or classifies the song somehow.
+- Annotate with **convex hull mask** and **transcribe its content**.
+- If you can't read it, don't transcribe it (leave it empty).
 
-"lidová", "piáno", název partu
+It is typically these texts:
 
-TODO: text před začátkem partu - název nástroje / role partu (a jestli to je název písničky, je mi to jedno, nebudou to metadata, je to před začátkem partu)
-A nebo metadata? Nevím?
+- Song title
+- Author name
+- Song type (e.g. "Folk song")
+- Part name (the text before the start of a staff), may be song name, may be instrument name, may be instrument role.
 
-Staré inline: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
-Vs nové hezké: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/53307830-00c8-11f0-9b34-5ef3fc9bb22f_8da7d206-4466-4ee4-ac26-80d8e3243a87
+<p>
+  <img src="./img/metadataText-1.png" height="200"/>
+  <img src="./img/metadataText-2.png" height="300"/>
+  <img src="./img/metadataText-3.png" width="620"/>
+  <img src="./img/metadataText-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/334c2e20-cadf-4b30-8c21-8426a686b950_2405cebe-37f0-4a60-932c-f443027246e6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
 
 ---
 
 
 ### `measureNumber`
 
-> **🚧 Under construction.**
+*(`measureNumber` is not part of SMuFL, because it is a text class)*
 
-TODO: čísla taktů, pokud je jasné že je to číslo taktu. Jinak other text.
+- Annotate with **convex hull mask** and **transcribe its content**.
+- If unsure, whether it is a measure number, use `otherText` instead.
+- Rehersal marks, and other counting numbers in particella are NOT measure numbers. Measure number is only the number of the measure from the start of the song.
+- There is one <kbd>🔴 syntax</kbd> link from the first notehead or rest in the measure to the `measureNumber`. If there are multiple "first" noteheads, pick any one of them.
+
+<p>
+  <img src="./img/measureNumber-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+</details>
 
 ---
 
 
 ### `pageNumber`
 
-> **🚧 Under construction.**
+*(`pageNumber` is not part of SMuFL, because it is a text class)*
 
-TODO: čísla stránek, pokud je jasné že je to číslo stránky. Pokud si nejsem jistý, tak other text
+- Annotate with **convex hull mask** and **transcribe its content**.
+- If unsure, whether it is a page number, use `otherText` instead.
+
+<p>
+  <img src="./img/pageNumber-1.png" height="200"/>
+  <img src="./img/pageNumber-2.png" height="200"/>
+  <img src="./img/pageNumber-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/334c2e20-cadf-4b30-8c21-8426a686b950_2405cebe-37f0-4a60-932c-f443027246e6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
 
 ---
 
 
 ### `otherText`
 
-> **🚧 Under construction.**
+*(`otherText` is not part of SMuFL, because it is a text class)*
 
-Used for **non-musical text elements** such as:
-- Rehersal marks
-- text jiných slok co není pod notami (např. v kancionálu), NE když je to aligned pod notami
+- Any remaining text on the page.
+- Annotate with **convex hull mask** and **transcribe its content**.
+- If you can't read it, don't transcribe it (leave it empty).
 
-stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není už jiný text
+What usually belongs here:
+
+- Any text notes by the author or the library around the music notation.
+- Measure counting numbers in particella (NOT measure numbers).
+- Rehersal marks (`[A]`, `[B]`) and other "measure" numbers (`[150]`) that are not obvious measure numbers (are nowhere else on the page and are not periodic).
+- Lyrics of other verses, that are NOT aligned under the music (e.g. are positioned in a text-block somewhere else)
+- Stamps by the library. (You don't need to transcribe these.)
+
+<p>
+  <img src="./img/otherText-1.png" height="200"/>
+  <img src="./img/otherText-2.png" height="200"/>
+  <img src="./img/otherText-3.png" height="200"/>
+  <img src="./img/otherText-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/334c2e20-cadf-4b30-8c21-8426a686b950_2405cebe-37f0-4a60-932c-f443027246e6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_47f48e77-9fbc-41bb-9fb0-8c6ed0876d04
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/86f8017f-c0c3-4d88-949e-e6f18aafd1c6_a9d78ada-642d-4a4a-b67b-12176961d7db
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
@@ -1414,6 +1679,11 @@ stakeholder = OCR systém, sebere všechno ostatní co je "čtitelné" co není 
 
 
 ## Barlines
+
+<!--
+Ornamented terminal barline:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+-->
 
 
 ### `barlineSingle`
@@ -1757,6 +2027,18 @@ This group discusses these classes: `dynamicPiano`, `dynamicMezzo`, `dynamicFort
 - A specific time span can be represented by a visual spanner line. This line is a separate node with class `dynamicDiminuendoSpanner` and a **convex hull** mask. It is <kbd>🔴 syntax</kbd> linked from the parent `dynamicDiminuendo`.
 - When crescendo spanner continues to the next line, it should start with another `dynamicDiminuendo` text and so can be treated as a separate `dynamicDiminuendo` instance with a spanner. If the text is not present, then this second spanner should be linked from the first `dynamicDiminuendo` (it will have two children - two spanners).
 
+<p>
+  <img src="img/dynamicDiminuendo-1.png" height="200"/>
+  <img src="img/dynamicDiminuendo-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+</details>
+
 ---
 
 
@@ -1893,6 +2175,9 @@ https://w3c.github.io/smufl/latest/tables/repeats.html
 Serpent segno examples:
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
 - https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/
+
+Half-bar repeat annotated as "otherText":
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
 -->
 
 A **repetition mark** is composed of several elements:
