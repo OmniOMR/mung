@@ -126,6 +126,7 @@ TODO: what about chords with differing number of dots and noteheads?
     - First beat: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/d9fede70-b9f0-11ea-b68c-005056827e52_2f8490c5-7e84-426e-8628-2bc938f47260
   - Multiple augmentation dots per note
     - First system, first measure: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+    - Triple-augmentation dot, first staff, last measure: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
 </details>
 
 ---
@@ -346,6 +347,8 @@ Flags are divided into separate classes according to their type and direction:
 - All annotated pages are available in the **Digital Library**, where you can browse the full document. If you want to check it yourself (for clefs or slurs), the links follow this format:
 
     `https://www.digitalniknihovna.cz/mzk/view/uuid:<document_id>?page=uuid:<page_id>`
+
+- Do **NOT link** notehead to a slur on another line (when the slur goes **across line break**). Treat it as if it went off to another page. While it's logically the same slur, graphically they are two separate slurs that have nothing in common.
 
 <p>
   <img src="./img/slur-1.png" alt="slur Example" width="300"/>
@@ -1342,6 +1345,7 @@ If you see some text and are unsure whether it's a tempo text, try looking it up
 <p>
   <img src="./img/tempoText-1.png" height="200"/>
   <img src="./img/tempoText-2.png" height="200"/>
+  <img src="./img/tempoText-3.png" height="200"/>
 </p>
 
 <details>
@@ -1350,6 +1354,7 @@ If you see some text and are unsure whether it's a tempo text, try looking it up
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
 </details>
 
 ---
@@ -2576,14 +2581,62 @@ A grace note is composed of:
 ---
 
 
-## `fermataAbove` / `fermataBelow`
+## Fermata
 
-> **🚧 Under construction.**
+
+### `fermataAbove`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/holds-and-pauses.html))*
 
 <p>
-  <img src="./img/fermata-above-1.png" alt="fermataAbove Example" width="200"/>
-  <img src="./img/fermata-below-1.png" alt="fermataBelow Example" width="183"/>
+  <img src="./img/fermataAbove-0.png" height="200"/>
 </p>
+
+- A pause for an unspecified amount of time.
+- Use **precise mask** for the symbol, not convex.
+- <kbd>🔴 syntax</kbd> link from all affected noteheads (or rests) to the fermata.
+
+<p>
+  <img src="./img/fermataAbove-1.png" height="200"/>
+  <img src="./img/fermataAbove-2.png" height="200"/>
+</p>
+
+- In sloppy handwriting, you can find one fermata above two noteheads of differing onset. This should really be understood as two separate fermatas, one above each of the noteheads:
+
+<p>
+  <img src="./img/fermataAbove-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+</details>
+
+---
+
+
+### `fermataBelow`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/holds-and-pauses.html))*
+
+<p>
+  <img src="./img/fermataBelow-0.png" height="200"/>
+</p>
+
+- A pause for an unspecified amount of time.
+- Use **precise mask** for the symbol, not convex.
+- <kbd>🔴 syntax</kbd> link from all affected noteheads (or rests) to the fermata.
+
+<p>
+  <img src="./img/fermataBelow-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+</details>
 
 ---
 
@@ -2595,40 +2648,54 @@ A grace note is composed of:
 
 ### `ornamentTrill`
 
-> **🚧 Under construction.**
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
 *(Previously grouped under `ornament` in CVAT.)*
 
-- Used for the **“tr” text** symbol marking a **short trill**.
-- Do not use a simple convex hull. The annotation **must follow the exact shape** of the symbol. **TODO:** je toto pravda?
+- Used for the **"tr" text** symbol marking a **short trill**.
+- Use **precise mask** for the symbol, not convex.
+- <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
 
 <p>
-  <img src="./img/ornament-trill-1.png" alt="ornamentTrill Example" width="200"/>
+  <img src="./img/ornamentTrill-1.png" height="200"/>
+  <img src="./img/ornamentTrill-2.png" height="200"/>
 </p>
 
-<!--
-TODO: docs:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
--->
+- The trill can have an accidental attached that specifies the direction of the pitch change during the trill-ing. Add a <kbd>🔴 syntax</kbd> link from the trill to the accidental. (just like noteheads link to accidentals)
+
+<p>
+  <img src="./img/ornamentTrill-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
 
 ### `wiggleTrill`
 
-> **🚧 Under construction.**
-
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/multi-segment-lines.html))*
 
 - Represents the **wavy line** that typically **follows a trill mark**,  
 indicating the continuation of the trill.
+- Use **precise mask** for the symbol, not convex.
+- <kbd>🔴 syntax</kbd> link from the trill to the wavy line.
 
-<!--
-TODO: docs:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
--->
+<p>
+  <img src="./img/wiggleTrill-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_2904af42-889b-4358-bf4e-65c81818d642
+</details>
 
 ---
 
@@ -2662,6 +2729,36 @@ TODO: docs:
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
+
+---
+
+
+## `custos`
+
+*(seems not to be in SMuFL; there are [mensural SMuFL variants](https://w3c.github.io/smufl/latest/tables/medieval-and-renaissance-miscellany.html) `mensuralCustosUp`, `mensuralCustosDown`, but no modern variant without direction)*
+
+*(See the related [Wikipedia page](https://en.wikipedia.org/wiki/Direct_(music_symbol)))*
+
+<p>
+  <img src="./img/custos-1.png" height="200"/>
+</p>
+
+- Mark at the end of a staff, that signals where the next note to be played (on the next page) will be positioned.
+- Behaves very much like a notehead - has leger lines and accidentals and participates in the precedence graph.
+- Annotate with **precise mask**.
+- Add <kbd>🔴 syntax</kbd> links to leger lines and accidentals.
+- Link it from the preceding notehead or rest via <kbd>🟢 precedence</kbd> links, as if it was a regular notehead.
+
+<p>
+  <img src="./img/custos-2.png" height="200"/>
+  <img src="./img/custos-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
 </details>
 
 ---
