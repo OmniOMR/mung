@@ -59,7 +59,7 @@ setup(
                 'music recognition.',
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
-    packages=['mung', 'mung2midi'],
+    packages=['mung', 'mung2midi', 'mung2musicxml'],
     include_package_data=True,
     scripts=['scripts/add_staff_relationships.py',
              'scripts/add_staffline_symbols.py',
