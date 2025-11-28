@@ -59,7 +59,24 @@ setup(
                 'music recognition.',
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
-    packages=['mung', 'mung2midi', 'mung2musicxml'],
+    packages=[
+        # Expanded modules to quickly get MuNG Studio running,
+        # but really I'd rather completely remake the whole package
+        # build system to what Smashcima uses:
+        # https://github.com/OMR-Research/Smashcima/blob/main/pyproject.toml
+        'mung',
+        'mung.constants',
+        'mung2midi',
+        'mung2midi.inference',
+        'mung2musicxml',
+        'mung2musicxml.preprocessing',
+        'mung2musicxml.preprocessing.multistem',
+        'mung2musicxml.preprocessing.precedence_linking',
+        'mung2musicxml.preprocessing.snap_engines',
+        'mung2musicxml.preprocessing.staff_generator',
+        'mung2musicxml.preprocessing.staff_wrapper',
+        'mung2musicxml.preprocessing.staffspace_generator',
+    ],
     include_package_data=True,
     scripts=['scripts/add_staff_relationships.py',
              'scripts/add_staffline_symbols.py',
