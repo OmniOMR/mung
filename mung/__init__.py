@@ -1,3 +1,3 @@
-__version__ = '1.2.1'
+from ._version import __version__
 from .graph import NotationGraph
 from .node import Node

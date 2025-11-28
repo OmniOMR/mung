@@ -2,8 +2,17 @@ from setuptools import setup
 import io
 import logging
 import os
+from pathlib import Path
 
-import mung
+
+# Funky way of importing the _version.py file without also
+# initializing the mung package (which cannot be done, since that
+# requires the package to be installed - which it isn't since we're
+# just installing it). You CANNOT import the package you're installing.
+with open(Path(__file__).parent / "mung" / "_version.py") as f:
+    __version__ = "" # will be overriden by the exec below
+    exec(f.read())
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -40,7 +49,7 @@ def get_long_description():
 
 setup(
     name='mung',
-    version=mung.__version__,
+    version=__version__,
     url='https://mung.readthedocs.io',
     license='MIT Software License',
     author='Jan Hajič jr. and Alexander Pacha',
