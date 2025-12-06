@@ -2961,4 +2961,106 @@ Here, there is a missing eighth rest, first system, last measure, bottom staff, 
 
 ## Linking objects to staves
 
-TODO ...
+After you annotate all notation objects you can link them to staves. This is done semi-automatically. **You need to have all stafflines annotated and staves and staffspaces generated in the whole document before you proceed to this step.**
+
+> In MuNG Studio, open main menu and click on **Snap nodes to staves** or press <kbd>Shift + N</kbd>.
+
+This will perform automatic assignment of objects to staves, stafflines and staffspaces. This must be checked in two phases:
+
+1. Checking assignment of objects to staves
+2. Checking assignment of objects to stafflines and staffspaces
+
+
+### 1. Assignment to staves
+
+In class visibility presets, select **Staves review** to show only nodes of interest. Also, hide <kbd>🟢 precedence</kbd> links, since they are irrelevant and only get in the way.
+
+<p>
+  <img src="./img/stavesReviewPreset.png" height="200"/>
+</p>
+
+Look at the whole page and make sure there are no <kbd>🔴 syntax</kbd> links leading to incorrect staff. Especially check objects (noteheads) that are in-between staves so that they are assigned properly.
+
+<p>
+  <img src="./img/staffAssignments.png" width="620"/>
+</p>
+
+There should be no symbols left that were not linked. In case there are, validation rules should detect them. So if you see no wrongly-assigned links and there are no validation issues, there should be no mistakes.
+
+These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
+
+- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+  - Pay attention to noteheads in between staves and decide by the direction of leger lines.
+  - Grace note noteheads are NOT assigned to staves.
+  - <img src="./img/notehead-to-staff.png" height="200"/>
+- **Rests** (`restWhole`, `restHalf`, `restQuarter`, `rest8th`, ...)
+  - <img src="./img/rest-to-staff.png" height="200"/>
+- **Long Rests** (`restDoubleWhole`, `restLonga`, `restHBar`)
+  - Must be linked manually!
+- **Clefs** and **Clef Changes** (`gClef`, `fClef`, `cClef`, `gClefChange`, `fClefChange`, `cClefChange`)
+  - Clef changes must be linked manually!
+  - <img src="./img/clef-to-staff.png" height="200"/>
+- **Time and Key Signatures** (`timeSignature`, `keySignature`)
+  - <img src="./img/keySignature-to-staff.png" height="200"/>
+- **Measure separators** (`measureSeparator`)
+  - Links to ALL staves it connects.
+  - Is linked automatically to staves it intersects. Just check there aren't mistakes.
+  - <img src="./img/measureSeparator-to-staff.png" height="200"/>
+- **Staff groupings** (`staffGrouping`)
+  - Links ALL staves it groups.
+  - Must be linked manually!
+  - <img src="./img/staffGrouping-to-staff.png" height="200"/>
+- TODO: repeat1Bar?
+- TODO: unisonoText?
+- TODO: systemDivider, splitBarDivider?
+- **Custos** (`custos`)
+  - Same rules as for noteheads.
+  - Must be linked manually!
+
+TODO: extend automatic assignment to missing classes (clef changes, restHBar, custos, etc.)
+
+TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff)
+
+
+### 2. Assignment to stafflines and staffspaces
+
+In class visibility presets, select **Staves lines/spaces review** to show only nodes of interest. Also, hide <kbd>🟢 precedence</kbd> links, since they are irrelevant and only get in the way.
+
+<p>
+  <img src="./img/staffpositionReviewPreset.png" height="200"/>
+</p>
+
+Go staff by staff and check that objects are assigned to correct stafflines or staff spaces:
+
+<p>
+  <img src="./img/staffpositionAssignments.png" width="620"/>
+</p>
+
+There should be no symbols left that were not linked. In case there are, validation rules should detect them. So if you see no wrongly-assigned links and there are no validation issues, there should be no mistakes.
+
+These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `staffSpace` objects:
+
+- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+  - Only noteheads that are NOT affected by leger lines.
+  - The <kbd>🔴 syntax</kbd> link should point to the middle of the line of space that the notehead sits on.
+  - The assignment is automatic, only check that it's correct.
+  - <img src="./img/notehead-to-staffposition.png" height="200"/>
+- **Clefs** and **Clef Changes** (`gClef`, `fClef`, `cClef`, `gClefChange`, `fClefChange`, `cClefChange`)
+  - Clef must be linked manually!
+  - Clef links to its staffline:
+  - G glef - the line the clef is drawn from
+    - <img src="./img/g-clef-to-staffposition.png" height="200"/>
+  - F clef - the line between the two dots
+    - <img src="./img/f-clef-to-staffposition.png" height="200"/>
+  - C clef - the line going through the middle of the clef
+    - <img src="./img/c-clef-to-staffposition.png" height="200"/>
+- **Custos** (`custos`)
+  - Same rules as for noteheads.
+  - Must be linked manually!
+
+TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff line/space / leger-line)
+
+**The following are errors that can be encountered when checking the assignment:**
+
+- Missing <kbd>🔴 syntax</kbd> link to `legerLine` caused the notehead to be assigned to `staffSpace` incorrectly:
+  - <img src="./img/mistake-missing-legerLine-link.png" height="200"/>
