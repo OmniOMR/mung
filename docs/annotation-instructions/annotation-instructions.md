@@ -36,6 +36,139 @@ Alternatively, select the object and click the “Edit nodes” icon (⬟) in th
 ---
 
 
+## Staves
+
+Staves are the first objects to be annotated, because lots of other objects link to them.
+
+
+### `staffLine`
+
+*(`staffLine` is not part of SMuFL, because it cannot be rendered using a notation font)*
+
+*(Called `Staff line` in CVAT)*
+
+<p>
+  <img src="./img/staffLine-0.png" height="200"/>
+</p>
+
+- Represents a **single staff line**.
+- There are <kbd>🔴 syntax</kbd> links leading to `staffLine` objects. This is covered in detail later in the [Linking objects to staves](#linking-objects-to-staves) section.
+
+<p>
+  <img src="./img/staffLine-1.png" width="620"/>
+</p>
+
+- Use the *Staff Annotation Tool* of MuNG Studio to annotate all 5 staff lines at once, and then split them up into 5 separate objects.
+
+<p>
+  <img src="./img/staffLine-cut-tool.png" height="200"/>
+  <img src="./img/staffLine-2.png" height="200"/>
+</p>
+
+- Annotate staff lines through foreground objects (beams, clefs, etc...).
+
+<p>
+  <img src="./img/staffLine-through.png" height="200"/>
+</p>
+
+- Erase faulty detections of the automatic tool.
+
+<p>
+  <img src="./img/staffLine-faulty-detections.png" height="200"/>
+</p>
+
+- Make sure the mask reflects line thickness and curvature, but do not waste time correcting individual pixels. This automatic detection is good-enough and does NOT need to be corrected:
+
+<p>
+  <img src="./img/staffLine-ok-quality.png" height="200"/>
+</p>
+
+- If the staff lines are broken, it is OK for the mask to be broken as well. If the automatic tool however joins the mask over the gap, it is also OK to leave the mask connected. The purpose of staffline annotations is to have masks that are *diverse* and *representative*, not necessarily *pixel-precise*.
+
+<p>
+  <img src="./img/staffLine-broken.png" height="200"/>
+</p>
+
+- Even stafflines that contain no music notation, or have text written over them, should be annotated.
+
+<p>
+  <img src="./img/staffLine-empty.png" width="620"/>
+</p>
+
+- Check the cut lines before slicing into separate lines. Sometimes the algorithm may fail in which case you need to correct the mask so that the algorithm detects cut lines properly:
+
+<p>
+  <img src="./img/staffLine-faulty-slice.png" height="200"/>
+  <img src="./img/staffLine-repaired-cut.png" height="200"/>
+</p>
+
+<details>
+  <summary>🤔 Why not use staff1Line class of SMuFL?</summary>
+
+  The `staff1Line` class from SMuFL is intended for text-rendering. It is not used to actually render stafflines and thus means something slightly different semantically. Staff lines are more similar to beams, slurs, and ties, which cannot be rendered via a font, so aren't present in SMuFL. Therefore we decided to also introduce the class `staffLine` for this non-font-renderable symbol, just like we did with `beam`, `slur`, and `tie`.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+</details>
+
+---
+
+
+### `staffSpace`
+
+*(`staffSpace` is not part of SMuFL, because it is not an explicitly drawn object)*
+
+<p>
+  <img src="./img/staffSpace-0.png" height="200"/>
+</p>
+
+- Represents the **a single space** between two staff lines (as well as two more spaces above and below the staff).
+- There are <kbd>🔴 syntax</kbd> links leading to `staffSpace` objects. This is covered in detail later in the [Linking objects to staves](#linking-objects-to-staves) section.
+- This object is **automatically generated** - select 5 `staffLine` objects and press <kbd>Shift + S</kbd> in MuNG Studio. It will be generated together with the `staff` object.
+
+<p>
+  <img src="./img/staffSpace-1.png" height="200"/>
+  <img src="./img/staffSpace-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+</details>
+
+---
+
+
+### `staff`
+
+*(`staffSpace` is not part of SMuFL, because it is not an explicitly drawn object)*
+
+*(Called `Staff` in CVAT)*
+
+<p>
+  <img src="./img/staff-0.png" height="200"/>
+  <img src="./img/staff-syntax.png" height="200"/>
+</p>
+
+- Groups together the **five staff lines** that form a complete staff.
+- The bounding box should **fit tightly** around the lines.
+- This object is **automatically generated** - select 5 `staffLine` objects and press <kbd>Shift + S</kbd> in MuNG Studio. It will be generated together with the 6 `staffSpace` objects.
+- The `staff` object <kbd>🔴 syntax</kbd> links to each of its `staffLine` and `staffSpace` objects. These links are, however, automatically generated when `staff` is generated.
+- There are <kbd>🔴 syntax</kbd> links leading to `staff` objects. This is covered in detail later in the [Linking objects to staves](#linking-objects-to-staves) section.
+
+<p>
+  <img src="./img/staff-1.png" width="620"/>
+</p>
+
+---
+
+
 ## Noteheads
 
 - There are many <kbd>🔴 syntax</kbd> links going from noteheads to other symbols. Because there are so many, they are mentioned at those other smybols (e.g. `stem`, accidentals, flags), instead of here.
@@ -1643,46 +1776,6 @@ What usually belongs here:
 ---
 
 
-## Staves
-
-
-### `staffLine`
-
-*(`staffLine` is not part of SMuFL, because it cannot be rendered using a notation font)*
-
-*(Called `Staff line` in CVAT)*  
-
-- Represents a **single staff line**.
-- Annotate **precisely around the entire shape**.
-
-<p>
-  <img src="./img/staff-1-line.png" alt="staff1Line Example" width="700"/>
-</p>
-
-<details>
-  <summary>🤔 Why not use staff1Line class of SMuFL?</summary>
-
-  The `staff1Line` class from SMuFL is intended for text-rendering. It is not used to actually render stafflines and thus means something slightly different semantically. Staff lines are more similar to beams, slurs, and ties, which cannot be rendered via a font, so aren't present in SMuFL. Therefore we decided to also introduce the class `staffLine` for this non-font-renderable symbol, just like we did with `beam`, `slur`, and `tie`.
-</details>
-
----
-
-
-### `staff`
-
-*(Called `Staff` in CVAT)*  
-
-- Groups together the **five staff lines** that form a complete staff.  
-- The bounding box should **fit tightly** around the lines.  
-- Ensure the box aligns **exactly with the corners** of the staff.
-
-<p>
-  <img src="./img/staff-1.png" alt="staff Example" width="800"/>
-</p>
-
----
-
-
 ## Barlines
 
 <!--
@@ -2864,3 +2957,8 @@ TODO ...
 
 Here, there is a missing eighth rest, first system, last measure, bottom staff, onset 1.5 beats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
 (this breaks the central assumption for precedence links, what to do about it?)
+
+
+## Linking objects to staves
+
+TODO ...
