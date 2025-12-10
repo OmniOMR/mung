@@ -501,7 +501,9 @@ class NoteheadSnapEngine:
         # Grace notes with leger lines should be snapped to staff only,
         # if there are no leger lines connections, the grace note has to be linked
         # to a staff position.
-        self._snap_grace_note_without_leger_lines_to_staff(grace, parent_staff.id)
+        if not self._graph.has_children(grace, class_filter=ClassNamesConstants.LEGER_LINE):
+            self._snap_grace_note_without_leger_lines_to_staff(grace, parent_staff.id)
+            print(f"Snapping {grace} to staff position")
         return 1
 
 
