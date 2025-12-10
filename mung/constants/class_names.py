@@ -8,6 +8,8 @@ class ClassNamesConstants:
     """
     STAFF_GROUPING = "staffGrouping"
     MEASURE_SEPARATOR = "measureSeparator"
+    BARLINE = "barline"
+    BARLINE_HEAVY = "barlineHeavy"
 
     KEY_SIGNATURE = "keySignature"
     TIME_SIGNATURE = "timeSignature"
@@ -75,6 +77,8 @@ class ClassNamesConstants:
     LETTER_OTHER = "characterOther"
 
     TREMOLO_MARK = "tremoloMark"
+
+    UNCLASSIFIED = "unclassified"
 
     @staticmethod
     def rest_name_to_duration(rest_name: str) -> Fraction:
