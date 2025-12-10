@@ -154,3 +154,8 @@ class Pitch:
             raise ValueError(f"MIDI note out of range (0-127): {midi_num} for {self}")
 
         return midi_num
+    
+    def __lt__(self, other: Self) -> bool:
+        if not isinstance(other, Pitch):
+            return NotImplemented
+        return self.to_midi() < other.to_midi()
