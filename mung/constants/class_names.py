@@ -46,11 +46,12 @@ class ClassNamesConstants:
     MULTI_MEASURE_REST = "multiMeasureRest"
     AUGMENTATION_DOT = "augmentationDot"
 
-    DYNAMIC_CRESHENDO = "dynamicCrescendoHairpin"
-    DYNAMIC_DIMINUENDO = "dynamicDiminuendoHairpin"
+    DYNAMIC_CRESHENDO_HAIRPIN = "dynamicCrescendoHairpin"
+    DYNAMIC_DIMINUENDO_HAIRPIN = "dynamicDiminuendoHairpin"
 
     TUPLE = "tuple"
-
+    TUPLE_BRACKET = "tupletBracket"
+    
     FLAG_8TH_UP = "flag8thUp"
     FLAG_8TH_DOWN = "flag8thDown"
     FLAG_16TH_UP = "flag16thUp"

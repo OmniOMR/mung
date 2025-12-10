@@ -1318,6 +1318,36 @@ def infer_stem_orientation(stem: Node, graph: NotationGraph) -> int:
     return 1
 
 
+def infer_vertical_object_placement_relative_to_notes(obj: Node, graph: NotationGraph, nodes: Optional[list[Node]] = None) -> int:
+    """
+    Computes the placement of the given object based on its
+    center's cumulative distance from attached noteheads.
+
+    `+1` means that the object is above,
+    `-1` below.
+    """
+    if nodes is None:
+        nodes = graph.parents(obj, class_filter=I.NOTEHEAD_CLASS_NAMES)
+    distance = sum(n.vertical_center - obj.vertical_center for n in nodes)
+    if distance < 0:
+        return -1
+    return 1
+
+def infer_horizontal_object_placement_relative_to_notes(obj: Node, graph: NotationGraph, nodes: Optional[list[Node]] = None) -> int:
+    """
+    Computes the placement of the given object based on its
+    center's cumulative distance from attached noteheads.
+
+    `+1` means that the object is on the left,
+    `-1` on the right.
+    """
+    if nodes is None:
+        nodes = graph.parents(obj, class_filter=I.NOTEHEAD_CLASS_NAMES)
+    distance = sum(n.horizontal_center - obj.horizontal_center for n in nodes)
+    if distance < 0:
+        return -1
+    return 1
+
 ##############################################################################
 
 def _nodes_or_graph_to_graph(nodes_or_graph: Iterable[Node] | NotationGraph) -> NotationGraph:

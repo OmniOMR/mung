@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 from .class_names import ClassNamesConstants as C
 from .general import STEP_ORDER
 
@@ -102,8 +104,8 @@ class InferenceEngineConstants(C):
     ]
 
     HAIRPINS = [
-        C.DYNAMIC_CRESHENDO,
-        C.DYNAMIC_DIMINUENDO,
+        C.DYNAMIC_CRESHENDO_HAIRPIN,
+        C.DYNAMIC_DIMINUENDO_HAIRPIN,
     ]
 
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
@@ -258,3 +260,5 @@ class InferenceEngineConstants(C):
         + REST_CLASS_NAMES
         + [C.REPEAT_ONE_BAR]
     ))
+
+    DEFAULT_MEASURE_DURATION = Fraction(4)
