@@ -14,8 +14,8 @@ class ChordComponentValidator:
     _CLASSES_TO_CHECK = [
         *InferenceEngineConstants.FLAGS_AND_BEAMS,
         ClassNamesConstants.TUPLE,
-        ClassNamesConstants.DYNAMIC_CRESHENDO,
-        ClassNamesConstants.DYNAMIC_DIMINUENDO,
+        ClassNamesConstants.DYNAMIC_CRESHENDO_HAIRPIN,
+        ClassNamesConstants.DYNAMIC_DIMINUENDO_HAIRPIN,
         ClassNamesConstants.SLUR
         ]
 
