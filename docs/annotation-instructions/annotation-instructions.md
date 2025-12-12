@@ -166,6 +166,13 @@ Staves are the first objects to be annotated, because lots of other objects link
   <img src="./img/staff-1.png" width="620"/>
 </p>
 
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+</details>
+
 ---
 
 
@@ -414,7 +421,7 @@ Flags are divided into separate classes according to their type and direction:
   <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="220"/>
 </p>
 
-- **`flag16thUp`** / **`flag16thDown`**  
+- **`flag16thUp`** / **`flag16thDown`**
   ⚠️ *Be careful:* If a single note has **two flags**, the outer is **8th** and the inner is **16th** (and the same for three flags - 8th, 16th, 32nd... and so on).
 - **`flag32ndUp`** / **`flag32ndDown`**
 - *(and so on for higher flag counts)*
@@ -461,6 +468,14 @@ Flags are divided into separate classes according to their type and direction:
 <p>
   <img src="./img/leger-line-1.png" alt="legerLine Example" width="450"/>
 </p>
+
+<!--
+TODO: co se slepování leger lines?
+E.g. https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+poslední staff
+
+Nevidím v tom problém, když to anotátor uzná za vhodné, tak je to možné. Při zpracovávání mungu se s tím musí počítat.
+-->
 
 ---
 
@@ -796,6 +811,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
   <img src="./img/accidental-sharp-1.png" alt="accidentalSharp Example" width="200"/>
 </p>
 
+<!--
+TODO: messy sharp:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+-->
+
 ---
 
 
@@ -937,6 +957,10 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 - A **container (parent) symbol** representing the entire key signature.
 - Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
 - <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
+
+<!--
+TODO: digram 0, a digram syntaxu
+-->
 
 <p>
   <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
@@ -1280,6 +1304,11 @@ When two time signatures are written next to each other, they represent an **alt
   <img src="./img/lyricsText-melisma-2.png" height="200"/>
 </p>
 
+<!--
+TODO: is this an extreme melisma? Use it as an example:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+-->
+
 - If two syllables are sung within one note (tied together), an undertie is used to join them. This is called an **elision**. Transcribe the undertie as this undertie character `‿` ([U+203F](https://www.compart.com/en/unicode/U+203F)) and treat the whole thing as a single syllable.
 
 > Copy the undertie character from here: `‿`
@@ -1521,6 +1550,12 @@ If you see some text and are unsure whether it's a tempo text, try looking it up
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
 </details>
+
+<!--
+TODO:
+Ritenuto with spanner:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+-->
 
 ---
 
@@ -1780,7 +1815,13 @@ What usually belongs here:
 
 <!--
 Ornamented terminal barline:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+Terminal barline:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+
 -->
 
 
@@ -1842,63 +1883,337 @@ Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussio
 ---
 
 
-## Staff Grouping (brackets and braces)
+## Staff Brackets and Dividers
 
 
 ### `brace`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
 *(Previously `staff_bracket` in CVAT, together with bracket)*
 
-- Represents the **curly brace `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
+<p>
+  <img src="./img/brace-0.png" height="200"/>
+  <img src="./img/brace-syntax.png" height="200"/>
+</p>
+
+- Represents the **curly brace `{`** that connects related staves together.
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. Their function may be interchanged in older documents.
 - Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
+- Must be <kbd>🔴 syntax</kbd> linked from a parent [`staffGrouping`](#staffgrouping).
+- Does NOT <kbd>🔴 syntax</kbd> link to staves. The parent `staffGrouping` does.
 
 <p>
-  <img src="./img/brace-1.png" alt="brace Example" width="150"/>
+  <img src="./img/brace-1.png" height="300"/>
+  <img src="./img/brace-2.png" height="300"/>
+  <img src="./img/brace-3.png" height="300"/>
+  <img src="./img/brace-4.png" height="300"/>
+  <img src="./img/brace-5.png" height="300"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+</details>
 
 ---
 
 
 ### `bracket`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
 *(Previously `staff_bracket` in CVAT, together with brace)*
 
-- Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
-- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
-
 <p>
-  <img src="./img/bracket-1.png" alt="bracket Example" width="300"/>
+  <img src="./img/bracket-0.png" height="200"/>
+  <img src="./img/bracket-syntax.png" height="200"/>
 </p>
 
+- Represents the **square bracket `[`** that connects related staves together (e.g., instrument families in orchestral scores).  
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. Their function may be interchanged in older documents.
+- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
+- Must be <kbd>🔴 syntax</kbd> linked from a parent [`staffGrouping`](#staffgrouping).
+- Does NOT <kbd>🔴 syntax</kbd> link to staves. The parent `staffGrouping` does.
+
+<p>
+  <img src="./img/bracket-1.png" height="300"/>
+  <img src="./img/bracket-2.png" height="300"/>
+  <img src="./img/bracket-3.png" height="300"/>
+  <img src="./img/bracket-4.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+</details>
 
 ---
+
 
 ### `staffGrouping`
 
-- An **abstract grouping class** for combining related staves or systems.
+*(`staffGrouping` is not part of SMuFL, because it is a container class)*
 
-**Note:**  
-If a system contains **multiple brackets, braces, and a barline**, annotate them as follows:
-- Each **barline** → `barlineSingle` 
-- Each **brace or bracket** → annotated individually as `brace` or `bracket`
-- Then create:
-  - **One long `staffGrouping`** spanning the entire barline, brace or bracket (covering all connected staves)  
-  - **Several shorter `staffGrouping` boxes**, each covering one brace or bracket
+- A **container class** for wrapping visual symbols that group together staves.
+- Use **convex hull** mask.
+- There are <kbd>🔴 syntax</kbd> links from the `staffGrouping` to all of its children (`barlineSingle`, `barlineHeavy`, `brace`, `bracket`).
+- There are <kbd>🔴 syntax</kbd> links from the `staffGrouping` to all the `staff` objects that the grouping groups together.
+- `staffGrouping` objects can be nested hierarchically (see more below).
 
-- `staffGrouping` is usually annotated as a **rectangle or polygon** — not tightly around the line or brace. This means the **areas of multiple `staffGrouping` may overlap**, which is perfectly fine.
+**In single-instrument documents:**
 
-In the example below, a **long `staffGrouping`** connects all staves via the main bracket,  
-while a **shorter `staffGrouping`** encloses the brace on the left side.
+- If there are NO barlines before the first measure, there is NO `staffGrouping` object.
+- If there ARE barlines before the first measure, then:
+  - Each barline is a separate `barlineSingle` object (or `barlineHeavy`).
+  - Each barline is wrapped in a single `staffGrouping` container.
+  - There are <kbd>🔴 syntax</kbd> links from each `staffGrouping` to all of its barlines and to the `staff` they sit on.
 
 <p>
-  <img src="./img/staff-grouping-1.png" alt="staffGrouping Example" width="200"/>
+  <img src="./img/staffGrouping-mono-0.png" height="200"/>
+  <img src="./img/staffGrouping-mono-syntax.png" height="200"/>
+  <img src="./img/staffGrouping-mono-missing.png" height="200"/>
+  <img src="./img/staffGrouping-mono-double.png" height="200"/>
 </p>
 
-- Previous [CVAT staffGrouping rules](https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410)
+Here, there are no staff groupings (only measure separators), because there are no leading barlines / brackets / braces:
+
+<p>
+  <img src="./img/staffGrouping-mono-1.png" height="100"/>
+  <img src="./img/staffGrouping-mono-2.png" height="100"/>
+  <img src="./img/staffGrouping-mono-3.png" height="100"/>
+</p>
+
+Here are staff groupings for leading double or single barlines:
+
+<p>
+  <img src="./img/staffGrouping-mono-4.png" height="100"/>
+  <img src="./img/staffGrouping-mono-5.png" height="100"/>
+  <img src="./img/staffGrouping-mono-6.png" height="100"/>
+</p>
+
+**In piano documents:**
+
+- The `staffGrouping` <kbd>🔴 syntax</kbd> links to both `staff` objects.
+- The `staffGrouping` may have not only barlines, but also a brace as a child. It <kbd>🔴 syntax</kbd> links to its barlines and the brace.
+- The barline may be missing, which is ok. It may also be a heavy barline. Or the brace may be missing. Or there may be two barlines (of the same length).
+- The brace and barlines must span THE SAME staves. If there are two singe-staff barlines, then they define nested `staffGrouping` objects (more on nested groupings below).
+
+<p>
+  <img src="./img/staffGrouping-piano-0.png" height="200"/>
+  <img src="./img/staffGrouping-piano-syntax.png" height="200"/>
+</p>
+
+Here are piano staff groupings with a brace, two barlines and a brace and a barline:
+
+<p>
+  <img src="./img/staffGrouping-piano-1.png" height="200"/>
+  <img src="./img/staffGrouping-piano-2.png" height="200"/>
+  <img src="./img/staffGrouping-piano-3.png" height="200"/>
+</p>
+
+**In piano and voice documents:**
+
+- Piano with a voice is the simplest case of a nested `staffGrouping` (if there is a long barline joining the voice to the piano grandstaff).
+- The long barline defines the top-level `staffGrouping`, which <kbd>🔴 syntax</kbd> links to:
+  - The long `barlineSingle` spanning all staves.
+  - All `staff` objects that the barline spans.
+  - The nested `staffGrouping` which wraps the piano grandstaff.
+- The `brace` defines the nested `staffGrouping`. It is <kbd>🔴 syntax</kbd> linked FROM the top-level `staffGrouping` and it <kbd>🔴 syntax</kbd> links TO:
+  - The `brace` object.
+  - The two `staff` objects for the piano part.
+- The nested `staffGrouping` does not own the barline, because the barline spans different number staves then the brace.
+- There is a new <kbd>🔴 syntax</kbd> link between the two `staffGrouping` objects. This is because, the smaller `staffGrouping` is completely contained inside the staves of the larger `staffGrouping`.
+
+<p>
+  <img src="./img/staffGrouping-pianovoice-0.png" height="250"/>
+  <img src="./img/staffGrouping-pianovoice-syntax.png" height="250"/>
+</p>
+
+Here are two staff groupings, the smaler one groups the two piano staves and links to the `brace` and the larger one groups all three staves and links to the smaler `staffGrouping` and to the long `barline`:
+
+<p>
+  <img src="./img/staffGrouping-pianovoice-1.png" height="250"/>
+</p>
+
+**In multi-instrument documents:**
+
+In more complex pieces, use this process:
+
+1. Annotate all barlines, braces and brackets.
+2. Wrap these objects in `staffGrouping` (and those that span the same staves share the same `staffGrouping`).
+3. Add <kbd>🔴 syntax</kbd> links from each `staffGrouping` to its barlines, braces and brackets.
+4. Add <kbd>🔴 syntax</kbd> links from each `staffGrouping` to its staves.
+5. Add <kbd>🔴 syntax</kbd> links from each larger `staffGrouping` to each smaller, contained `staffGrouping`.
+
+Here, the `bracket` and the `barlineSingle` span the same staves, so they share one `staffGrouping`. It is analogous to piano parts above, just with 4 staves:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-1.png" height="250"/>
+</p>
+
+Here there's just one `brace` spanning 5 staves. Again, analogous to piano parts:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-2.png" height="250"/>
+</p>
+
+Here, there are two separate `systemGrouping`s for one system WITHOUT any parent `systemGrouping`. There is no parent grouping, because there is no barline spanning all staves. This is the reason why systems are also defined by measure separators since there is no guarantee a single `staffGrouping` will span the whole system:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-3a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-3b.png" height="300"/>
+</p>
+
+Here, there are separate short stafflines for each staff. Each defines its own little staff grouping (just like in single-insturment cases above). The hierarchy of staff groupings here is therefore quite deep and complex: a top-level one for the `brace`, another smaler one for the second `brace` and then many single-staff ones for all the `barlineSingle` objects:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-4a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-4b.png" height="300"/>
+</p>
+
+Here we have just a `barline`, a `brace`, and a `bracket`. The barline defines the top-level `staffGrouping` and then there are two shorter ones for the `brace`, and the `bracket`:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-5a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-5b.png" height="300"/>
+</p>
+
+**In particello documents:**
+
+The most complex are particello documents - documents where the whole page is just a single system and there are all the instruments. However the logic stays the same as in multi-instrument documents. There is just one additional rule to keep in mind:
+
+- If a barline spans an empty staff, that staff is ALSO CONNECTED to the `staffGrouping` defined by that barline (same applies to braces, brackets, and measure separators).
+
+This example does have the all-spanning barline. The two smaler groupings (the two braces) are nested underneath the top-level staff grouping. Again, the empty staves ARE connected:
+
+<p>
+  <img src="./img/staffGrouping-particello-2a.png" height="300"/>
+  <img src="./img/staffGrouping-particello-2b.png" height="300"/>
+</p>
+
+Here, the particello is missing the leading barline that would connect the all the staves together. This makes it a collection of separate small staff groupings. There are also the double-barline staff groupings that can be seen above in the single-instrument examples. Notice the empty staves in the middle are NOT connected by any staff grouping (beacuse there isn't any), instead they are connected by the measure separators:
+
+<p>
+  <img src="./img/staffGrouping-particello-1a.png" height="300"/>
+  <img src="./img/staffGrouping-particello-1b.png" height="300"/>
+</p>
+
+
+**Additional regards:**
+
+- `staffGrouping` is annotated as a **rectangle or polygon**. This means the **areas of multiple `staffGrouping` may overlap**, which is perfectly fine. Make groupings spanning more staves larger to make it easier to see and click on them. Also, don't be too tight so that a reviewer can clearly see the grouping object.
+- `staffGrouping` objects can be nested in which case the larger grouping <kbd>🔴 syntax</kbd> links to those smaller groupings it contains.
+- Staff grouping must always have some visible symbol that defines it (barline, brace, bracket). Empty or "artificial" staff groupings are not allowed. To group staves into a system, use measure separators instead.
+- The visual symbols of one staff grouping (barlines, braces, brackets) must span THE SAME systems. Otherwise you are looking at multiple staff groupings.
+- Empty staves should ALSO be grouped by staff groupings and measure separators. The fact that they are empty has no effect.
+
+<details>
+  <summary>🤔 Does staff grouping define a system? NO! Because...</summary>
+
+  The `staffGrouping` objects are not enough to define a system (a set of staves that play simultanously). You must also consider `measureSeparator` objects to see how are staves grouped together. Here is a counter-example where there are two separate `staffGroupings` in a single system: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+
+  Here is another example of a particello: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Single-instrument (NO staff grouping)
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_c98a8dd2-1141-48c8-a594-ee15db270b02
+  - Single-instrument (WITH staff grouping)
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - Piano
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - Piano and Voice
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - Multi-instrument
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - Particello
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_38de73a6-8f92-4876-bda7-c71925d04dcd
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_47f48e77-9fbc-41bb-9fb0-8c6ed0876d04
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410
+</details>
 
 ---
+
+
+## `systemDivider`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
+*(Called `system_break` in CVAT)*
+
+- Two lines between staves which signal that the staves above and below this symbol belong to different systems.
+- Annotate **precisely** around the symbol.
+- Both lines form a single object.
+- `systemDivider` <kbd>🔴 syntax</kbd> links to the upper `staff`.
+
+<p>
+  <img src="./img/systemDivider-1.png" height="300"/>
+  <img src="./img/systemDivider-2.png" height="200"/>
+  <img src="./img/systemDivider-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🤔 Does a system divider define a system? NO! Because...</summary>
+
+  The `systemDivider` symbol is not mandatory - it often is not explicitly written in the document. It is only a reading aid. It cannot be relied upon to determine which staves form systems. For that, `measureSeparator` and `staffGrouping` objects must be used.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+</details>
+
+---
+
+<!--
+## `splitBarDivider`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
+- Any symbol at the end of the staff that mean "the measure is broken in half and the second half is on the next line/page". Check that the measure duration is shorter than expected!
+- **⚠️ Warning**: Do not confuse with [`custos`](#custos), which signals where the next note on the next line/page will be. 
+- Annotate **precisely** around the symbol.
+- `splitBarDivider` <kbd>🔴 syntax</kbd> links to the `staff`.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - ... TO BE FOUND ...
+</details>
+
+---
+-->
 
 
 ## Articulation
@@ -2272,10 +2587,18 @@ TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zav
 https://w3c.github.io/smufl/latest/tables/repeats.html
 Serpent segno examples:
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
 - https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/
 
 Half-bar repeat annotated as "otherText":
 https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+
+Voltas:
+028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+
+Bug-repeat:
+db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
 -->
 
 A **repetition mark** is composed of several elements:
@@ -2324,6 +2647,9 @@ TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což
 
 <!--
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
 -->
 
 ---
@@ -2346,6 +2672,9 @@ dvě čárky = "dtto", stejně jako to předtím
 "interpretační pokyny = čti noty jinde"
 
 Samples:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
 
 ---
@@ -2611,6 +2940,7 @@ Half notes can afford to have the tremolo beams connected to the stem (since hal
 
 <!--
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
 -->
 
 
@@ -2669,6 +2999,10 @@ A grace note is composed of:
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
 </details>
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+
+Opravdu obskurní akordová grace nota a nad ní trámcované gracenoty:
+48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+(přidat i do slurs a ties AI, ohledně syntax grafu)
 -->
 
 ---
@@ -2846,37 +3180,16 @@ indicating the continuation of the trill.
 <p>
   <img src="./img/custos-2.png" height="200"/>
   <img src="./img/custos-3.png" height="200"/>
+  <img src="./img/custos-4.png" height="200"/>
 </p>
 
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b75
 </details>
-
----
-
-
-## `systemDivider`
-
-> **🚧 Under construction.**
-
-*(Called `system_break` in CVAT)* 
-
-TODO: image
-
----
-
-
-## `splitBarDivider`
-
-> **🚧 Under construction.**
-
-- napojení taktu (ta vlnovka na konci)
-
-<p>
-  <img src="./img/split-bar-divider-1.png" alt="splitBarDivider Example" width="300"/>
-</p>
 
 ---
 
@@ -2918,6 +3231,8 @@ TODO: the first example document below also contains pedal markings
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+
+  48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
 </details>
 -->
 
