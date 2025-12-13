@@ -477,6 +477,12 @@ poslední staff
 Nevidím v tom problém, když to anotátor uzná za vhodné, tak je to možné. Při zpracovávání mungu se s tím musí počítat.
 -->
 
+If leger lines for multiple noteheads form one long line, then we split it into multiple shorter leger lines. Long leger lines would be of no benefit when processing the data:
+
+<p>
+  <img src="./img/legerLine-long.png" height="200"/>
+</p>
+
 ---
 
 
