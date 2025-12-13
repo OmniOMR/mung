@@ -1112,17 +1112,36 @@ While the G and F clefs almost always sit on the same line, C clef is often plac
 
 ## `keySignature`
 
-- A **container (parent) symbol** representing the entire key signature.
-- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
-- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
-
-<!--
-TODO: digram 0, a digram syntaxu
--->
+*(`keySignature` is not part of SMuFL, because it is a container class)*
 
 <p>
-  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
+  <img src="./img/keySignature-0.png" height="200"/>
+  <img src="./img/keySignature-syntax.png" height="200"/>
 </p>
+
+- A **container object** representing the entire key signature.
+- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
+- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it.
+- Additional <kbd>🔴 syntax</kbd> link leads to the `staff`.
+- Individual accidentals are NOT linked to staff lines / staff spaces.
+
+<p>
+  <img src="./img/keySignature-1.png" height="150"/>
+  <img src="./img/keySignature-2.png" height="150"/>
+</p>
+
+<details>
+  <summary>🤔 Why not link accidentals to stafflines?</summary>
+
+  Accidentals are often not positioned precisely, insted their count is what matters. Moreover, even the MusicXML standard does not support key signature accidental positioning, it only counts them. Therefore we also ignore their exact position.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
 
 ---
 
@@ -1384,7 +1403,8 @@ Used to communicate the semantic grouping of beats within a measure. The example
 
 - A **container class** for grouping all elements that form a time signature (see the elements listed above).
 - Create one container for the whole time signature.
-- There is one <kbd>🔴 syntax</kbd> going from the container to each of the elements making up the time signature (numbers, slashes, plus, equals).
+- There is one <kbd>🔴 syntax</kbd> link going from the container to each of the elements making up the time signature (numbers, slashes, plus, equals).
+- There is one additional <kbd>🔴 syntax</kbd> link going to the `staff`.
 - The elements inside the time signature are linked together via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-to-bottom). See the precedence diagrams above.
 
 This is what the syntax and precerence graph hierarchy for the time signature container looks like:
@@ -3486,6 +3506,7 @@ indicating the continuation of the trill.
 - Annotate with **precise mask**.
 - Add <kbd>🔴 syntax</kbd> links to leger lines and accidentals.
 - Link it from the preceding notehead or rest via <kbd>🟢 precedence</kbd> links, as if it was a regular notehead.
+- Add <kbd>🔴 syntax</kbd> links to the `staff` and `staffLine` or `staffSpace`, just like noteheads have.
 
 <p>
   <img src="./img/custos-2.png" height="200"/>
