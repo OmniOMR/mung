@@ -469,19 +469,20 @@ Flags are divided into separate classes according to their type and direction:
   <img src="./img/leger-line-1.png" alt="legerLine Example" width="450"/>
 </p>
 
-<!--
-TODO: co se slepování leger lines?
-E.g. https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
-poslední staff
-
-Nevidím v tom problém, když to anotátor uzná za vhodné, tak je to možné. Při zpracovávání mungu se s tím musí počítat.
--->
-
 If leger lines for multiple noteheads form one long line, then we split it into multiple shorter leger lines. Long leger lines would be of no benefit when processing the data:
 
 <p>
   <img src="./img/legerLine-long.png" height="200"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+</details>
 
 ---
 
@@ -874,45 +875,137 @@ TODO: image
 
 ### `gClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_g`)*
 
+<p>
+  <img src="./img/gClef-0.png" height="200"/>
+  <img src="./img/gClef-syntax.png" height="200"/>
+</p>
+
 - Always **leave out the center!** Don’t just outline the shape.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` it sits on (the second lowest `staffLine`).
+- The G clef almost always sits on the second-lowest staffline, therefore it is often written imprecisely. Even if it does not sit visually on that line, link it to that line, unless you are sure from the music and context (e.g. printed music is precise) that it is positioned differently.
 
 <p>
-  <img src="./img/g-clef-2.png" alt="gClef Example" width="135"/>
-  <img src="./img/g-clef-1.png" alt="gClef Example" width="140"/>
+  <img src="./img/gClef-1.png" height="150"/>
+  <img src="./img/gClef-2.png" height="150"/>
+  <img src="./img/gClef-3.png" height="150"/>
+  <img src="./img/gClef-4.png" height="150"/>
+  <img src="./img/gClef-5.png" height="150"/>
 </p>
+
+The G clef has undergone an evolution so these are the variants you may come across. All are annotated as `gClef`:
+
+<p>
+  <img src="./img/gClef-evolution.jpg" height="150"/>
+</p>
+
+> Source: Harvard Dictionary of Music and Wikipedia, [here](https://www.smithsonianmag.com/arts-culture/the-evolution-of-the-treble-clef-87122373/).
+
+This is a sloppy G clef. It does not sit on the staffline properly and is drawn quite low on the staff. However, G clef almost always sits on the second staffline from the bottom, so it is linked to that staffline:
+
+<p>
+  <img src="./img/gClef-sloppy1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
 
 ---
 
 
 ### `gClefChange`
 
-- Used when the **clef changes in the middle of the staff** to a G clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
 
-TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+<p>
+  <img src="./img/gClefChange-0.png" height="200"/>
+</p>
+
+- Used when the **clef changes in the middle of the staff** to a G clef.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `gClef`.
+
+<p>
+  <img src="./img/gClefChange-1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
 
 ### `fClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_f`)*
 
 <p>
-  <img src="./img/f-clef-1.png" alt="fClef Example" width="200"/>
+  <img src="./img/fClef-0.png" height="200"/>
+  <img src="./img/fClef-syntax.png" height="200"/>
 </p>
+
+- Annotate **precisely** around the symbol.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` that goes in between the two dots.
+- The F clef almost always sits on the second-highest staffline, therefore it is often written imprecisely. Even if it does not sit visually on that line, link it to that line, unless you are sure from the music and context (e.g. printed music is precise) that it is positioned differently.
+
+<p>
+  <img src="./img/fClef-1.png" height="150"/>
+  <img src="./img/fClef-2.png" height="150"/>
+  <img src="./img/fClef-3.png" height="150"/>
+  <img src="./img/fClef-4.png" height="150"/>
+</p>
+
+This is a sloppy F clef. It is positioned low, but links to the second staffline from top, because it is a bass of a piano part an that's always the second staffline from top:
+
+<p>
+  <img src="./img/fClef-sloppy1.png" height="150"/>
+  <img src="./img/fClef-sloppy2.png" height="150"/>
+  <img src="./img/fClef-sloppy3.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
 
 ---
 
 
 ### `fClefChange`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
+<p>
+  <img src="img/fClefChange-0.png" height="200"/>
+</p>
+
 - Used when the **clef changes in the middle of the staff** to an F clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `fClef`.
 
 <p>
   <img src="img/fClefChange-1.png" height="150"/>
@@ -922,7 +1015,9 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  <!--TODO:
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+  -->
 </details>
 
 ---
@@ -930,20 +1025,58 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 
 ### `cClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_c`)*
 
 <p>
-  <img src="./img/c-clef-1.png" alt="cClef Example" width="150"/>
+  <img src="./img/cClef-0.png" height="200"/>
+  <img src="./img/cClef-syntax.png" height="200"/>
 </p>
+
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` that goes through the center of the clef.
+- The C clef (unlike the two others) IS OFTEN placed on different stafflines. Be careful and link it to the proper staffline.
+
+<p>
+  <img src="./img/cClef-1.png" height="150"/>
+  <img src="./img/cClef-2.png" height="150"/>
+  <img src="./img/cClef-3.png" height="150"/>
+  <img src="./img/cClef-4.png" height="150"/>
+  <img src="./img/cClef-5.png" height="150"/>
+</p>
+
+While the G and F clefs almost always sit on the same line, C clef is often placed in different positions. When <kbd>🔴 syntax</kbd> linking to a staffline, be careful and precise. Here is the same clef in three different positions:
+
+<p>
+  <img src="./img/cClef-p1.png" height="150"/>
+  <img src="./img/cClef-p2.png" height="150"/>
+  <img src="./img/cClef-p3.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+</details>
 
 ---
 
 
 ### `cClefChange`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
+<p>
+  <img src="img/cClefChange-0.png" height="200"/>
+</p>
+
 - Used when the **clef changes in the middle of the staff** to a C clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `cClef`.
 
 <p>
   <img src="img/cClefChange-1.png" height="150"/>
@@ -2114,7 +2247,6 @@ Here are staff groupings for leading double or single barlines:
 <p>
   <img src="./img/staffGrouping-mono-4.png" height="100"/>
   <img src="./img/staffGrouping-mono-5.png" height="100"/>
-  <img src="./img/staffGrouping-mono-6.png" height="100"/>
 </p>
 
 **In piano documents:**
@@ -3075,6 +3207,21 @@ Half notes can afford to have the tremolo beams connected to the stem (since hal
 > **🚧 Under construction.**
 
 - zatím pro to není třída (ani SMuFL pro to nemá nic)
+
+---
+
+
+## Fingering
+
+> **🚧 Under construction.**
+
+Prstokladová čísla
+
+SMuFL:
+https://w3c.github.io/smufl/latest/tables/fingering.html
+
+druhý systém uprostřed v piánu:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/fe2c5c10-00c6-11f0-9b34-5ef3fc9bb22f_9a377034-e508-4794-ac10-86796d56b563
 
 ---
 
