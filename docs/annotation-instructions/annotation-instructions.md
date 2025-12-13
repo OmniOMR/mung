@@ -3239,6 +3239,8 @@ indicating the continuation of the trill.
 
 ### `ornamentTurn`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
 *(Previously grouped under `ornament` in CVAT.)*
 
 - <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
@@ -3251,6 +3253,8 @@ indicating the continuation of the trill.
 
 
 ### `ornamentTurnInverted`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
 *(Previously grouped under `ornament` in CVAT.)*
 
@@ -3266,6 +3270,30 @@ indicating the continuation of the trill.
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+</details>
+
+---
+
+### `ornamentShortTrill`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+<p>
+  <img src="./img/ornamentShortTrill-0.png" height="200"/>
+  <img src="./img/ornamentShortTrill-syntax.png" height="200"/>
+</p>
+
+- Short trill wavy line above a notehead. If it reads "tr", then it's `ornamentTrill`, otherwise it's `ornamentShortTrill`.
+- <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
+
+<p>
+  <img src="./img/ornamentShortTrill-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
 </details>
 
 ---
@@ -3328,23 +3356,35 @@ TODO: the first example document below also contains pedal markings
 
 ## `arpeggiato`
 
-> **🚧 Under construction.**
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/plucked-techniques.html))*
 
 *(Previously grouped under `ornament` in CVAT.)*  
 
-- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
-- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+<p>
+  <img src="./img/arpeggiato-0.png" height="200"/>
+  <img src="./img/arpeggiato-syntax.png" height="200"/>
+</p>
 
-<!--
+- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.
+- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+- If it has an arrow up/down, then it's an `arpeggiatoUp` or `arpeggiatoDown`.
+- Add <kbd>🔴 syntax</kbd> links from each affected notehead to the `arpeggiato` symbol.
+
+<p>
+  <img src="./img/arpeggiato-1.png" height="200"/>
+  <img src="./img/arpeggiato-2.png" height="200"/>
+  <img src="./img/arpeggiato-3.png" height="200"/>
+  <img src="./img/arpeggiato-4.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
-
-  48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
 </details>
--->
 
 ---
 
