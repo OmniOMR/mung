@@ -1813,58 +1813,129 @@ What usually belongs here:
 
 ## Barlines
 
-<!--
-Ornamented terminal barline:
-Terminal barline:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
-
--->
-
 
 ### `barlineSingle`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
 *(Called `thin_barline` in CVAT)*  
+
+<p>
+  <img src="./img/barlineSingle-0.png" height="200"/>
+</p>
 
 - Represents a **single thin barline**.  
 - Annotate **precisely around the entire shape**.
+- Double-barline is annotated as two `barlineSingle` objects.
+- Must be <kbd>🔴 syntax</kbd> linked from `staffGrouping` or `measureSeparator`.
 
 <p>
-  <img src="./img/barline-single-1.png" alt="barlineSingle Example" width="180"/>
+  <img src="./img/barlineSingle-1.png" height="100"/>
+  <img src="./img/barlineSingle-2.png" height="100"/>
+  <img src="./img/barlineSingle-3.png" height="100"/>
+  <img src="./img/barlineSingle-4.png" height="200"/>
+  <img src="./img/barlineSingle-5.png" height="200"/>
+  <img src="./img/barlineSingle-6.png" height="200"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
 
 ---
 
 
 ### `barlineHeavy`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
 *(Called `barline_thick` in CVAT)*
 
+<p>
+  <img src="./img/barlineHeavy-0.png" height="200"/>
+</p>
+
 - Represents a **thick barline**, usually used at section endings.
+- Annotate **precisely around the entire shape**.
+- Must be <kbd>🔴 syntax</kbd> linked from `staffGrouping` or `measureSeparator`.
+- Differentiate between `barlineSingle` and `barlineHeavy` based on document context. If all barlines in the document are thick, they are just `barlineSingle`. Only the more-emphasized barlines are `barlineHeavy`.
 
 <p>
-  <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
+  <img src="./img/barlineHeavy-1.png" height="200"/>
+  <img src="./img/barlineHeavy-2.png" height="200"/>
+  <img src="./img/barlineHeavy-3.png" height="200"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+</details>
+
+---
+
+
+### `barlineFinal`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
+<p>
+  <img src="./img/barlineFinal-0.png" height="200"/>
+</p>
+
+- Represents an ornamented barline, only used at the end of a song.
+- Annotate **precisely around the entire shape**.
+- Must be <kbd>🔴 syntax</kbd> linked from `measureSeparator`.
+- Annotate only as `barlineFinal`, if the barline symbol can NOT be used anywhere else, other than at the end of a song (e.g. in a repeat). Otherwise it's likely just a combination of `barlineSingle` and `barlineHeavy`.
+
+<p>
+  <img src="./img/barlineFinal-1.png" height="200"/>
+  <img src="./img/barlineFinal-2.png" height="200"/>
+  <img src="./img/barlineFinal-3.png" height="200"/>
+  <img src="./img/barlineFinal-4.png" height="200"/>
+  <img src="./img/barlineFinal-5.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+</details>
 
 ---
 
 
 ### `measureSeparator`
 
+*(`measureSeparator` is not part of SMuFL, because it is a container class)*
+
 *(Called `measure_separator` in CVAT)*
 
-- The `staffGrouping` symbols define which staves belong to the same **system** (or **subsystem**) - for example, multi-staff instruments like piano, or sectional groupings in orchestral scores.
-- ⚠️ At the **beginning of a system**, a `measureSeparator` should **not** be annotated, to avoid duplicating the final barline of the previous system.
+<p>
+  <img src="./img/measureSeparator-0.png" height="200"/>
+  <img src="./img/measureSeparator-syntax.png" height="200"/>
+</p>
 
-There should always be **exactly one continuous `measureSeparator` per system**,  
-regardless of how it appears visually:
-
-- It may be drawn as several **short individual barlines**,  
-- as one **long barline**,  
-- or a **combination** of both.
+- A **container object** that groups together all barlines that represent a measure boundary.
+- There should always be **exactly one continuous `measureSeparator` per system**, regardless of how it appears visually:
+  - It may be drawn as several **short individual barlines**,  
+  - as one **long barline**,  
+  - or a **combination** of both.
+- It has <kbd>🔴 syntax</kbd> links to all of its barlines.
+- It has <kbd>🔴 syntax</kbd> links to all staves of the system.
+- All barlines should belong to some `measureSeparator`, except for barlines at the very beginning of staves, which belong to `staffGrouping` (see below). Therefore barlines in repeats, section breaks and song endings all have a corresponding `measureSeparator`.
 
 The example below shows **four** `measureSeparator` **regions** (blue rectangles) spanning all staves, and **two** `staffGrouping` **boxes** at the start of the system.
 
@@ -1878,7 +1949,46 @@ Similar case below (annotated in MuNG): The **fourth** `measureSeparator` should
   <img src="./img/measure-separator-2.png" alt="measureSeparator Example" width="700"/>
 </p>
 
-Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussions/24)
+Measure separators are used even in single-instrument documents:
+
+<p>
+  <img src="./img/measureSeparator-1.png" height="100"/>
+</p>
+
+Regions which do not look like measures (e.g. have no content) are also bound by measure separators, because those barlines need a parent. We interpret this area as an empty measure:
+
+<p>
+  <img src="./img/measureSeparator-2.png" height="200"/>
+</p>
+
+Measure separators are crucial in defining systems, where staff groupings are not connected together or even where staves are not connected by long barlines:
+
+<p>
+  <img src="./img/measureSeparator-3.png" height="300"/>
+  <img src="./img/measureSeparator-4.png" height="300"/>
+</p>
+
+<details>
+  <summary>🤔 Does measure separator define a system? YES! And...</summary>
+
+  All `measureSeparator` objects are responsible for grouping staves into systems. This is because they MUST reference all staves of a system, even if there is no single barline spanning all of those staves. The `staffGrouping` object is helpful and can also be used to aid in detecting systems, however there may not be a single `staffGrouping` spanning all staves if there is no visual element that does thata (bracket, brace, barline). Therefore relying on `measureSeparators` is a mandatory fallback.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/24
+</details>
 
 ---
 
