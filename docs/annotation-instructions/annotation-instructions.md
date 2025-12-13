@@ -542,6 +542,7 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 *(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
 
 - Rests participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
+- Rests are <kbd>🔴 syntax</kbd> linked to their `staff`. This is [automated](#linking-objects-to-staves) for the common rests, but needs to be done manually for the rare ones (longa, HBar).
 
 
 ### `restWhole`
@@ -552,10 +553,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restWhole-0.png" height="200"/>
+  <img src="./img/restWhole-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 4 beats.
 - Even if it does not hang from a line precisely, if it takes up 4 beats, annotate it as a whole rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it hangs from. 
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
@@ -574,10 +577,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restHalf-0.png" height="200"/>
+  <img src="./img/restHalf-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 2 beats.
 - Even if it does not sit on a line precisely, if it takes up 2 beats, annotate it as a whole rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it sits on. 
 
 <p>
@@ -595,10 +600,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restQuarter-0.png" height="200"/>
+  <img src="./img/restQuarter-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1 beat.
 - Has a large number of appearances and styles. If there's a rest and you're unsure what it is, it likely is a quarter rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/restQuarter-1.png" height="200"/>
@@ -626,9 +633,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest8th-0.png" height="200"/>
+  <img src="./img/rest8th-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/2 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/rest8th-1.png" height="200"/>
@@ -645,9 +654,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest16th-0.png" height="200"/>
+  <img src="./img/rest16th-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/4 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/rest16th-1.png" height="200"/>
@@ -664,9 +675,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest32nd-0.png" height="200"/>
+  <img src="./img/rest32nd-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/8 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 ---
 
@@ -679,10 +692,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restLonga-0.png" height="200"/>
+  <img src="./img/restLonga-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 16 beats (4 whole rests).
 - Often represents a rest longer than one measure.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
 <p>
@@ -708,10 +723,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restDoubleWhole-0.png" height="200"/>
+  <img src="./img/restDoubleWhole-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 8 beats (2 whole rests).
 - Often represents a rest longer than one measure.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
 <p>
@@ -743,12 +760,14 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restHBar-0.png" height="200"/>
+  <img src="./img/restHBar-syntax.png" height="200"/>
   <img src="./img/restHBar-precedence.png" height="200"/>
 </p>
 
 - Represents a rest for a given number of measures (the number of measures is written above)
 - The number above the HBar is a `restText`, [see below](#resttext).
 - The HBar symbol participates in the <kbd>🟢 precedence</kbd> graph like any other rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/restHBar-1.png" height="200"/>
