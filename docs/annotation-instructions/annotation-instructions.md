@@ -178,19 +178,32 @@ Staves are the first objects to be annotated, because lots of other objects link
 
 ## Noteheads
 
+<p>
+  <img src="./img/noteheads-syntax.png" height="200"/>
+</p>
+
 - There are many <kbd>🔴 syntax</kbd> links going from noteheads to other symbols. Because there are so many, they are mentioned at those other smybols (e.g. `stem`, accidentals, flags), instead of here.
+- There are <kbd>🔴 syntax</kbd> links to `staff` and `staffLine` or `staffSpace`, there are, however, [automatically assigned](#linking-objects-to-staves) for common noteheads (black, half). They need to be assigned manually for small noteheads and verified after the assignment to make sure there are no mistakes.
 - Noteheads participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
 
 
 ### `noteheadWhole`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+*(Previously in CVAT: `notehead_empty`)*
+
 <p>
   <img src="./img/noteheadWhole-0.png" height="200"/>
-  <img src="./img/noteheadWhole-1.png" height="200"/>
 </p>
+
 
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
+
+<p>
+  <img src="./img/noteheadWhole-1.png" height="200"/>
+</p>
 
 <details>
   <summary>🤔 Why differentiate whole/half noteheads if they look identical?</summary>
@@ -209,11 +222,19 @@ Staves are the first objects to be annotated, because lots of other objects link
 
 ### `noteheadHalf`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+*(Previously in CVAT: `notehead_empty`)*
+
+<p>
+  <img src="./img/noteheadHalf-0.png" height="200"/>
+</p>
+
 - Always **leave out the center**. Don’t just outline the shape.
 
 <p>
-  <img src="./img/notehead-half-1.png" alt="noteheadHalf example" width="300"/>
-  <img src="./img/notehead-half-2.png" alt="noteheadHalf example 2" width="220"/>
+  <img src="./img/noteheadHalf-1.png" height="200"/>
+  <img src="./img/noteheadHalf-2.png" height="200"/>
 </p>
 
 ---
@@ -221,17 +242,61 @@ Staves are the first objects to be annotated, because lots of other objects link
 
 ### `noteheadBlack`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
 *(Previously in CVAT: `notehead_full`. You may find `noteheadFull` in MuNG, but **do NOT use it.**)*
 
 <p>
-  <img src="./img/notehead-black-1.png" alt="noteheadBlack Example" width="200"/>
-  <img src="./img/notehead-black-2.png" alt="noteheadBlack Example 2" width="175"/>
+  <img src="./img/noteheadBlack-0.png" height="200"/>
+</p>
+
+<p>
+  <img src="./img/noteheadBlack-1.png" height="200"/>
+  <img src="./img/noteheadBlack-2.png" height="200"/>
 </p>
 
 ---
 
 
+## `noteheadBlackSmall`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+<p>
+  <img src="./img/noteheadBlackSmall-0.png" height="200"/>
+</p>
+
+- Smaller than other noteheads in the document.
+- Used in [Grace notes](#grace-notes), see that section for more info.
+- There are also variants `noteheadWholeSmall` and `noteheadHalfSmall`, but those have not yet been spotted in the data.
+
+<p>
+  <img src="./img/noteheadBlackSmall-1.png" height="200"/>
+  <img src="./img/noteheadBlackSmall-2.png" height="200"/>
+  <img src="./img/noteheadBlackSmall-3.png" height="200"/>
+</p>
+
+In sloppy handwriting they often have the same size as regular noteheads. They must be identified by the fact that they take up zero duration, because they are [grace notes](#grace-notes):
+
+<p>
+  <img src="./img/noteheadBlackSmall-sloppy1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
+
+---
+
+
 ## `augmentationDot`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/individual-notes.html))*
 
 *(Previously in CVAT: `duration_dot`)*
 
@@ -3267,25 +3332,59 @@ https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/fe2c5c10-00c6
 
 ## Grace notes
 
-> **🚧 Under construction.**
-
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
-A grace note is composed of:
-
-- `noteheadWholeSmall` / `noteheadHalfSmall` / `noteheadBlackSmall`
-
 <p>
-  <img src="./img/notehead-black-small-1.png" alt="noteheadBlackSmall Example" width="350"/>
+  <img src="./img/grace-notes.png" height="200"/>
 </p>
 
-- Uses a standard `stem`, `flag(number)th(Up/Down)`, `beam`
+- Grace notes are notes that have zero musical duration and are played fast, just before another note.
+- They are identified by having smaller noteheads, which should be annotated as [`noteheadBlackSmall`](#noteheadblacksmall), see the link.
+- Other symbols, like stems, beams, flags, accidentals are annotated with the usual classes (`stem`, `beam`, `flag8thUp`, `accidentalSharp`).
+- These other symbols are <kbd>🔴 syntax</kbd> linked from `noteheadBlackSmall` noteheads as usual.
 
 <p>
-  <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
+  <img src="./img/grace-notes-syntax-internal.png" height="200"/>
 </p>
 
-- The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
+- Grace noteheads are <kbd>🟢 precedence</kbd> linked just like regular noteheads, but there are NO links to regular noteheads. This is because grace notes have their own "virtual" musical time and so cannot mix with regular notes.
+
+<p>
+  <img src="./img/grace-notes-precedence.png" height="200"/>
+</p>
+
+- Grace notes are connected from their parent notehead(s) using <kbd>🔴 syntax</kbd> links. Only the last grace notes connect and if they are a chord, each grace notehead should be linked from some corresponding closest parent notehead. The link is oriented from the parent notehead, to the grace notehead.
+
+<p>
+  <img src="./img/grace-notes-syntax-external.png" height="200"/>
+</p>
+
+- There may be a `slur` or a `tie` between a grace notehead and regular notehead. Connect it with <kbd>🔴 syntax</kbd> links as usual.
+
+<p>
+  <img src="./img/grace-notes-syntax-slur.png" height="200"/>
+</p>
+
+Here are real examples of grace notes:
+
+<p>
+  <img src="./img/grace-notes-1.png" height="200"/>
+  <img src="./img/grace-notes-2.png" height="200"/>
+  <img src="./img/grace-notes-3.png" height="200"/>
+  <img src="./img/grace-notes-4.png" height="200"/>
+  <img src="./img/grace-notes-5.png" height="200"/>
+  <img src="./img/grace-notes-6.png" height="200"/>
+  <img src="./img/grace-notes-7.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
 
 <details>
   <summary>🧵 Relevant discussions</summary>
@@ -3293,19 +3392,33 @@ A grace note is composed of:
   - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
 </details>
 
-<!--
+---
+
+
+### `graceNoteSlashStemUp` / `graceNoteSlashStemDown`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+<p>
+  <img src="./img/graceNoteSlashStemUpDown-0.png" height="200"/>
+  <img src="./img/graceNoteSlashStemUpDown-syntax.png" height="200"/>
+</p>
+
+- A grace note can have a slash across the stem, making it an acciacatura (has slightly different interpretation).
+- The slash is annotated as `graceNoteSlashStemUp` if the slash points upward or `graceNoteSlashStemDown` if the slash points downward.
+- Add <kbd>🔴 syntax</kbd> link from the notehead (of the slashed stem) to the slash symbol. If it's a chord, pick the closest notehead.
+
+<p>
+  <img src="./img/graceNoteSlashStemUp-1.png" height="200"/>
+  <img src="./img/graceNoteSlashStemUp-2.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
-  - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
 </details>
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
-
-Opravdu obskurní akordová grace nota a nad ní trámcované gracenoty:
-48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
-(přidat i do slurs a ties AI, ohledně syntax grafu)
--->
 
 ---
 
@@ -3498,7 +3611,7 @@ indicating the continuation of the trill.
 *(See the related [Wikipedia page](https://en.wikipedia.org/wiki/Direct_(music_symbol)))*
 
 <p>
-  <img src="./img/custos-1.png" height="200"/>
+  <img src="./img/custos-0.png" height="200"/>
 </p>
 
 - Mark at the end of a staff, that signals where the next note to be played (on the next page) will be positioned.
@@ -3509,6 +3622,7 @@ indicating the continuation of the trill.
 - Add <kbd>🔴 syntax</kbd> links to the `staff` and `staffLine` or `staffSpace`, just like noteheads have.
 
 <p>
+  <img src="./img/custos-1.png" height="200"/>
   <img src="./img/custos-2.png" height="200"/>
   <img src="./img/custos-3.png" height="200"/>
   <img src="./img/custos-4.png" height="200"/>
@@ -3698,7 +3812,7 @@ There should be no symbols left that were not linked. In case there are, validat
 
 These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `staffSpace` objects:
 
-- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+- **Noteheads** (`noteheadBlack`, `noteheadHalf`, `noteheadWhole`, `noteheadBlackSmall`)
   - Only noteheads that are NOT affected by leger lines.
   - The <kbd>🔴 syntax</kbd> link should point to the middle of the line of space that the notehead sits on.
   - The assignment is automatic, only check that it's correct.
