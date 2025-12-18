@@ -2160,6 +2160,38 @@ What usually belongs here:
 ---
 
 
+### `barlineWing`
+
+*(`barlineWing` is not part of SMuFL; SMuFL has bracket hooks but barline wings are not brackets)*
+
+<p>
+  <img src="./img/barlineWing-0.png" height="200"/>
+  <img src="./img/barlineWing-syntax.png" height="200"/>
+</p>
+
+- Repeats may have barlines with "wings". Each one of these strokes is a distinct `barlineWing` object.
+- Each `barlineWing` is <kbd>🔴 syntax</kbd> linked from all barlines in the barline group.
+- **⚠️ Warning**: Do not confuse winged-barline with [`bracket`](#bracket). Brackets group staves and are only present at the very beginning of a staff. Winged barlines are present in repeats, so look for [`repeatDot`](#repeatdot)s if unsure.
+
+<p>
+  <img src="./img/barlineWing-1.png" height="200"/>
+  <img src="./img/barlineWing-2.png" height="200"/>
+  <img src="./img/barlineWing-3.png" height="200"/>
+  <img src="./img/barlineWing-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+</details>
+
+---
+
+
 ### `measureSeparator`
 
 *(`measureSeparator` is not part of SMuFL, because it is a container class)*
@@ -2931,9 +2963,129 @@ This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 
 ## Repeats
 
-> **🚧 Under construction.**
 
-TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zavedeme
+### `repeatLeft` and `repeatRight`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+*(previously `repeat` in CVAT and old MuNG)*
+
+<p>
+  <img src="img/repeats-0.png" width="620"/>
+</p>
+
+- Repeats are emphasized barlines with repeat dots that mark the spot where a part of the song should be repeated (where the repeated section begin and ends).
+- Repeat barlines may have wings, which are annotated as [`barlineWing`](#barlinewing), see that section for more.
+- `repeatLeft` and  `repeatRight` are **container classes** that mark the start and end of the repeated section respectively.
+- Both repeats can coexist on a single measure boundary, marking an end of one repeated section and a start of another at the same time.
+
+<p>
+  <img src="img/repeatLeftRight-0.png" height="200"/>
+  <img src="img/repeatLeftRight-syntax.png" height="200"/>
+</p>
+
+- The repeat has <kbd>🔴 syntax</kbd> links to its children (barlines, repeat dots).
+- The repeat dot NOT have <kbd>🔴 syntax</kbd> links to `staff` objects.
+- Barlines should be shared by `repeatLeft` and `repeatRight` if both repeats are on the same measure boundary. But only those barlines in the center, that make sense for each repeat, not necessarily all barlines.
+
+<p>
+  <img src="img/repeat-multistaff-0.png" width="620"/>
+</p>
+
+- The repeat spans just as many staves as the barlines it contains do. If it spans multiple staves, it <kbd>🔴 syntax</kbd> links to all repeat dots.
+
+<p>
+  <img src="img/repeats-and-measureSeparators.png" height="200"/>
+</p>
+
+- Repeats often coexist with `measureSeparator`s. They have no relationship, other than sharing the same barlines as children. However, repeats can also exist in places, where `measureSeparator`s do not, e.g. at the beginning of a staff or in the middle of a measure.
+
+This is an example of a simple `repeatRight` at the end of a staff. It coincides with a `measureSeparator`, but they have no link between each other, they just share the two barlines:
+
+<p>
+  <img src="img/repeatRight-1.png" height="200"/>
+  <img src="img/repeatRight-2.png" height="200"/>
+</p>
+
+This is a `repeatRight` that spans two staves and therefore has 4 `repeatDot`s:
+
+<p>
+  <img src="img/repeatRight-3.png" height="200"/>
+</p>
+
+These are repeats with winged barlines:
+
+<p>
+  <img src="img/repeats-winged-1.png" height="200"/>
+</p>
+
+These are places where the repeat does NOT align with a measure separator:
+
+<p>
+  <img src="img/repeat-without-separator-1.png" height="200"/>
+  <img src="img/repeat-without-separator-2.png" height="200"/>
+</p>
+
+This is an example of a piano part with four separate repeat containers and one measure separator. Both barlines in the middle are `barlineHeavy` and they have wings. The corresponding <kbd>🔴 syntax</kbd> graph is quite complex:
+
+<p>
+  <img src="img/repeat-complex-1.png" height="200"/>
+  <img src="img/repeat-complex-syntax.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Without wings
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/82ab6fe0-ea75-11ed-9f31-5ef3fc9bb22f_689af144-8232-4e60-af78-eb04fa023656
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - With wings
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+</details>
+
+---
+
+
+### `repeatDot`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+<p>
+  <img src="img/repeatDot-0.png" height="200"/>
+  <img src="img/repeatDot-syntax.png" height="200"/>
+</p>
+
+- Represents one dot of a repeat sign.
+- Is <kbd>🔴 syntax</kbd> linked from its parent `repeatLeft` or `repeatRight` container.
+
+Here are various repeat dot appearances:
+
+<p>
+  <img src="img/repeatDot-1.png" height="200"/>
+  <img src="img/repeatDot-2.png" height="200"/>
+  <img src="img/repeatDot-3.png" height="200"/>
+  <img src="img/repeatDot-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/82ab6fe0-ea75-11ed-9f31-5ef3fc9bb22f_689af144-8232-4e60-af78-eb04fa023656
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+</details>
+
+---
+
+
+### volta, voltaText, segno, coda, repeatText, ...
+
+> **🚧 Under construction.**
 
 <!--
 https://w3c.github.io/smufl/latest/tables/repeats.html
@@ -2952,36 +3104,6 @@ Voltas:
 Bug-repeat:
 db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
 -->
-
-A **repetition mark** is composed of several elements:
-
-
-### repeatDot
-
-- The **two dots** next to the barline indicating the repeat.  
-  Each dot should be annotated individually as a separate `repeatDot`.
-
-
-### bracket / barlineSingle / barlineHeavy
-
-- The **barline or bracket components** that form the vertical part of the repeat symbol.
-
-
-### repeat
-
-- The **container mask** that encloses the entire repeat sign (as a convex hull).
-- Back-to-back repeats share the two barlines, but are two distinct repeat (containers).
-
-
-### TODO: když se vyskytne
-
-podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, volat výš, tohle je potřeba dořešit
-
-<p>
-  <img src="./img/strange-repetition.png" alt="TODO: how to annotate strange repetition" width="200"/>
-</p>
-
-ODPOVĚĎ: ocasy nahoře/dole jsou barline, vlnovky jsou repeat dot, jinak barline
 
 ---
 
@@ -3007,7 +3129,7 @@ https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64
 ---
 
 
-## Col violino unisono
+## Unisono
 
 > **🚧 Under construction.**
 
