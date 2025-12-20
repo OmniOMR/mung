@@ -3883,9 +3883,9 @@ There should be no symbols left that were not linked. In case there are, validat
 
 These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
 
-- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+- **Noteheads** (`noteheadBlack`, `noteheadHalf`, `noteheadWhole`, `noteheadBlackSmall`)
   - Pay attention to noteheads in between staves and decide by the direction of leger lines.
-  - Grace note noteheads are NOT assigned to staves.
+  - Grace note noteheads are also assigned to staves.
   - <img src="./img/notehead-to-staff.png" height="200"/>
 - **Rests** (`restWhole`, `restHalf`, `restQuarter`, `rest8th`, ...)
   - <img src="./img/rest-to-staff.png" height="200"/>
@@ -3906,7 +3906,8 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
   - <img src="./img/staffGrouping-to-staff.png" height="200"/>
 - TODO: repeat1Bar?
 - TODO: unisonoText?
-- TODO: systemDivider, splitBarDivider?
+- **System divider** (`systemDivider`)
+  - Links to the upper staff.
 - **Custos** (`custos`)
   - Same rules as for noteheads.
   - Must be linked manually!
