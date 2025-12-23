@@ -172,6 +172,12 @@ class NotationGraph(object):
         """
         return self.__id_to_node_mapping[node_id]
     
+    def __iter__(self):
+        """
+        Returns an Iterator over graph's nodes in no particular order.
+        """
+        return iter(self.__nodes)
+
     def _template_node_search_not_recursive_single_lookahead(
             self,
             node_or_id: Node | int,
