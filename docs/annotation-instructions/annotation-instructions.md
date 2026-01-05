@@ -2942,7 +2942,7 @@ The niente dynamics text can also sometimes be written as text, e.g. "n." or "ni
 ---
 
 
-## `dynamicNienteForHairpin`
+### `dynamicNienteForHairpin`
 
 *(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
 
@@ -2985,7 +2985,7 @@ This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 </p>
 
 - The repeat has <kbd>🔴 syntax</kbd> links to its children (barlines, repeat dots).
-- The repeat dot NOT have <kbd>🔴 syntax</kbd> links to `staff` objects.
+- The repeat does NOT have <kbd>🔴 syntax</kbd> links to `staff` objects.
 - Barlines should be shared by `repeatLeft` and `repeatRight` if both repeats are on the same measure boundary. But only those barlines in the center, that make sense for each repeat, not necessarily all barlines.
 
 <p>
@@ -3083,7 +3083,94 @@ Here are various repeat dot appearances:
 ---
 
 
-### volta, voltaText, segno, coda, repeatText, ...
+### `volta`
+
+*(`volta` is not part of SMuFL because it cannot be rendered via a font)*
+
+<p>
+  <img src="img/volta-0.png" width="620"/>
+  <img src="img/volta-syntax.png" width="620"/>
+  <img src="img/volta-precedence.png" width="620"/>
+</p>
+
+- Represents a section of music that should only be played during the first/second/third repetition of the piece.
+- Visually it is the spanner or bracket above the staff.
+- Annotate **precise mask**.
+- The number or text inside is [`voltaText`](#voltatext), see below.
+- It <kbd>🔴 syntax</kbd> links to exactly one notehead/rest of each measure it spans. For music with multiple voices or staves, pick the closest notehead/rest for each measure.
+- <kbd>🟢 precedence</kbd> links across measure boundaries have special behaviour: Preceeding music links to all volta sections. Only the last volta section links to the following music. Within volta sections, the rules are as usual.
+
+<p>
+  <img src="img/volta-1.png" height="200"/>
+  <img src="img/volta-2.png" height="200"/>
+  <img src="img/volta-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
+
+---
+
+
+### `voltaText`
+
+*(`voltaText` is not part of SMuFL because it is a text class)*
+
+<p>
+  <img src="img/voltaText-0.png" width="620"/>
+  <img src="img/voltaText-syntax.png" height="200"/>
+</p>
+
+- The text inside a [`volta`](#volta) bracket.
+- Annotate **convex hull mask**.
+- Transcribe the text.
+- It is <kbd>🔴 syntax</kbd> linked from the parent `volta` object.
+
+<p>
+  <img src="img/voltaText-1.png" height="200"/>
+  <img src="img/voltaText-2.png" height="200"/>
+  <img src="img/voltaText-3.png" height="200"/>
+</p>
+
+The text inside `voltaText` must be transcribed. It can look like this:
+
+```
+1.
+2.
+3.
+I.
+II.
+Prima volta
+Seconda volta
+1ma.
+2da.
+1a
+2a
+```
+
+There may even be multiple repetitions under one bracket (first two times play the first bracket, third time play the second bracket), in which case the text in the first bracket may look like this:
+
+```
+1., 2.
+```
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
+
+---
+
+
+### segno, coda, repeatText, ...
 
 > **🚧 Under construction.**
 
