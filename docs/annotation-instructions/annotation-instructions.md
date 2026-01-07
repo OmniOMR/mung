@@ -3170,27 +3170,154 @@ There may even be multiple repetitions under one bracket (first two times play t
 ---
 
 
-### segno, coda, repeatText, ...
+### `segno`
 
-> **🚧 Under construction.**
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
 
-<!--
-https://w3c.github.io/smufl/latest/tables/repeats.html
-Serpent segno examples:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
-- https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/
+<p>
+  <img src="img/segno-0.png" height="200"/>
+  <img src="img/segno-syntax.png" height="200"/>
+</p>
 
-Half-bar repeat annotated as "otherText":
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+- A symbol that we jump to from some other place in the song.
+- Placed at the beginning of the measure we start playing after the jump. Often directly over the barline.
+- Annotate **precise mask**.
+- It is <kbd>🔴 syntax</kbd> linked from the first notehead/rest of the measure that follows the sign (that we jump to). For multi-instrument or multi-voice parts, link the sign from the closest notehead/rest to the sign.
 
-Voltas:
-028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+---
 
-Bug-repeat:
-db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
--->
+
+### `coda`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+<p>
+  <img src="img/coda-0.png" height="200"/>
+  <img src="img/coda-syntax.png" height="200"/>
+</p>
+
+- A symbol that we jump to from some other place in the song.
+- Placed at the beginning of the measure we start playing after the jump. Often directly over the barline.
+- Annotate **precise mask**.
+- It is <kbd>🔴 syntax</kbd> linked from the first notehead/rest of the measure that follows the sign (that we jump to). For multi-instrument or multi-voice parts, link the sign from the closest notehead/rest to the sign.
+
+---
+
+
+### `segnoSerpent`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+*(`segnoSerpent` is not directly in SMuFL, because there are two variants 1 and 2 which we differentiate via attached barlines instead of numbers; but the class name is SMuFL-inspired)*
+
+<p>
+  <img src="img/segnoSerpent-0.png" height="200"/>
+  <img src="img/segnoSerpent-piano-0.png" height="200"/>
+  <img src="img/segnoSerpent-syntax.png" height="200"/>
+</p>
+
+- Older variant of the [`segno`](#segno) sign described above. Is drawn over the staff, often intersected with barlines.
+- Learn more here on [Dorico forum](https://forums.steinberg.net/t/serpent-segno/127943/15) or [Reddit](https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/).
+- When intersected with barlines, they are annotated separately as `barlineSingle` and <kbd>🔴 syntax</kbd> linked from the `segnoSerpent` object.
+- In multi-staff pieces (e.g. piano), the barlines span all staves and there is one `segnoSerpent` object on each staff, each of them <kbd>🔴 syntax</kbd> linking to both barlines.
+- The `segnoSerpent` can be placed over a measure boundary, in which case there is a `measureSeparator` also, or it can be placed in the middle of a measure or start of a song, in which case there is NO `measureSeparator`.
+- Unlike with `segno`, there are NO <kbd>🔴 syntax</kbd> links from noteheads!
+
+Here are two `segnoSerpent` with three barlines and NO `measureSeparator`, because it is placed at the very beginning of the song:
+
+<p>
+  <img src="img/segnoSerpent-1.png" height="200"/>
+</p>
+
+Here it is in the same document at the end of a staff, so there is a `measureSeparator` now:
+
+<p>
+  <img src="img/segnoSerpent-2.png" height="200"/>
+  <img src="img/segnoSerpent-3.png" height="200"/>
+</p>
+
+Here it seems it is at the beginning of a song, but in fact there is a one-beat pick-up measure before it. So there is a `measureSeparator` present:
+
+<p>
+  <img src="img/segnoSerpent-4.png" height="200"/>
+</p>
+
+This is a long sequence of `serpentSegno`s in a particello document:
+
+<p>
+  <img src="img/segnoSerpent-5.png" height="200"/>
+</p>
+
+
+This is what it looks like in other documents:
+
+<p>
+  <img src="img/segnoSerpent-6.jpeg" width="620"/>
+  <img src="img/segnoSerpent-7.jpeg" height="150"/>
+  <img src="img/segnoSerpent-8.png" height="150"/>
+  <img src="img/segnoSerpent-9.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
+</details>
+
+---
+
+
+### `repeatText`
+
+*(`repeatText` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="img/repeatText-0.png" height="200"/>
+  <img src="img/repeatText-syntax.png" height="200"/>
+</p>
+
+- Repeat text instructs the player to jump to a specific place in the song, usually the beginning ("Capo"), coda or segno. It may also represent a place where a repeated section ends, e.g. "Fine".
+- Annotate with **convex hull mask** and **transcribe its content**.
+- There is one <kbd>🔴 syntax</kbd> link from the last notehead/rest of the measure, after which the jump is performed. For multi-instrument or multi-voice parts, pick the closest notehead to the text element.
+  1. Text instructing the start of a jump should be <kbd>🔴 syntax</kbd> lined from the LAST notehead of the measure before jump.
+  2. Text instructing the place to stop should also be <kbd>🔴 syntax</kbd> linked from the LAST notehead before stopping.
+  3. Text indicating a place to jump to ("Coda", "Segno") should be <kbd>🔴 syntax</kbd> linked from the FIRST notehead after the jump.
+
+Here are some examples of what a `repeatText` can say, with its meaning:
+
+| Repeat text content         | Meaning                |
+|-----------------------------|------------------------|
+| `D.C.` | Da Capo - jump to beginning |
+| `D.S.` | Dal Segno - jump to the segno sign |
+| `D.C. al Fine` | Jump to beginning and play until you hit "Fine" |
+| `D.C. al Coda` | Jump to beginning and play until you hit the coda sign |
+| `Fine` | Stop playing the repeated section here |
+| `Segno` | Place of the segno landing mark, using text instead of symbol |
+| `Coda` | Place of the coda landing mark, using text instead of symbol |
+| `To Coda` | Jump to the coda sign |
+| `Da Coda` | Jump to the coda sign |
+| `Da Doppia Coda` | Jump to the second coda sign |
+| `D.D.S. al Doppia Coda` | Dal Doppio Segno al Doppia Coda |
+| any combination of these | ... |
+
+The "To Coda" can sometimes be written as "To 𝄌" (with the coda symbol). Transcribe it as text and do NOT annotate it as [`coda`](#coda), since it instructs to start the jump, not the place of landing. Similar thing may happen with segno. Copy those unicode symbols from here:
+
+```
+Coda  U+1D10C: 𝄌
+Segno U+1D10B: 𝄋
+```
+
+<p>
+  <img src="img/repeatText-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+</details>
 
 ---
 
@@ -3205,13 +3332,6 @@ TODO: nad tímhle může být text (stejně jako nad multi-measure rets / whole 
 TODO: někdy se používá pro repeat půl-taktu, to je v pohodě, je to pořád tento symbol
 
 TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což je jen ten slash bez teček a někdy to opakuje půl-takt
-
-<!--
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
--->
 
 ---
 
