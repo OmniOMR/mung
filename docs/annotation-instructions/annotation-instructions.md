@@ -515,7 +515,7 @@ Flags are divided into separate classes according to their type and direction:
 </p>
 
 - If the beams intersects other symbols (e.g. stems), mark the mask through the intersected section. Pixels can be shared between multiple objects.
-- ⚠️ If the **noteheads are empty** you might be looking at a **tremolo beam**, check out the annotation instructions on tremolos (TODO: add link) to make sure you don't accidentally annotate multi-note tremolos as beams.
+- ⚠️ If the **noteheads are empty** you might be looking at a **tremolo beam**, check out the [annotation instructions on tremolos](#tremolo) to make sure you don't accidentally annotate multi-note tremolos as beams.
 
 ---
 
@@ -4216,10 +4216,10 @@ Here, we will talk about the first two functions of the <kbd>🟢 precedence</kb
 - [Noteheads](#noteheads)
 - [Rests, including multi-measure rests](#rests)
 - [Grace Notes](#grace-notes)
-- [`repeat1Bar`](#repeat1bar)
 - [Voltas](#volta)
+- [`repeat1Bar`](#repeat1bar)
+- [Unisono sections](#unisono)
 - [`custos`](#custos)
-TODO: unisono?
 
 The principles on how to connect these via <kbd>🟢 precedence</kbd> links are:
 
