@@ -6,7 +6,7 @@ from mung import NotationGraph, Node
 from mung.graph import group_by_system_measure, UnionFind
 from mung.subevents_from_nodes import subevents_from_list_of_symbols
 from mung.constants import (
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
     InferenceEngineConstants as I,
     OnsetDataConstants as O
 )
@@ -89,8 +89,8 @@ class VoiceEngine:
         (notehead full, half and rests).
         """
         groups = [
-            self._graph.children(n, class_filter=C.BEAM)
-            for n in self._graph.filter_vertices([C.NOTEHEAD_BLACK, C.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
+            self._graph.children(n, class_filter=C.NoteheadAttachments.BEAM)
+            for n in self._graph.filter_vertices([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
         ]
         for g in UnionFind.merge_groups(groups):
             print([x.id for x in g])
@@ -113,7 +113,7 @@ class VoiceEngine:
         Finds all tremolos and fills in the ``tremolo_to_staff`` dictionary.
         """
         self._tremolo_to_staff = {}
-        for tremolo in self._graph.filter_vertices(C.TREMOLO_MARK):
+        for tremolo in self._graph.filter_vertices(C.Tremolo.TREMOLO_BEAM):
             _, staff = find_staff_for_container(tremolo, self._graph)
             self._tremolo_to_staff[tremolo] = staff
 
@@ -122,7 +122,7 @@ class VoiceEngine:
         Finds all tuples and fills in the ``tuple_to_staff`` dictionary.
         """
         self._tuple_to_staff = {}
-        for tuple_ in self._graph.filter_vertices(C.TUPLE):
+        for tuple_ in self._graph.filter_vertices(C.Tuplets.TUPLET):
             _, staff = find_staff_for_container(tuple_, self._graph)
             self._tuple_to_staff[tuple_] = staff
     
@@ -147,9 +147,9 @@ class VoiceEngine:
         subevents_to_staff: defaultdict[Node, list[_Subevent]] = defaultdict(list)
 
         for subevent in subevents:
-            beam = subevent.get_any(self._graph, C.BEAM)
-            tremolo = subevent.get_any(self._graph, C.TREMOLO_MARK)
-            tuple_ = subevent.get_any(self._graph, C.TUPLE)
+            beam = subevent.get_any(self._graph, C.NoteheadAttachments.BEAM)
+            tremolo = subevent.get_any(self._graph, C.Tremolo.TREMOLO_BEAM)
+            tuple_ = subevent.get_any(self._graph, C.Tuplets.TUPLET)
 
             if beam is not None:
                 subevents_to_staff[self._beam_to_staff[beam]].append(subevent)

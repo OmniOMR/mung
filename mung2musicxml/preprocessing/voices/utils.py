@@ -2,7 +2,7 @@ from mung import Node, NotationGraph
 from typing import TypeAlias
 from fractions import Fraction
 from mung.constants import (
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
     OnsetDataConstants as O,
     InferenceEngineConstants as I
 )
@@ -21,7 +21,7 @@ def find_staff_for_container(container: Node, graph: NotationGraph) -> tuple[Fra
     If there are multiple leftmost durables, returns the topmost found staff.
     """
     # retrieve all durables connected to beam
-    nodes = graph.parents(container, class_filter=[C.NOTEHEAD_BLACK, C.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
+    nodes = graph.parents(container, class_filter=[C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
     # find all the leftmost notes (smallest onset)
     minimal = all_min(nodes, key=lambda n: n.data[O.ONSET_BEATS])
     onset: Fraction = minimal[0].data[O.ONSET_BEATS]
@@ -31,7 +31,7 @@ def find_staff_for_container(container: Node, graph: NotationGraph) -> tuple[Fra
         onset,
         min(
             flatten(
-                graph.children(n, class_filter=C.STAFF) for n in minimal
+                graph.children(n, class_filter=C.Staves.STAFF) for n in minimal
                 ), key=lambda n: n.top
         )
     )
@@ -49,7 +49,7 @@ def find_all_durable_groups(subevents: list[_VoiceNode], graph: NotationGraph) -
             mapping[node] = subevent
             large_objects.update(graph.children(
                 node,
-                class_filter=[C.TREMOLO_MARK, C.BEAM, C.TUPLE])
+                class_filter=[C.Tremolo.TREMOLO_BEAM, C.NoteheadAttachments.BEAM, C.Tuplets.TUPLET])
             )
     
     groups: list[list[_VoiceNode]] = []

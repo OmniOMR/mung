@@ -1,6 +1,6 @@
 from mung import NotationGraph, Node
 from mung.graph import group_staffs_into_systems, UnionFind
-from mung.constants import ClassNamesConstants as C
+from mung.constants import ClassNameConstants as C
 from typing import TypeVar, Callable, Optional
 
 from ..logger import logger
@@ -23,7 +23,7 @@ def get_instrument_groups_from_systems(graph: NotationGraph) -> list[list[list[N
         logger.debug(f"Processing system {[x.id for x in system]}")
         current_instruments = []
         # find all groupings that are linked to the system
-        groupings = set(flatten(graph.parents(staff, class_filter=C.STAFF_GROUPING) for staff in system))
+        groupings = set(flatten(graph.parents(staff, class_filter=C.StaffGroupingBracketsAndBraces.STAFF_GROUPING) for staff in system))
         
         # no grouping, image a single large grouping spanning over all staffs in system
         if len(groupings) == 0:
@@ -35,7 +35,7 @@ def get_instrument_groups_from_systems(graph: NotationGraph) -> list[list[list[N
         else:
             # try to find grandstaffs
             for g in groupings:
-                staffs = graph.children(g, class_filter=C.STAFF)
+                staffs = graph.children(g, class_filter=C.Staves.STAFF)
                 if len(staffs) == 2:
                     current_instruments.append(sorted(staffs, key=lambda s: s.top))
             

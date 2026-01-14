@@ -10,7 +10,7 @@ import time
 
 from typing import List
 from collections import defaultdict
-from mung.constants import InferenceEngineConstants as _CONST
+from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 from mung.io import read_nodes_from_file, export_node_list
 from mung.node import link_nodes, Node
 
@@ -23,17 +23,17 @@ def add_staff_relationships(nodes: List[Node],
 
     ##########################################################################
     logging.info('Find the staff-related symbols')
-    staffs = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staffs = [c for c in nodes if c.class_name == C.Staves.STAFF]
 
     staff_related_symbols = defaultdict(list)  # type: defaultdict[str, List[Node]]
     notehead_symbols = defaultdict(list)  # type: defaultdict[str, List[Node]]
     rest_symbols = defaultdict(list)  # type: defaultdict[str, List[Node]]
     for node in nodes:
-        if node.class_name in _CONST.STAFF_RELATED_CLASS_NAMES:
+        if node.class_name in I.STAFF_RELATED_CLASS_NAMES:
             staff_related_symbols[node.class_name].append(node)
-        if node.class_name in _CONST.NOTEHEAD_CLASS_NAMES:
+        if node.class_name in I.NOTEHEAD_CLASS_NAMES:
             notehead_symbols[node.class_name].append(node)
-        if node.class_name in _CONST.REST_CLASS_NAMES:
+        if node.class_name in I.REST_CLASS_NAMES:
             rest_symbols[node.class_name].append(node)
 
     ##########################################################################
@@ -76,11 +76,11 @@ def add_staff_relationships(nodes: List[Node],
     # Sort the staff objects top-down. Assumes stafflines do not cross,
     # and that there are no crazy curves at the end that would make the lower
     # stafflines stick out over the ones above them...
-    stafflines = [c for c in nodes if c.class_name == _CONST.STAFFLINE]
+    stafflines = [c for c in nodes if c.class_name == C.Staves.STAFF_LINE]
     stafflines = sorted(stafflines, key=lambda c: c.top)
-    staffspaces = [c for c in nodes if c.class_name == _CONST.STAFFSPACE]
+    staffspaces = [c for c in nodes if c.class_name == C.Staves.STAFF_SPACE]
     staffspaces = sorted(staffspaces, key=lambda c: c.top)
-    staves = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staves = [c for c in nodes if c.class_name == C.Staves.STAFF]
     staves = sorted(staves, key=lambda c: c.top)
 
     # Indexing data structures.
@@ -127,7 +127,7 @@ def add_staff_relationships(nodes: List[Node],
             # If notehead has leger lines, skip it for now.
             has_leger_line = False
             for o in node.outlinks:
-                if id_to_node_mapping[o].class_name == _CONST.LEGER_LINE:
+                if id_to_node_mapping[o].class_name == C.NoteheadAttachments.LEGER_LINE:
                     has_leger_line = True
                     break
 
@@ -135,7 +135,7 @@ def add_staff_relationships(nodes: List[Node],
                 # Attach to the appropriate staff:
                 # meaning, staff closest to the innermost leger line.
                 lls = [id_to_node_mapping[o] for o in node.outlinks
-                       if id_to_node_mapping[o].class_name == _CONST.LEGER_LINE]
+                       if id_to_node_mapping[o].class_name == C.NoteheadAttachments.LEGER_LINE]
                 # Furthest from notehead's top is innermost.
                 # (If notehead is below staff and crosses a ll., one
                 #  of these numbers will be negative. But that doesn't matter.)

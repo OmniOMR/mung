@@ -1,4 +1,4 @@
-from mung.constants import ClassNamesConstants
+from mung.constants import ClassNameConstants as C
 from mung import Node, NotationGraph
 from typing import Optional
 
@@ -37,10 +37,10 @@ class MeasureSeparatorSnapEngine:
                 logger.debug(f"Snapping measure separator {measure_separator.id} to {sw.staff.id}, overlap is {overlap}.")
 
     def snap_measure_separators_to_staffs(self, graph: NotationGraph, staff_wrappers: list[StaffWrapper]):
-        separators = graph.filter_vertices(ClassNamesConstants.MEASURE_SEPARATOR)
+        separators = graph.filter_vertices(C.Barlines.MEASURE_SEPARATOR)
         total = 0
         for separator in separators:
             self.snap_measure_separator_based_on_overlap(separator, graph, staff_wrappers)
             total += 1
         
-        log_total(total, ClassNamesConstants.MEASURE_SEPARATOR)
+        log_total(total, C.Barlines.MEASURE_SEPARATOR)

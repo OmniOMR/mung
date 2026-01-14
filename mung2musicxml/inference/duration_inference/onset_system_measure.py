@@ -3,7 +3,7 @@ from mung import NotationGraph, Node
 from typing import Optional, Self
 
 from mung.constants import (
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
     InferenceEngineConstants as I,
     OnsetDataConstants as O
 )
@@ -161,7 +161,7 @@ class _OnsetSystemMeasureWrapper:
         staffs: set[Node] = set()
         for symbol in symbols:
             if symbol.class_name in I.CLASSES_BEARING_DURATIONS:
-                s = graph.children(symbol, class_filter=C.STAFF)
+                s = graph.children(symbol, class_filter=C.Staves.STAFF)
                 if len(s) != 1:
                     logger.warning(f"Unexpected number of staffs linked to symbol {symbol.class_name} {symbol.id}")
                 staffs.update(s)

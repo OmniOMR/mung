@@ -10,7 +10,7 @@ from .node import Node
 from .constants import (
     InferenceEngineConstants as I,
     PrecedenceLinksConstants as P,
-    ClassNamesConstants as C
+    ClassNameConstants as C
 )
 from .io import read_nodes_from_file, write_nodes_to_file
 from .logger import logger
@@ -893,18 +893,18 @@ def group_staffs_into_systems(nodes: list[Node],
     :returns: A list of systems, where each system is a list of ``staff`` Nodes.
     """
     graph = NotationGraph(nodes)
-    staff_groups = graph.filter_vertices(C.STAFF_GROUPING)
+    staff_groups = graph.filter_vertices(C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
     
     def is_empty_staff(staff: Node, graph: NotationGraph) -> bool:
         durables = graph.parents(staff, class_filter=I.CLASSES_BEARING_DURATIONS)
         return len(durables) == 0
 
-    empty_staffs = [s for s in graph.filter_vertices(C.STAFF) if is_empty_staff(s, graph)]
+    empty_staffs = [s for s in graph.filter_vertices(C.Staves.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
         logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # For simplicity, add non-empty staffs as potential systems.
-    staff_groups += [s for s in graph.filter_vertices(C.STAFF) if s not in empty_staffs]
+    staff_groups += [s for s in graph.filter_vertices(C.Staves.STAFF) if s not in empty_staffs]
 
     # There might also be non-empty staffs that are nevertheless
     # not covered by a staff grouping, only measure separators.
@@ -913,7 +913,7 @@ def group_staffs_into_systems(nodes: list[Node],
         measure_separators = graph.filter_vertices(I.MEASURE_SEPARATOR_CLASS_NAMES)
         measure_separators = sorted(measure_separators, key=lambda x: x.left)
         # Use only the leftmost measure separator for each staff.
-        staffs = [c for c in nodes if c.class_name in [I.STAFF]]
+        staffs = [c for c in nodes if c.class_name in [C.Staves.STAFF]]
 
         if leftmost_measure_separators_only:
             leftmost_measure_separators = set()
@@ -931,7 +931,7 @@ def group_staffs_into_systems(nodes: list[Node],
     if len(staff_groups) == 0:
         return [[]]
     
-    staffs_per_group = {node.id: graph.children(node, class_filter=C.STAFF) for node in staff_groups}
+    staffs_per_group = {node.id: graph.children(node, class_filter=C.Staves.STAFF) for node in staff_groups}
     
     merged = UnionFind.merge_groups(list(staffs_per_group.values()))
     for group in merged:
@@ -951,7 +951,7 @@ def group_by_staff(nodes: list[Node]) -> dict[int, list[Node]]:
     """
     g = NotationGraph(nodes=nodes)
 
-    staffs = [c for c in nodes if c.class_name == I.STAFF]
+    staffs = [c for c in nodes if c.class_name == C.Staves.STAFF]
     objects_per_staff = dict()  # type: dict[int, list[Node]]
     for staff in staffs:
         descendants = g.descendants(staff)
@@ -988,7 +988,7 @@ def group_by_chord(graph: NotationGraph, nodes: list[Node]) -> list[list[Node]]:
     closure = []
     chord_mapping: dict[int, list[Node]] = {}
     for node in nodes:
-        stems = graph.children(node, C.STEM)
+        stems = graph.children(node, C.NoteheadAttachments.STEM)
         if len(stems) == 0:
             closure.append([node])
         elif len(stems) == 1:
@@ -1040,8 +1040,8 @@ def find_related_staffs(query_nodes: list[Node], all_nodes: NotationGraph | list
 
     related_staffs = set()
     for c in query_nodes:
-        desc_staffs = graph.descendants(c, class_filter=[I.STAFF])
-        anc_staffs = graph.ancestors(c, class_filter=[I.STAFF])
+        desc_staffs = graph.descendants(c, class_filter=[C.Staves.STAFF])
+        anc_staffs = graph.ancestors(c, class_filter=[C.Staves.STAFF])
         current_staffs = set(desc_staffs + anc_staffs)
         related_staffs = related_staffs.union(current_staffs)
 
@@ -1120,7 +1120,7 @@ def find_leger_lines_with_noteheads_from_both_directions(nodes: list[Node]) -> l
     problem_leger_lines = []
 
     for node in nodes:
-        if node.class_name != I.LEGER_LINE:
+        if node.class_name != C.NoteheadAttachments.LEGER_LINE:
             continue
 
         noteheads = graph.parents(node, class_filter=I.NOTEHEAD_CLASS_NAMES)
@@ -1153,7 +1153,7 @@ def find_noteheads_with_leger_line_and_staff_conflict(nodes: list[Node]) -> list
         if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [I.LEGER_LINE])
+        lls = graph.children(node, [C.NoteheadAttachments.LEGER_LINE])
         staff_objs = graph.children(node, I.STAFFLINE_CLASS_NAMES)
         if lls and staff_objs:
             problem_noteheads.append(node)
@@ -1182,7 +1182,7 @@ def find_noteheads_on_staff_linked_to_leger_line(nodes: list[Node]) -> list[Node
         if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [I.LEGER_LINE])
+        lls = graph.children(node, [C.NoteheadAttachments.LEGER_LINE])
         if len(lls) == 0:
             continue
 
@@ -1223,11 +1223,11 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
         if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [I.LEGER_LINE])
+        lls = graph.children(node, [C.NoteheadAttachments.LEGER_LINE])
         if not lls:
             continue
 
-        staffs = graph.children(node, [I.STAFF])
+        staffs = graph.children(node, [C.Staves.STAFF])
         if not staffs:
             logger.warning('Notehead {0} not connected to any staff!'.format(node.id))
             continue
@@ -1237,7 +1237,7 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
         # Because of mistakes in notehead-ll edges, can actually be
         # *on* the staff. (If it is on a staffline, then the edge is
         # definitely wrong.)
-        stafflines = sorted(graph.children(staff, [I.STAFFLINE]),
+        stafflines = sorted(graph.children(staff, [C.Staves.STAFF_LINE]),
                             key=lambda x: x.top)
         p_top = resolve_notehead_wrt_staffline(node, stafflines[0])
         p_bottom = resolve_notehead_wrt_staffline(node, stafflines[-1])
@@ -1260,9 +1260,9 @@ def find_misdirected_leger_line_edges(nodes: list[Node], retain_ll_for_disconnec
                 _current_misdirected_object_pairs.append([node, ll])
 
         if retain_ll_for_disconnected_noteheads:
-            staffline_like_children = graph.children(node, class_filter=[I.STAFFLINE,
-                                                                         I.STAFFSPACE,
-                                                                         I.LEGER_LINE])
+            staffline_like_children = graph.children(node, class_filter=[C.Staves.STAFF_LINE,
+                                                                         C.Staves.STAFF_SPACE,
+                                                                         C.NoteheadAttachments.LEGER_LINE])
             # If all the notehead's links to staffline-like objects are scheduled to be discarded:
             if len(staffline_like_children) == len(_current_misdirected_object_pairs):
                 # Remove them from the schedule
@@ -1288,9 +1288,9 @@ def resolve_leger_line_or_staffline_object(nodes: list[Node]):
         if node.class_name not in I.NOTEHEAD_CLASS_NAMES:
             continue
 
-        lls = graph.children(node, [I.LEGER_LINE])
+        lls = graph.children(node, [C.NoteheadAttachments.LEGER_LINE])
         stafflines = graph.children(node, I.STAFFLINE_CLASS_NAMES)
-        staff = graph.children(node, I.STAFF)
+        staff = graph.children(node, I.Staves.STAFF)
 
         if len(lls) == 0:
             continue
@@ -1382,7 +1382,7 @@ def group_by_system_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[
         """
         output: set[Node] = set()
         for staff in staffs:
-            output.update(graph.parents(staff, class_filter=C.MEASURE_SEPARATOR))
+            output.update(graph.parents(staff, class_filter=C.Barlines.MEASURE_SEPARATOR))
         
         return output
     
@@ -1448,7 +1448,7 @@ def group_by_system_measure_and_system(nodes_or_graph: list[Node] | NotationGrap
         """
         output: set[Node] = set()
         for staff in staffs:
-            output.update(graph.parents(staff, class_filter=C.MEASURE_SEPARATOR))
+            output.update(graph.parents(staff, class_filter=C.Barlines.MEASURE_SEPARATOR))
         
         return output
     
@@ -1515,7 +1515,7 @@ def group_by_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[list[No
         measures: defaultdict[Node, list[Node]] = defaultdict(list)
         # split symbols inside a single system measure to measure based on their linkage to staffs
         for symbol in sm:
-            staffs = sorted(graph.children(symbol, class_filter=C.STAFF), key=lambda x: x.id)
+            staffs = sorted(graph.children(symbol, class_filter=C.Staves.STAFF), key=lambda x: x.id)
             if len(staffs) == 0:
                 raise ValueError(f"Symbol {symbol.class_name} {symbol.id} is not linked to any staff")
             if len(staffs) > 1:

@@ -1,6 +1,6 @@
 from typing import Optional
 from mung import Node, NotationGraph
-from mung.constants import ClassNamesConstants
+from mung.constants import ClassNameConstants as C
 
 
 class _DummyStaffGenerator:
@@ -40,7 +40,7 @@ class _DummyStaffGenerator:
         graph = self._add_notehead_to_every_dummy_staff_position(
             self._create_dummy_staff(staffline_count=self._staffline_count)
         )
-        self._staff_id = graph.filter_vertices(ClassNamesConstants.STAFF)[0].id
+        self._staff_id = graph.filter_vertices(C.Staves.STAFF)[0].id
 
         if clef_name is not None:
             graph = self._add_clef(graph, clef_name, clef_delta)
@@ -65,9 +65,9 @@ class _DummyStaffGenerator:
             nodes.append(
                 Node(
                     _id,
-                    ClassNamesConstants.STAFFSPACE
+                    C.Staves.STAFF_SPACE
                     if i % 2 == 0
-                    else ClassNamesConstants.STAFFLINE,
+                    else C.Staves.STAFF_LINE,
                     spacing * i, 0, 0, 0,
                 )
             )
@@ -75,7 +75,7 @@ class _DummyStaffGenerator:
 
         # add staff
         staff_id = _id
-        nodes.append(Node(staff_id, ClassNamesConstants.STAFF, 0, 0, 0, 0))
+        nodes.append(Node(staff_id, C.Staves.STAFF, 0, 0, 0, 0))
 
         graph = NotationGraph(nodes)
         for n in range(len(nodes) - 1):
@@ -88,14 +88,14 @@ class _DummyStaffGenerator:
         graph: NotationGraph,
     ) -> NotationGraph:
         noteheads: list[Node] = []
-        staff = graph.filter_vertices(ClassNamesConstants.STAFF)[0]
+        staff = graph.filter_vertices(C.Staves.STAFF)[0]
         positions = graph.filter_vertices(
-            [ClassNamesConstants.STAFFLINE, ClassNamesConstants.STAFFSPACE]
+            [C.Staves.STAFF_LINE, C.Staves.STAFF_SPACE]
         )
 
         _id = graph.next_node_id
         for _ in positions:
-            noteheads.append(Node(_id, ClassNamesConstants.NOTEHEAD_FULL, 0, 0, 0, 0))
+            noteheads.append(Node(_id, C.Noteheads.NOTEHEAD_BLACK, 0, 0, 0, 0))
             _id += 1
 
         graph = NotationGraph(graph.vertices + noteheads)
@@ -108,7 +108,7 @@ class _DummyStaffGenerator:
         return [
             x.id
             for x in sorted(
-                graph.filter_vertices(ClassNamesConstants.STAFFLINE),
+                graph.filter_vertices(C.Staves.STAFF_LINE),
                 key=lambda s: s.top,
                 reverse=True
             )
@@ -139,12 +139,12 @@ class _DummyStaffGenerator:
         if key_signature == 0:
             return graph
         elif key_signature > 0:
-            accidental_type = ClassNamesConstants.ACCIDENTAL_SHARP
+            accidental_type = C.Accidentals.ACCIDENTAL_SHARP
         else:
-            accidental_type = ClassNamesConstants.ACCIDENTAL_FLAT
+            accidental_type = C.Accidentals.ACCIDENTAL_FLAT
 
         _id = graph.next_node_id
-        sig_node = Node(_id, ClassNamesConstants.KEY_SIGNATURE, 0, 0, 0, 0)
+        sig_node = Node(_id, C.KeySignature.KEY_SIGNATURE, 0, 0, 0, 0)
         _id += 1
         accidentals: list[Node] = []
         for _ in range(abs(key_signature)):

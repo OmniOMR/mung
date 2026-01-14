@@ -12,7 +12,7 @@ def get_clef_data_from_node(clef: Optional[Node] = None, permissive: bool = Fals
         return DefaultClef()
     
     for sub in ClefBase.__subclasses__():
-        if sub().name == clef.class_name:
+        if clef.class_name.startswith(sub().name):
             return sub()
     
     if permissive:

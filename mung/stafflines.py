@@ -10,25 +10,23 @@ from skimage.filters import gaussian
 from skimage.segmentation import watershed
 
 from .graph import NotationGraph, find_noteheads_on_staff_linked_to_leger_line
-from .constants import InferenceEngineConstants
+from .constants import InferenceEngineConstants as I, ClassNameConstants as C
 from .node import Node, draw_nodes_on_empty_canvas, link_nodes
 from .utils import compute_connected_components
 from .logger import logger
-
-_CONST = InferenceEngineConstants()
 
 
 def __has_parent_staff(node: Node, nodes: list[Node]) -> bool:
     id_to_node_mapping = {c.id: c for c in nodes}
     staff_inlinks = [id_to_node_mapping[i] for i in node.inlinks
-                     if id_to_node_mapping[i].class_name == _CONST.STAFF]
+                     if id_to_node_mapping[i].class_name == C.Staves.STAFF]
     return len(staff_inlinks) > 0
 
 
 def __has_child_staffspace(staff: Node, nodes: list[Node]) -> bool:
     id_to_node_mapping = {c.id: c for c in nodes}
     staffline_outlinks = [id_to_node_mapping[i] for i in staff.outlinks
-                          if id_to_node_mapping[i].class_name == _CONST.STAFFSPACE]
+                          if id_to_node_mapping[i].class_name == C.Staves.STAFF_SPACE]
     return len(staffline_outlinks) > 0
 
 
@@ -38,7 +36,7 @@ def __has_neighbor_staffspace(staffline: Node, nodes: list[Node]) -> bool:
     if not __has_parent_staff(staffline, nodes):
         return False
     parent_staffs = [id_to_node_mapping[i] for i in staffline.inlinks
-                     if id_to_node_mapping[i].class_name == _CONST.STAFF]
+                     if id_to_node_mapping[i].class_name == C.Staves.STAFF]
     if len(parent_staffs) > 1:
         raise ValueError('More than one parent staff for staffline {0}!'
                          ''.format(staffline.id))
@@ -61,12 +59,12 @@ def merge_staffline_segments(nodes: list[Node], margin: int = 10) -> list[Node]:
         had any inlinks, they are preserved (mapped to the new staffline).
     """
     already_processed_stafflines = [node for node in nodes
-                                    if (node.class_name == _CONST.STAFFLINE) and
+                                    if (node.class_name == C.Staves.STAFF_LINE) and
                                     __has_parent_staff(node, nodes)]
     # margin is used to avoid the stafflines touching the edges,
     # which could perhaps break some assumptions down the line.
     old_staffline_nodes = [c for c in nodes
-                           if (c.class_name == _CONST.STAFFLINE) and
+                           if (c.class_name == C.Staves.STAFF_LINE) and
                            not __has_parent_staff(c, nodes)]
     if len(old_staffline_nodes) == 0:
         logger.info('merge_staffline_segments: nothing new to do!')
@@ -88,7 +86,7 @@ def merge_staffline_segments(nodes: list[Node], margin: int = 10) -> list[Node]:
     for sl_bb, sl_m in zip(staffline_bboxes, staffline_masks):
         t, l, b, r = sl_bb
         c = Node(id_=next_node_id,
-                 class_name=_CONST.STAFFLINE,
+                 class_name=C.Staves.STAFF_LINE,
                  top=t, left=l, height=b - t, width=r - l,
                  mask=sl_m,
                  dataset=dataset, document=document)
@@ -96,7 +94,7 @@ def merge_staffline_segments(nodes: list[Node], margin: int = 10) -> list[Node]:
         next_node_id += 1
 
     non_staffline_nodes = [c for c in nodes
-                           if c.class_name != _CONST.STAFFLINE]
+                           if c.class_name != C.Staves.STAFF_LINE]
     old_staffline_ids = set([c.id for c in old_staffline_nodes])
     old2new_staffline_id_map = {}
     for os in old_staffline_nodes:
@@ -267,7 +265,7 @@ def build_staff_nodes(nodes: list[Node], build_links: bool = True) -> list[Node]
 
     Assumes the stafflines have already been merged."""
     stafflines = sorted([c for c in nodes
-                  if c.class_name == _CONST.STAFFLINE and
+                  if c.class_name == C.Staves.STAFF_LINE and
                   not __has_parent_staff(c, nodes)], key=lambda c: c.top)
     if len(stafflines) == 0:
         return []
@@ -301,7 +299,7 @@ def build_staff_nodes(nodes: list[Node], build_links: bool = True) -> list[Node]
     for s_bb, s_m in zip(staff_bboxes, staff_masks):
         t, l, b, r = s_bb
         staff = Node(id_=next_node_id,
-                     class_name=_CONST.STAFF,
+                     class_name=C.Staves.STAFF,
                      top=t, left=l, height=b - t, width=r - l,
                      mask=s_m,
                      dataset=dataset, document=document)
@@ -341,10 +339,10 @@ def build_staffspace_nodes(nodes: list[Node]) -> list[Node]:
     document = nodes[0].document
 
     staff_nodes = sorted([node for node in nodes
-                   if node.class_name == _CONST.STAFF
+                   if node.class_name == C.Staves.STAFF
                    and not __has_child_staffspace(node, nodes)], key=lambda c: c.top)
     staffline_nodes = sorted([node for node in nodes
-                       if node.class_name == _CONST.STAFFLINE
+                       if node.class_name == C.Staves.STAFF_LINE
                        and not __has_neighbor_staffspace(node, nodes)], key=lambda c: c.top)
 
     staff_spaces = []
@@ -426,7 +424,7 @@ def build_staffspace_nodes(nodes: list[Node]) -> list[Node]:
             ss_left = l
             ss_right = r
 
-            staff_space = Node(next_node_id, _CONST.STAFFSPACE,
+            staff_space = Node(next_node_id, C.Staves.STAFF_SPACE,
                                top=ss_top, left=ss_left,
                                height=ss_bottom - ss_top,
                                width=ss_right - ss_left,
@@ -463,7 +461,7 @@ def build_staffspace_nodes(nodes: list[Node]) -> list[Node]:
         uss_top += tss.height - uss_height
         uss_mask = tss.mask[:uss_height, :] * 1
 
-        staff_space = Node(next_node_id, _CONST.STAFFSPACE,
+        staff_space = Node(next_node_id, C.Staves.STAFF_SPACE,
                            top=uss_top, left=uss_left,
                            height=uss_height,
                            width=uss_width,
@@ -486,7 +484,7 @@ def build_staffspace_nodes(nodes: list[Node]) -> list[Node]:
         lss_height = int(bss.height / 1.2)
         lss_mask = bss.mask[:lss_height, :] * 1
 
-        staff_space = Node(next_node_id, _CONST.STAFFSPACE,
+        staff_space = Node(next_node_id, C.Staves.STAFF_SPACE,
                            top=lss_top, left=lss_left,
                            height=lss_height,
                            width=lss_width,
@@ -545,27 +543,27 @@ def add_staff_relationships(nodes: list[Node],
                      ''.format(len(ll_noteheads_on_staff)))
         for n in ll_noteheads_on_staff:
             # Remove all links to leger lines.
-            leger_lines = graph.children(n, class_filter=[_CONST.LEGER_LINE])
+            leger_lines = graph.children(n, class_filter=[C.NoteheadAttachments.LEGER_LINE])
             for ll in leger_lines:
                 graph.remove_edge(n.id, ll.id)
 
     ##########################################################################
     logger.info('Find the staff-related symbols')
-    staffs = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staffs = [c for c in nodes if c.class_name == C.Staves.STAFF]
 
     staff_related_symbols = collections.defaultdict(list)
     notehead_symbols = collections.defaultdict(list)
     rest_symbols = collections.defaultdict(list)
     for node in nodes:
-        if node.class_name in _CONST.STAFF_RELATED_CLASS_NAMES:
+        if node.class_name in I.STAFF_RELATED_CLASS_NAMES:
             # Check if it already has a staff link
-            if not graph.has_children(node, [_CONST.STAFF]):
+            if not graph.has_children(node, [C.Staves.STAFF]):
                 staff_related_symbols[node.class_name].append(node)
-        if node.class_name in _CONST.NOTEHEAD_CLASS_NAMES:
-            if not graph.has_children(node, [_CONST.STAFF]):
+        if node.class_name in I.NOTEHEAD_CLASS_NAMES:
+            if not graph.has_children(node, [C.Staves.STAFF]):
                 notehead_symbols[node.class_name].append(node)
-        if node.class_name in _CONST.REST_CLASS_NAMES:
-            if not graph.has_children(node, [_CONST.STAFF]):
+        if node.class_name in I.REST_CLASS_NAMES:
+            if not graph.has_children(node, [C.Staves.STAFF]):
                 rest_symbols[node.class_name].append(node)
 
     ##########################################################################
@@ -609,11 +607,11 @@ def add_staff_relationships(nodes: list[Node],
     # Sort the staff objects top-down. Assumes stafflines do not cross,
     # and that there are no crazy curves at the end that would make the lower
     # stafflines stick out over the ones above them...
-    stafflines = [c for c in nodes if c.class_name == _CONST.STAFFLINE]
+    stafflines = [c for c in nodes if c.class_name == C.Staves.STAFF_LINE]
     stafflines = sorted(stafflines, key=lambda c: c.top)
-    staffspaces = [c for c in nodes if c.class_name == _CONST.STAFFSPACE]
+    staffspaces = [c for c in nodes if c.class_name == C.Staves.STAFF_SPACE]
     staffspaces = sorted(staffspaces, key=lambda c: c.top)
-    staves = [c for c in nodes if c.class_name == _CONST.STAFF]
+    staves = [c for c in nodes if c.class_name == C.Staves.STAFF]
     staves = sorted(staves, key=lambda c: c.top)
 
     logger.info('Stafflines: {0}'.format(len(stafflines)))
@@ -664,7 +662,7 @@ def add_staff_relationships(nodes: list[Node],
             # If notehead has leger lines, skip it for now.
             has_leger_line = False
             for outlink in node.outlinks:
-                if id_to_node_mapping[outlink].class_name == _CONST.LEGER_LINE:
+                if id_to_node_mapping[outlink].class_name == C.NoteheadAttachments.LEGER_LINE:
                     has_leger_line = True
                     break
 
@@ -672,7 +670,7 @@ def add_staff_relationships(nodes: list[Node],
                 # Attach to the appropriate staff:
                 # meaning, staff closest to the innermost leger line.
                 leger_lines = [id_to_node_mapping[o] for o in node.outlinks
-                               if id_to_node_mapping[o].class_name == _CONST.LEGER_LINE]
+                               if id_to_node_mapping[o].class_name == C.NoteheadAttachments.LEGER_LINE]
                 # Furthest from notehead's top is innermost.
                 # (If notehead is below staff and crosses a ll., one
                 #  of these numbers will be negative. But that doesn't matter.)

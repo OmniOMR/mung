@@ -18,7 +18,7 @@ from mung.io import read_nodes_from_file, export_node_list
 from mung.node import Node
 from mung.utils import compute_connected_components
 
-from mung.constants import InferenceEngineConstants as _CONST
+from mung.constants import InferenceEngineConstants as I, ClassNameConstants as C
 
 
 def build_argument_parser():
@@ -213,7 +213,7 @@ def main(args):
     for sl_bb, sl_m in zip(staffline_bboxes, staffline_masks):
         t, l, b, r = sl_bb
         c = Node(id_=next_node_id,
-                 class_name=_CONST.STAFFLINE,
+                 class_name=C.Staves.STAFF_LINE,
                  top=t, left=l, height=b - t, width=r - l,
                  mask=sl_m,
                  dataset=dataset, document=document)
@@ -227,7 +227,7 @@ def main(args):
         for s_bb, s_m in zip(staff_bboxes, staff_masks):
             t, l, b, r = s_bb
             c = Node(id_=next_node_id,
-                     class_name=_CONST.STAFF,
+                     class_name=C.Staves.STAFF,
                      top=t, left=l, height=b - t, width=r - l,
                      mask=s_m,
                      dataset=dataset, document=document)
@@ -319,7 +319,7 @@ def main(args):
                 ss_left = l
                 ss_right = r
 
-                staffspace = Node(next_node_id, _CONST.STAFFSPACE,
+                staffspace = Node(next_node_id, C.Staves.STAFF_SPACE,
                                   top=ss_top, left=ss_left,
                                   height=ss_bottom - ss_top,
                                   width=ss_right - ss_left,
@@ -355,7 +355,7 @@ def main(args):
             uss_top += tss.height - uss_height
             uss_mask = tss.mask[:uss_height, :] * 1
 
-            staffspace = Node(next_node_id, _CONST.STAFFSPACE,
+            staffspace = Node(next_node_id, C.Staves.STAFF_SPACE,
                               top=uss_top, left=uss_left,
                               height=uss_height,
                               width=uss_width,
@@ -378,7 +378,7 @@ def main(args):
             lss_height = int(bss.height / 1.2)
             lss_mask = bss.mask[:lss_height, :] * 1
 
-            staffspace = Node(next_node_id, _CONST.STAFFSPACE,
+            staffspace = Node(next_node_id, C.Staves.STAFF_SPACE,
                               top=lss_top, left=lss_left,
                               height=lss_height,
                               width=lss_width,

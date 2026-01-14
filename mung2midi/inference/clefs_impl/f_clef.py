@@ -1,4 +1,4 @@
-from mung.constants import ClassNamesConstants
+from mung.constants import ClassNameConstants as C
 
 from .clef_base import ClefBase
 
@@ -6,7 +6,7 @@ from .clef_base import ClefBase
 class FClef(ClefBase):
     @property
     def name(self) -> str:
-        return ClassNamesConstants.F_CLEF
+        return C.Clefs.F_CLEF
 
     @property
     def base_pitch(self) -> int:

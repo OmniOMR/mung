@@ -1,4 +1,4 @@
-from mung.constants import InferenceEngineConstants, ClassNamesConstants
+from mung.constants import InferenceEngineConstants as I, ClassNameConstants as C
 from mung import NotationGraph, Node
 from typing import Optional, Callable
 from itertools import chain
@@ -11,7 +11,6 @@ from ...logger import logger
 
 
 class NoteheadSnapEngine:
-    _CONST = InferenceEngineConstants()
 
     def __init__(self, strategy: Optional[NoteheadSnapEngineStrategy] = None):
         """
@@ -54,7 +53,7 @@ class NoteheadSnapEngine:
         self._set_wrappers(StaffWrapper.from_graph(graph) if staff_wrappers is None else staff_wrappers)
         self._set_graph(graph)
 
-        noteheads = self._graph.filter_vertices(self._CONST.NONGRACE_NOTEHEAD_CLASS_NAMES)
+        noteheads = self._graph.filter_vertices(I.NONGRACE_NOTEHEAD_CLASS_NAMES)
         # Split noteheads to three categories based on the difficulty of their assignment to staff:
         # - No leger lines
         # - Two and more leger lines
@@ -75,7 +74,7 @@ class NoteheadSnapEngine:
         one_line = []
         two_or_more_lines = []
         for notehead in noteheads:
-            num_lines = len(self._graph.children(notehead, class_filter=ClassNamesConstants.LEGER_LINE))
+            num_lines = len(self._graph.children(notehead, class_filter=C.NoteheadAttachments.LEGER_LINE))
             match num_lines:
                 case 0:
                     no_lines.append(notehead)
@@ -92,10 +91,10 @@ class NoteheadSnapEngine:
         total += _process_noteheads(two_or_more_lines)
         total += _process_noteheads(one_line)
         
-        log_total(total, self._CONST.NONGRACE_NOTEHEAD_CLASS_NAMES)
+        log_total(total, I.NONGRACE_NOTEHEAD_CLASS_NAMES)
 
         snapped, total = self._snap_grace_notes_to_staff()
-        logger.info(f"Snapped {snapped}/{total} {', '.join(InferenceEngineConstants.GRACE_NOTEHEAD_CLASS_NAMES)} to staffs.")
+        logger.info(f"Snapped {snapped}/{total} {', '.join(I.GRACE_NOTEHEAD_CLASS_NAMES)} to staffs.")
     
     def snap_notehead_with_leger_lines_to_staff(self, notehead: Node):
         """
@@ -128,7 +127,7 @@ class NoteheadSnapEngine:
                     - Assign it to the closest staff.
                     - Optional implemented fallback: Compute the direction based on stem direction - up/down.
         """
-        leger_lines = self._graph.children(notehead, ClassNamesConstants.LEGER_LINE)
+        leger_lines = self._graph.children(notehead, C.NoteheadAttachments.LEGER_LINE)
         assert len(leger_lines) > 0
         distance_from_staffs = [(sw.vertical_distance_from_geometry(notehead), sw.parent_staff_id)
                                 for sw in self._staff_wrappers]        
@@ -270,7 +269,7 @@ class NoteheadSnapEngine:
         """
         Returns true, if given node has at least one leger line connected to it as a child.
         """
-        return len(self._graph.children(node, ClassNamesConstants.LEGER_LINE)) > 0
+        return len(self._graph.children(node, C.NoteheadAttachments.LEGER_LINE)) > 0
 
     @staticmethod
     def _find_first_staff_under(staff_distances_with_ids: list[tuple[int,int]]) -> tuple[int,int]:
@@ -311,15 +310,15 @@ class NoteheadSnapEngine:
         Returns a notehead that shares a leger line with the given notehead
         and has two and more leger lines. If not found, returns ``None`` .
         """
-        leger_lines = self._graph.children(notehead, class_filter=ClassNamesConstants.LEGER_LINE)
+        leger_lines = self._graph.children(notehead, class_filter=C.NoteheadAttachments.LEGER_LINE)
         assert len(leger_lines) == 1
         leger_line = leger_lines[0]
 
         # Get noteheads connected to the same leger line
-        other_noteheads = self._graph.parents(leger_line, class_filter=NoteheadSnapEngine._CONST.NOTEHEAD_CLASS_NAMES)
+        other_noteheads = self._graph.parents(leger_line, class_filter=I.NOTEHEAD_CLASS_NAMES)
         # Compute number of assigned leger lines to each found notehead, (Node, # leger lines)
         other_noteheads = [
-            (x, len(self._graph.children(x, class_filter=ClassNamesConstants.LEGER_LINE)))
+            (x, len(self._graph.children(x, class_filter=C.NoteheadAttachments.LEGER_LINE)))
             for x in other_noteheads
         ]
         # Find notehead with the most leger lines - assume higher precision
@@ -335,12 +334,12 @@ class NoteheadSnapEngine:
         Finds and returns ID of staff to which the given notehead is assigned.
         Crashes if staff is not found or there are more than one staffs connected.
         """
-        staffs = self._graph.children(notehead, class_filter=ClassNamesConstants.STAFF)
+        staffs = self._graph.children(notehead, class_filter=C.Staves.STAFF)
         assert len(staffs) == 1
         return staffs[0].id
     
     def _get_positions_parent_staff_id(self, position_id: int) -> int:
-        staffs = self._graph.parents(position_id, ClassNamesConstants.STAFF)
+        staffs = self._graph.parents(position_id, C.Staves.STAFF)
         if len(staffs) != 1:
             raise ValueError(f"Staffposition {position_id} has wrong number of staff parents: {len(staffs)}:")
         return staffs[0].id
@@ -352,15 +351,15 @@ class NoteheadSnapEngine:
 
         The given notehead has to have exactly one leger line. 
         """
-        stems = self._graph.children(notehead, class_filter=ClassNamesConstants.STEM)
+        stems = self._graph.children(notehead, class_filter=C.NoteheadAttachments.STEM)
 
         # Cannot resolve multistem chords
         if len(stems) != 1:
             return None
         stem = stems[0]
         
-        noteheads_in_chord = [n for n in self._graph.parents(stem, class_filter=self._CONST.NONGRACE_NOTEHEAD_CLASS_NAMES)
-            if len(self._graph.children(n, class_filter=ClassNamesConstants.LEGER_LINE)) != 1]
+        noteheads_in_chord = [n for n in self._graph.parents(stem, class_filter=I.NONGRACE_NOTEHEAD_CLASS_NAMES)
+            if len(self._graph.children(n, class_filter=C.NoteheadAttachments.LEGER_LINE)) != 1]
         
         assert notehead not in noteheads_in_chord
 
@@ -377,7 +376,7 @@ class NoteheadSnapEngine:
 
         The given notehead has to have exactly one leger line. 
         """
-        beams = self._graph.children(notehead, class_filter=ClassNamesConstants.BEAM)
+        beams = self._graph.children(notehead, class_filter=C.NoteheadAttachments.BEAM)
         if len(beams) == 0:
             return None
         
@@ -386,9 +385,9 @@ class NoteheadSnapEngine:
         # - Has two or more leger lines
         # -> Does not have exactly one leger line
         noteheads = [other_notehead for other_notehead in chain.from_iterable(
-            self._graph.parents(beam, class_filter=self._CONST.NONGRACE_NOTEHEAD_CLASS_NAMES)
+            self._graph.parents(beam, class_filter=I.NONGRACE_NOTEHEAD_CLASS_NAMES)
             for beam in beams
-        ) if len(self._graph.children(other_notehead, class_filter=ClassNamesConstants.LEGER_LINE)) != 1]
+        ) if len(self._graph.children(other_notehead, class_filter=C.NoteheadAttachments.LEGER_LINE)) != 1]
 
         noteheads = list(set(noteheads))
         assert notehead not in noteheads
@@ -400,7 +399,7 @@ class NoteheadSnapEngine:
         return count_ids_check_for_draw(staff_ids)
     
     def _direction_based_on_stem(self, notehead: Node) -> Optional[StaffDirectionFromNotehead]:
-        stems = self._graph.children(notehead, class_filter=ClassNamesConstants.STEM)
+        stems = self._graph.children(notehead, class_filter=C.NoteheadAttachments.STEM)
 
         # Cannot resolve multistem chords
         if len(stems) != 1:
@@ -461,7 +460,7 @@ class NoteheadSnapEngine:
     
     def _snap_grace_notes_to_staff(self) -> tuple[int, int]:
         total = 0
-        grace_notes = self._graph.filter_vertices(InferenceEngineConstants.GRACE_NOTEHEAD_CLASS_NAMES)
+        grace_notes = self._graph.filter_vertices(I.GRACE_NOTEHEAD_CLASS_NAMES)
         for grace_note in grace_notes:
             total += self._process_grace_note(grace_note)
         return total, len(grace_notes)
@@ -478,7 +477,7 @@ class NoteheadSnapEngine:
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/grace-element/
         """
         parents = self._graph.parents(
-            grace, InferenceEngineConstants.NOTEHEAD_CLASS_NAMES
+            grace, I.NOTEHEAD_CLASS_NAMES
             )
         
         if len(parents) != 1:
@@ -489,7 +488,7 @@ class NoteheadSnapEngine:
         
         parent = parents[0]
 
-        parent_staffs = self._graph.children(parent, ClassNamesConstants.STAFF)
+        parent_staffs = self._graph.children(parent, C.Staves.STAFF)
         if len(parent_staffs) != 1:
             logger.warning(f"{parent.class_name} {parent.id} should be linked to exactly one staff")
             if len(parent_staffs) == 0:
@@ -501,7 +500,7 @@ class NoteheadSnapEngine:
         # Grace notes with leger lines should be snapped to staff only,
         # if there are no leger lines connections, the grace note has to be linked
         # to a staff position.
-        if not self._graph.has_children(grace, class_filter=ClassNamesConstants.LEGER_LINE):
+        if not self._graph.has_children(grace, class_filter=C.NoteheadAttachments.LEGER_LINE):
             self._snap_grace_note_without_leger_lines_to_staff(grace, parent_staff.id)
             print(f"Snapping {grace} to staff position")
         return 1

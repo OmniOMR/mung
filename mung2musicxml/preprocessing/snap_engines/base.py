@@ -1,8 +1,9 @@
 from abc import ABC
 from mung import NotationGraph, Node
-from mung.constants import ClassNamesConstants
 from typing import Optional
+from enum import StrEnum
 
+from mung.constants import ClassNameConstants as C
 from .strategies import GeneralSnapEngineStrategy
 from .utils import log_total
 from ..staff_wrapper import StaffWrapper
@@ -17,7 +18,7 @@ class SnapEngineBase(ABC):
     If the object is already connected to a staffline,
     it tries to use the parent staff of said staffline.
     """
-    _SYMBOL_NAMES: list[str] | set[str] | str
+    _SYMBOL_NAMES: list[str] | set[str] | str | list[StrEnum]
 
     def __init__(self, strategy: Optional[GeneralSnapEngineStrategy] = None):
         self._graph: NotationGraph = None #type: ignore
@@ -66,7 +67,7 @@ class SnapEngineBase(ABC):
         log_total(total, self._SYMBOL_NAMES)
     
     def _staff_id_from_staffline(self, staffline: Node) -> Optional[int]:
-        staff_from_staffline = self._graph.parents(staffline, class_filter=ClassNamesConstants.STAFF)
+        staff_from_staffline = self._graph.parents(staffline, class_filter=C.Staves.STAFF)
         if len(staff_from_staffline) != 1:
             self._warning_or_error(f"Staffline is assigned to {len(staff_from_staffline)} number of staffs")
             return None
@@ -82,8 +83,8 @@ class SnapEngineBase(ABC):
         assigned to multiple stafflines or staffs, or the assigned staffline
         is not a children of the assigned staff.
         """
-        stafflines = self._graph.children(symbol, class_filter=ClassNamesConstants.STAFFLINE)
-        staffs = self._graph.children(symbol, class_filter=ClassNamesConstants.STAFF)
+        stafflines = self._graph.children(symbol, class_filter=C.Staves.STAFF_LINE)
+        staffs = self._graph.children(symbol, class_filter=C.Staves.STAFF)
 
         if len(stafflines) > 1:
             self._warning_or_error("Symbol cannot be connected to more than one staffline")

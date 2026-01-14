@@ -1,6 +1,6 @@
 from typing import Optional
 from mung import NotationGraph, Node
-from mung.constants import ClassNamesConstants as C, InferenceEngineConstants as I
+from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 from mung2midi.inference import OnsetsInferenceEngine
 
 from .strategy import MultistemResolverStrategy
@@ -55,7 +55,7 @@ class MultistemResolver:
     def _check_on_start(self):
         # check that all noteheads are linked to exactly one staff
         for node in self._graph.filter_vertices(class_filter=I.NONGRACE_NOTEHEAD_CLASS_NAMES):
-            staffs = self._graph.children(node, class_filter=C.STAFF)
+            staffs = self._graph.children(node, class_filter=C.Staves.STAFF)
             if len(staffs) != 1:
                 self._error_or_warning(
                     f"Symbol {node.class_name} {node.id} has to be connected to exactly one staff, "
@@ -87,7 +87,7 @@ class MultistemResolver:
         return [
             node for node in
             self._graph.filter_vertices(I.NONGRACE_NOTEHEAD_CLASS_NAMES)
-            if len(self._graph.children(node, C.STEM)) > 1
+            if len(self._graph.children(node, C.NoteheadAttachments.STEM)) > 1
         ]
 
     def _find_double_stemmed_in_graph_and_sort(self) -> list[Node]:
@@ -100,7 +100,7 @@ class MultistemResolver:
         # filter
         double_stemmed: list[Node] = []
         for node in multi_stem:
-            if len(self._graph.children(node, C.STEM)) > 2:
+            if len(self._graph.children(node, C.NoteheadAttachments.STEM)) > 2:
                 raise ValueError(f"Notehead {node.id} cannot have more than two stems")
             else:
                 double_stemmed.append(node)
@@ -174,10 +174,10 @@ class MultistemResolver:
                     f"between original node {original.id} and ghost node {ghost.id}")
     
     def _resolve_incoming_precedence_edges(self, original: Node, ghost: Node) -> None:
-        original_staff = self._graph.children(original, class_filter=C.STAFF)[0]
+        original_staff = self._graph.children(original, class_filter=C.Staves.STAFF)[0]
         preceding_same_staff = [
             n for n in self._graph.precedence_parents(original)
-            if self._graph.children(n, class_filter=C.STAFF)[0].id == original_staff.id
+            if self._graph.children(n, class_filter=C.Staves.STAFF)[0].id == original_staff.id
         ]
         logger.debug(f"Preceding symbols on the same staff: {[x.id for x in preceding_same_staff]}")
         for node in preceding_same_staff:
@@ -202,7 +202,7 @@ class MultistemResolver:
         
     def _separate_double_stemmed_to_two(self, notehead: Node):
         assert notehead.class_name in I.NONGRACE_NOTEHEAD_CLASS_NAMES
-        stems = self._graph.children(notehead, C.STEM)
+        stems = self._graph.children(notehead, C.NoteheadAttachments.STEM)
         assert len(stems) == 2
 
         original_stem, ghost_stem = sorted(stems, key=lambda x: x.top)

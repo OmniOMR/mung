@@ -9,9 +9,10 @@ from dataclasses import dataclass
 
 from mung.constants import (
     InferenceEngineConstants as I,
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
     PrecedenceLinksConstants as P,
-    OnsetDataConstants as O
+    OnsetDataConstants as O,
+    Numerals as N
 )
 from mung.graph import group_staffs_into_systems, NotationGraph, NotationGraphError
 from mung.node import bounding_box_dice_coefficient, Node
@@ -95,7 +96,7 @@ class OnsetsInferenceEngine:
             return self.notehead_beats(node, ignore_modifiers=ignore_modifiers)
         elif node.class_name in I.REST_CLASS_NAMES:
             return self.rest_beats(node, ignore_modifiers=ignore_modifiers)
-        elif node.class_name == C.REPEAT_ONE_BAR:
+        elif node.class_name == C.Repeat.REPEAT_1_BAR:
             return self.rest_beats(node, ignore_modifiers=ignore_modifiers)
         else:
             self.__warning_or_error(
@@ -130,7 +131,7 @@ class OnsetsInferenceEngine:
         """
         beat = [Fraction(0)]
 
-        stems = self.children(notehead, [I.STEM])
+        stems = self.children(notehead, [C.NoteheadAttachments.STEM])
         flags_and_beams = self.children(
             notehead,
             I.FLAGS_AND_BEAMS)
@@ -147,17 +148,17 @@ class OnsetsInferenceEngine:
                                         " where multiple durations apply.")
                 beat = [max(beat)]
 
-        elif len(flags_and_beams) > 0 and notehead.class_name == C.NOTEHEAD_HALF and self.strategy.count_flags_and_beams_for_notehead_half:
+        elif len(flags_and_beams) > 0 and notehead.class_name == C.Noteheads.NOTEHEAD_HALF and self.strategy.count_flags_and_beams_for_notehead_half:
             logger.warning(f"Counting flags nad beams for {notehead.class_name} {notehead.id}")
             beat = [Fraction(1) * (Fraction(1, 2) ** len(flags_and_beams))]
 
-        elif notehead.class_name == I.NOTEHEAD_HALF or notehead.class_name == I.NOTEHEAD_WHOLE:
+        elif notehead.class_name == C.Noteheads.NOTEHEAD_HALF or notehead.class_name == C.Noteheads.NOTEHEAD_WHOLE:
             if len(flags_and_beams) != 0:
                 self.__warning_or_error(
                     f"Notehead {notehead.id} is empty, but has {len(flags_and_beams)} flags and beams!"
                 )
             
-            if len(stems) > 0 and notehead.class_name == C.NOTEHEAD_WHOLE:
+            if len(stems) > 0 and notehead.class_name == C.Noteheads.NOTEHEAD_WHOLE:
                 self.__warning_or_error(
                     f"{notehead.class_name} {notehead.id} should not have {len(stems)} stems."
                 )
@@ -167,7 +168,7 @@ class OnsetsInferenceEngine:
             else:
                 beat = [Fraction(2)]
 
-        elif notehead.class_name == I.NOTEHEAD_FULL:
+        elif notehead.class_name == C.Noteheads.NOTEHEAD_BLACK:
             if len(stems) == 0:
                 self.__warning_or_error(
                     f"Full notehead {notehead.id} has no stem!"
@@ -266,14 +267,14 @@ class OnsetsInferenceEngine:
     
     @staticmethod
     def _cache_time_modifier_tuple(tuple_: Node, modifier: Fraction) -> None:
-        assert tuple_.class_name == C.TUPLE
+        assert tuple_.class_name == C.Tuplets.TUPLET
         assert modifier > 0
         logger.debug(f"Caching time modifier for tuple {tuple_.id}, {modifier}")
         tuple_.data[O.TUPLE_TIME_MODIFICATION] = modifier
     
     @staticmethod
     def _try_decache_time_modifier_tuple(tuple_: Node) -> Optional[Fraction]:
-        assert tuple_.class_name == C.TUPLE
+        assert tuple_.class_name == C.Tuplets.TUPLET
         return tuple_.data.get(O.TUPLE_TIME_MODIFICATION, None)
 
     def compute_or_decache_tuple_modifier(self, tuple_: Node, cache: bool = True) -> Fraction:
@@ -305,7 +306,7 @@ class OnsetsInferenceEngine:
 
         ``modifier = 2 - 1/(2^n)``.
         """
-        assert all(x.class_name == C.AUGMENTATION_DOT for x in ddots)
+        assert all(x.class_name == C.NoteheadAttachments.AUGMENTATION_DOT for x in ddots)
         return 2 - (Fraction(1,2) ** len(ddots))
 
     def _compute_duration_modifier(self, notehead: Node) -> Fraction:
@@ -320,7 +321,7 @@ class OnsetsInferenceEngine:
 
         duration_modifier = Fraction(1)
         # Dealing with tuples:
-        tuples = sorted(self.children(notehead, [I.TUPLE]), key=lambda x: x.id)
+        tuples = sorted(self.children(notehead, [C.Tuplets.TUPLET]), key=lambda x: x.id)
         # TODO: silently ignore multiple tuples and only choose the first one
         # or maybe resolve this some other way
         if len(tuples) > 1:
@@ -331,7 +332,7 @@ class OnsetsInferenceEngine:
             duration_modifier = self.compute_or_decache_tuple_modifier(tuples[0])
         
         # Duration dots
-        ddots = self.children(notehead, C.AUGMENTATION_DOT)
+        ddots = self.children(notehead, C.NoteheadAttachments.AUGMENTATION_DOT)
         dot_duration_modifier = self._duration_dots_to_modifier(ddots)
         
         duration_modifier *= dot_duration_modifier
@@ -350,7 +351,7 @@ class OnsetsInferenceEngine:
             Also ignores deriving duration from the time signature
             for whole rests.
         """
-        base_rest_duration = C.rest_name_to_duration(rest.class_name)
+        base_rest_duration = I.rest_name_to_duration(rest.class_name)
         # Process the whole rest:
         #  - if it is the only symbol in the measure, it should take on
         #    the duration of the current time signature.
@@ -387,7 +388,7 @@ class OnsetsInferenceEngine:
         # graph = NotationGraph(list(self.id_to_node_mapping.values()))
 
         # Find current time signature
-        staffs = self.__graph.children(node, class_filter=[I.STAFF])
+        staffs = self.__graph.children(node, class_filter=[C.Staves.STAFF])
 
         if len(staffs) == 0:
             logger.warning('Interpreting object {0} as measure-lasting, but'
@@ -426,14 +427,14 @@ class OnsetsInferenceEngine:
 
     def process_multistem_notehead(self, notehead: Node) -> list[Fraction]:
         """Attempts to recover the duration options of a multi-stem note."""
-        stems = self.children(notehead, C.STEM)
+        stems = self.children(notehead, C.NoteheadAttachments.STEM)
         flags_and_beams = self.children(
             notehead,
             I.FLAGS_AND_BEAMS
         )
 
         if len(flags_and_beams) == 0:
-            if notehead.class_name == C.NOTEHEAD_FULL:
+            if notehead.class_name == C.Noteheads.NOTEHEAD_BLACK:
                 return [Fraction(1)]
             elif notehead.class_name in I.NOTEHEADS_EMPTY:
                 return [Fraction(2)]
@@ -467,7 +468,7 @@ class OnsetsInferenceEngine:
 
         beat = [beat_above]
 
-        tuples = self.children(notehead, [I.TUPLE])
+        tuples = self.children(notehead, [C.Tuplets.TUPLET])
         if len(tuples) % 2 != 0:
             raise NotImplementedError('Cannot deal with multi-stem note'
                                       ' that has an uneven number of tuples:'
@@ -501,7 +502,7 @@ class OnsetsInferenceEngine:
 
         if self.strategy.precedence_only_for_objects_connected_to_staff:
             precedence_nodes = [c for c in precedence_nodes
-                                if len(self.children(c, [I.STAFF])) > 0]
+                                if len(self.children(c, [C.Staves.STAFF])) > 0]
 
         durations = {c.id: self.beats(c) for c in precedence_nodes}
 
@@ -554,7 +555,7 @@ class OnsetsInferenceEngine:
         # - Assign objects to staffs
         objid2staff = {}
         for c in nodes:
-            staffs = self.children(c, [I.STAFF])
+            staffs = self.children(c, [C.Staves.STAFF])
             if len(staffs) == 1:
                 objid2staff[c.id] = staffs[0].id
 
@@ -564,7 +565,7 @@ class OnsetsInferenceEngine:
         for node in list(p_nodes.values()):
             if len(node.outlinks) == 0:
                 try:
-                    staff = self.children(node.obj, [I.STAFF])[0]
+                    staff = self.children(node.obj, [C.Staves.STAFF])[0]
                 except IndexError:
                     logger.error('Object {0} is a sink node in the precedence graph, but has no staff!'
                                   ''.format(node.obj.id))
@@ -587,7 +588,7 @@ class OnsetsInferenceEngine:
         staff2source_nodes = collections.defaultdict(list)
         for node in list(p_nodes.values()):
             if len(node.inlinks) == 0:
-                staff = self.children(node.obj, [I.STAFF])[0]
+                staff = self.children(node.obj, [C.Staves.STAFF])[0]
                 source_nodes2staff[node.obj.id] = staff.id
                 staff2source_nodes[staff.id].append(node)
 
@@ -805,7 +806,7 @@ class OnsetsInferenceEngine:
 
         # Add the relationships between the measure separator nodes.
         #  - Get staves to which the mseps are connected
-        msep_staffs = {m.id: self.children(m, [I.STAFF])
+        msep_staffs = {m.id: self.children(m, [C.Staves.STAFF])
                        for m in measure_separators}
         #  - Sort first by bottom-most staff to which the msep is connected
         #    to get systems
@@ -884,7 +885,7 @@ class OnsetsInferenceEngine:
         #    at the beginning of the next one anyway.)
         time_signatures_to_first_measure = {}
         for t in time_signatures:
-            s = self.children(t, [I.STAFF])[0]
+            s = self.children(t, [C.Staves.STAFF])[0]
             # - Find the measure pairs
             for i, (left_msep, right_msep) in enumerate(measures):
                 if s not in msep_staffs[right_msep.id]:
@@ -1198,7 +1199,7 @@ class OnsetsInferenceEngine:
             if n.class_name not in I.NUMERALS:
                 raise ValueError(f"Symbol {n.id} is not a numeral!")
         numeral_names = [n.class_name for n in sorted(numerals, key=lambda x: x.left)]
-        return C.interpret_numerals(numeral_names)
+        return N.interpret_numerals(numeral_names)
 
     def interpret_time_signature(
             self,
@@ -1260,9 +1261,9 @@ class OnsetsInferenceEngine:
         is_whole = False
         is_alla_breve = False
         for m in members:
-            if m.class_name == I.TIME_SIG_COMMON:
+            if m.class_name == C.TimeSignatures.TIME_SIG_COMMON:
                 is_whole = True
-            if m.class_name == I.TIME_SIG_CUT_COMMON:
+            if m.class_name == C.TimeSignatures.TIME_SIG_CUT_COMMON:
                 is_alla_breve = True
 
         if is_whole or is_alla_breve:
@@ -1276,7 +1277,7 @@ class OnsetsInferenceEngine:
 
         # Does the time signature have a fraction-like format?
         is_fraction_like = True
-        has_letter_other = (len([m for m in members if m.class_name == I.LETTER_OTHER]) > 0)
+        has_letter_other = (len([m for m in members if m.class_name == C.Text.OTHER_TEXT]) > 0)
         #  - Does it have a separator slash?
         if has_letter_other:
             logger.info('... Has fraction slash')
@@ -1480,8 +1481,8 @@ class OnsetsInferenceEngine:
 
         def __get_tie_notes(_tie, graph):
             notes = graph.parents(_tie,
-                                  class_filter=[I.NOTEHEAD_FULL, I.NOTEHEAD_HALF,
-                                                I.NOTEHEAD_WHOLE])
+                                  class_filter=[C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF,
+                                                C.Noteheads.NOTEHEAD_WHOLE])
             if len(notes) == 0:
                 raise NotationGraphError('No notes from tie {0}'.format(_tie.id))
             if len(notes) == 1:
@@ -1507,7 +1508,7 @@ class OnsetsInferenceEngine:
         # the new onsets dict by the time we process the note on the left
         # of the leftward tie (its predecessor).
         for k in sorted(onsets, key=lambda x: onsets[x], reverse=True):
-            ties = g.children(k, class_filter=[I.TIE_CLASS_NAME])
+            ties = g.children(k, class_filter=[C.Spanners.TIE])
             if len(ties) == 0:
                 continue
 

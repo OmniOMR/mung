@@ -4,7 +4,7 @@ from itertools import product
 import numpy as np
 
 from mung import NotationGraph
-from mung.constants import ClassNamesConstants as C
+from mung.constants import ClassNameConstants as C
 from mung2musicxml.preprocessing.multistem import MultistemResolver
 from ..utils import DummyNode
 
@@ -12,7 +12,7 @@ from ..utils import DummyNode
 class TestDoubleStemResolving(TestCase):
     resolver = MultistemResolver()
     @parameterized.expand([
-        (C.NOTEHEAD_FULL), (C.NOTEHEAD_HALF)
+        (C.Noteheads.NOTEHEAD_BLACK), (C.Noteheads.NOTEHEAD_HALF)
     ])
     def test_simple_single_no_precedence(self, name: str):
         """
@@ -23,13 +23,13 @@ class TestDoubleStemResolving(TestCase):
            |
         """
         _id = 0
-        staff = DummyNode(_id, C.STAFF) # 0
+        staff = DummyNode(_id, C.Staves.STAFF) # 0
         _id += 1
         original_note = DummyNode(_id, name) # 1
         _id += 1
-        stem_up = DummyNode(_id, C.STEM, top=0) # 2
+        stem_up = DummyNode(_id, C.NoteheadAttachments.STEM, top=0) # 2
         _id += 1
-        stem_down = DummyNode(_id, C.STEM, top=5) # 3
+        stem_down = DummyNode(_id, C.NoteheadAttachments.STEM, top=5) # 3
         
         graph = NotationGraph([staff, original_note, stem_up, stem_down])
         graph.add_edge(original_note, stem_up)
@@ -46,8 +46,8 @@ class TestDoubleStemResolving(TestCase):
         })
     
     @parameterized.expand(
-            product([C.NOTEHEAD_FULL, C.NOTEHEAD_HALF],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE])
+            product([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE])
     )
     def test_simple_incoming_single_precedence(self, original_name: str, other_name: str):
         """
@@ -59,13 +59,13 @@ class TestDoubleStemResolving(TestCase):
                   |
         """
         _id = 0
-        staff = DummyNode(_id, C.STAFF) # 0
+        staff = DummyNode(_id, C.Staves.STAFF) # 0
         _id += 1
         original_note = DummyNode(_id, original_name) # 1
         _id += 1
-        stem_up = DummyNode(_id, C.STEM, top=0) # 2
+        stem_up = DummyNode(_id, C.NoteheadAttachments.STEM, top=0) # 2
         _id += 1
-        stem_down = DummyNode(_id, C.STEM, top=5) # 3
+        stem_down = DummyNode(_id, C.NoteheadAttachments.STEM, top=5) # 3
         _id += 1
         other_note = DummyNode(_id, other_name) # 4 (leaving out stem)
         
@@ -88,9 +88,9 @@ class TestDoubleStemResolving(TestCase):
         })
     
     @parameterized.expand(
-            product([C.NOTEHEAD_FULL, C.NOTEHEAD_HALF],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],)
+            product([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],)
     )
     def test_simple_incoming_double_precedence(self, original_name: str, other_name: str, other_name2: str):
         """
@@ -102,13 +102,13 @@ class TestDoubleStemResolving(TestCase):
             o     |
         """
         _id = 0
-        staff = DummyNode(_id, C.STAFF) # 0
+        staff = DummyNode(_id, C.Staves.STAFF) # 0
         _id += 1
         original_note = DummyNode(_id, original_name) # 1
         _id += 1
-        stem_up = DummyNode(_id, C.STEM, top=0) # 2
+        stem_up = DummyNode(_id, C.NoteheadAttachments.STEM, top=0) # 2
         _id += 1
-        stem_down = DummyNode(_id, C.STEM, top=5) # 3
+        stem_down = DummyNode(_id, C.NoteheadAttachments.STEM, top=5) # 3
         _id += 1
         other_note = DummyNode(_id, other_name, top=0) # 4 (leaving out stem)
         _id += 1
@@ -142,9 +142,9 @@ class TestDoubleStemResolving(TestCase):
         self.assertSetEqual(graph.precedence_edges, expected_edges)
 
     @parameterized.expand(
-            product([C.NOTEHEAD_FULL, C.NOTEHEAD_HALF],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],)
+            product([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],)
     )
     def test_simple_outgoing_double_precedence(self, original_name: str, other_name: str, other_name2: str):
         """
@@ -156,13 +156,13 @@ class TestDoubleStemResolving(TestCase):
             |        o
         """
         _id = 0
-        staff = DummyNode(_id, C.STAFF) # 0
+        staff = DummyNode(_id, C.Staves.STAFF) # 0
         _id += 1
         original_note = DummyNode(_id, original_name) # 1
         _id += 1
-        stem_up = DummyNode(_id, C.STEM, top=0) # 2
+        stem_up = DummyNode(_id, C.NoteheadAttachments.STEM, top=0) # 2
         _id += 1
-        stem_down = DummyNode(_id, C.STEM, top=5) # 3
+        stem_down = DummyNode(_id, C.NoteheadAttachments.STEM, top=5) # 3
         _id += 1
         other_note = DummyNode(_id, other_name, top=0) # 4 (leaving out stem)
         _id += 1
@@ -194,11 +194,11 @@ class TestDoubleStemResolving(TestCase):
         self.assertSetEqual(graph.precedence_edges, expected_edges)
 
     @parameterized.expand(
-            product([C.NOTEHEAD_FULL, C.NOTEHEAD_HALF],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
-                    [C.NOTEHEAD_FULL, C.NOTEHEAD_HALF, C.NOTEHEAD_WHOLE],
+            product([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],
+                    [C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF, C.Noteheads.NOTEHEAD_WHOLE],
                     [-5, 5],
-                    [C.FLAG_8TH_UP, C.BEAM]
+                    [C.Flags.FLAG_8_UP, C.NoteheadAttachments.BEAM]
                     )
     )
     def test_different_length_outgoing_double_precedence(
@@ -220,13 +220,13 @@ class TestDoubleStemResolving(TestCase):
             |        o
         """
         _id = 0
-        staff = DummyNode(_id, C.STAFF) # 0
+        staff = DummyNode(_id, C.Staves.STAFF) # 0
         _id += 1
         original_note = DummyNode(_id, original_name) # 1
         _id += 1
-        stem_up = DummyNode(_id, C.STEM, top=-5) # 2
+        stem_up = DummyNode(_id, C.NoteheadAttachments.STEM, top=-5) # 2
         _id += 1
-        stem_down = DummyNode(_id, C.STEM, top=5) # 3
+        stem_down = DummyNode(_id, C.NoteheadAttachments.STEM, top=5) # 3
         _id += 1
         other_note = DummyNode(_id, other_name, top=0) # 4 (leaving out stem)
         _id += 1

@@ -4,7 +4,7 @@ from fractions import Fraction
 from mung import Node, NotationGraph
 from mung.constants import (
     OnsetDataConstants as O,
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
 )
 from ...inference import Pitch, PitchDataConstants
 from ...utils import flatten
@@ -76,7 +76,7 @@ class _Subevent:
         """
         Returns the topmost staff linked to any of the durables inside the subevent.
         """
-        staffs = flatten(graph.children(n, class_filter=C.STAFF) for n in self)
+        staffs = flatten(graph.children(n, class_filter=C.Staves.STAFF) for n in self)
         staffs.sort(key=lambda s: s.top)
         return staffs[0]
     

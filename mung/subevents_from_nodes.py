@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from .graph import Node, NotationGraph
-from .constants import ClassNamesConstants as C
+from .constants import ClassNameConstants as C
 from .constants import InferenceEngineConstants as I
 from .logger import logger
 
@@ -13,7 +13,7 @@ def form_chords(noteheads: list[Node], graph: NotationGraph) -> list[list[Node]]
     output = []
     stems: list[Node] = []
     for node in noteheads:
-        s = graph.children(node, class_filter=C.STEM)
+        s = graph.children(node, class_filter=C.NoteheadAttachments.STEM)
         if len(s) > 1:
             logger.warning(f"Found double stemmed notehead {node.id}, "
                        "should have been resolved earlier")
@@ -39,7 +39,7 @@ def form_chord_from_whole_notes(wholes: list[Node], graph: NotationGraph) -> lis
     """
     staffs_to_wholes: defaultdict[Node, list[Node]] = defaultdict(list)
     def _get_staff(node: Node, graph: NotationGraph) -> Node:
-        return graph.children(node, class_filter=C.STAFF)[0]
+        return graph.children(node, class_filter=C.Staves.STAFF)[0]
     
     for whole in wholes:
         staffs_to_wholes[_get_staff(whole, graph)].append(whole)
@@ -59,7 +59,7 @@ def subevents_from_list_of_symbols(symbols: list[Node], graph: NotationGraph) ->
     Assumes that all notes are located in the same system measure.
     """
     # notehead wholes are special case
-    wholes = [n for n in symbols if n.class_name == C.NOTEHEAD_WHOLE]
+    wholes = [n for n in symbols if n.class_name == C.Noteheads.NOTEHEAD_WHOLE]
     # other noteheads are also special, as they can form chords
     noteheads = [n for n in symbols
                     if n.class_name in I.NONGRACE_NOTEHEAD_CLASS_NAMES and n not in wholes]

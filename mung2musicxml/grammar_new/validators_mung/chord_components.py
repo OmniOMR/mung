@@ -1,6 +1,6 @@
 from typing import TypeVar
 from mung import Node, NotationGraph
-from mung.constants import ClassNamesConstants, InferenceEngineConstants
+from mung.constants import ClassNameConstants as C, InferenceEngineConstants
 
 from ..violations import InvalidSetViolation, GrammarViolation
 from ..parts import GrammarNode
@@ -13,10 +13,10 @@ T = TypeVar("T")
 class ChordComponentValidator:
     _CLASSES_TO_CHECK = [
         *InferenceEngineConstants.FLAGS_AND_BEAMS,
-        ClassNamesConstants.TUPLE,
-        ClassNamesConstants.DYNAMIC_CRESHENDO_HAIRPIN,
-        ClassNamesConstants.DYNAMIC_DIMINUENDO_HAIRPIN,
-        ClassNamesConstants.SLUR
+        C.Tuplets.TUPLET,
+        C.Dynamics.DYNAMIC_CRESCENDO_HAIRPIN,
+        C.Dynamics.DYNAMIC_DIMINUENDO_HAIRPIN,
+        C.Spanners.SLUR
         ]
 
     def __init__(self) -> None:
@@ -31,7 +31,7 @@ class ChordComponentValidator:
 
 
     def _has_single_stem(self, notehead: Node, graph: NotationGraph) -> bool:
-        return len(graph.children(notehead, class_filter=ClassNamesConstants.STEM)) == 1
+        return len(graph.children(notehead, class_filter=C.NoteheadAttachments.STEM)) == 1
     
     def _single_stem_noteheads_from_stem(self, stem: Node, graph: NotationGraph) -> list[Node]:
         return [x for x in graph.parents(stem, class_filter=InferenceEngineConstants.NOTEHEAD_CLASS_NAMES) if self._has_single_stem(x, graph)]
@@ -41,7 +41,7 @@ class ChordComponentValidator:
         Returns a list of chords, list of list of nodes, that are unambiguous. 
         Any notehead with multiple stems is removed from the chord.
         """
-        stems = graph.filter_vertices(ClassNamesConstants.STEM)
+        stems = graph.filter_vertices(C.NoteheadAttachments.STEM)
         chords: list[list[Node]] = []
         for stem in stems:
             chords.append(self._single_stem_noteheads_from_stem(stem, graph))

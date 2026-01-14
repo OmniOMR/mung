@@ -4,7 +4,7 @@ from parameterized import parameterized
 from typing import Optional, Any, Callable
 import inspect
 
-from mung.constants import InferenceEngineConstants, ClassNamesConstants
+from mung.constants import InferenceEngineConstants, ClassNameConstants
 
 
 def check_list_fields_and_properties(obj: Any, predicate: Callable[[list], bool], skip: Optional[set[str]] = None) -> list[str]:
@@ -51,7 +51,7 @@ def predicate_unique(value: list) -> bool:
 class TestConstantListFields(TestCase):
     @parameterized.expand(
         [
-            (ClassNamesConstants.__name__, ClassNamesConstants, {}),
+            (ClassNameConstants.__name__, ClassNameConstants, {}),
             (InferenceEngineConstants.__name__, InferenceEngineConstants, {"PITCH_STEPS"})
         ]
     )
