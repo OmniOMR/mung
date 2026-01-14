@@ -1,6 +1,6 @@
-# MuNG Annotation Instructions
+# Annotation Instructions for MuNG 2.0
 
-This document is a guide for annotators on how to annotate a new document in the MuNG format properly.
+This document is a guide for annotators on how to annotate a new document in the MuNG 2.0 format properly.
 
 > **📖 New here?** Read the [Introduction](annotation-introduction.md) text first.
 
@@ -3151,6 +3151,10 @@ Seconda volta
 2da.
 1a
 2a
+Imal
+IImal
+Einmal
+Zweimal
 ```
 
 There may even be multiple repetitions under one bracket (first two times play the first bracket, third time play the second bracket), in which case the text in the first bracket may look like this:
@@ -3322,41 +3326,190 @@ Segno U+1D10B: 𝄋
 ---
 
 
-### repeat1Bar
+### `repeat1Bar`
 
-- in CVAT `repeat_measure_sign`
-- `%`
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
 
-TODO: nad tímhle může být text (stejně jako nad multi-measure rets / whole rest), ten se linkuje v precedenčním grafu (na to je nějaká diskuze někde)
+*(`repeat_measure_sign` previously in CVAT)*
 
-TODO: někdy se používá pro repeat půl-taktu, to je v pohodě, je to pořád tento symbol
+<p>
+  <img src="img/repeat1Bar-0.png" height="200"/>
+  <img src="img/repeat1Bar-syntax.png" height="200"/>
+  <img src="img/repeat1Bar-precedence.png" height="200"/>
+</p>
 
-TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což je jen ten slash bez teček a někdy to opakuje půl-takt
+- Symbols takes up the entire measure and instructs the player to repeat the previous measure.
+- Annotate with **precise mask**.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
+- The symbol participates in the <kbd>🟢 precedence</kbd> graph, since it is a placeholder for notes that would otherwise be written there explicitly.
+
+<p>
+  <img src="img/repeat1Bar-1.png" width="620"/>
+  <img src="img/repeat1Bar-2.png" height="200"/>
+  <img src="img/repeat1Bar-3.png" height="200"/>
+</p>
+
+The repeat often has `tie`s attached. It's very unlikely that these are slurs, especially when there are more than one of them:
+
+<p>
+  <img src="img/repeat1Bar-ties-1.png" height="200"/>
+</p>
+
+It can sometimes repeat only one of the voices:
+
+<p>
+  <img src="img/repeat1Bar-one-voice-1.png" height="150"/>
+</p>
+
+There may be a number above the symbol, which signals the number of measures that have so far been repeated (when there are many measure repeats next to each other). Annotate the text as [`repeatText`](#repeattext) and add a <kbd>🔴 syntax</kbd> link from the `repeat1Bar` to the`repeatText` object.
+
+<p>
+  <img src="img/repeat1Bar-numbers.png" width="620"/>
+</p>
+
+We assume the symbol repeats the entire measure. If it repeats less than a measure, then annotate it as `unclassified`.
+
+<details>
+  <summary>❓ What about 2-bar repeats and slash-repeats?</summary>
+
+  There are niche repeats, double-percent and quadruple-percent signs that repeat 2 and 4 measures. Then there are slash-repeats that repeat a phrase or a single beat. This shash notation or "simile marks" as they may be called are very rare so we decided not to include them in the MuNG 2.0 ontology.
+
+  For any future updates to MuNG format, please learn more about these at this [MuseScore forum question](https://musescore.org/en/node/127396), [Lilypond documentation section](https://lilypond.org/doc/v2.19/Documentation/notation/short-repeats) and [MusicXML example](https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/beat-repeat-element/).
+
+  There is one example document where a double-slash phrase-repeat is used, but it is annotated as `unclassified`. These are the only two occurrences in the dataset we know of:
+  
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/d9fede70-b9f0-11ea-b68c-005056827e52_2f8490c5-7e84-426e-8628-2bc938f47260
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+</details>
 
 ---
 
 
 ## Unisono
 
-> **🚧 Under construction.**
+In particello documents there are places where one instrument temporarily plays the same music as another one (in unison with the other one). Unison in Italian is "unisono". This unisono section usually starts with text "col Viol." - play "with the Violin".
 
-- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
-- dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem (note: to je pokračování unisona)
-- "col viol" https://github.com/orgs/OmniOMR/discussions/124 stejná věc (stejné precedenční hrany) (note: tohle je začátek unisona)
+<details>
+  <summary>🧵 Relevant discussions</summary>
 
-nějakej "unisonoMark"
+  - https://github.com/orgs/OmniOMR/discussions/124
+</details>
 
-nebo "col instruction" - text nebo něco
 
-dvě čárky = "dtto", stejně jako to předtím
+### `unisonoText`
 
-"interpretační pokyny = čti noty jinde"
+*(`unisonoText` is not part of SMuFL because it is a text class)*
 
-Samples:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+<p>
+  <img src="img/unisonoText-0.png" height="200"/>
+  <img src="img/unisonoText-syntax.png" height="200"/>
+  <img src="img/unisonoText-precedence.png" height="200"/>
+  <img src="img/unisonoText-syntax-staff.png" height="200"/>
+</p>
+
+- It is a text class, use **convex hull mask** and **transcribe if readable**. Do NOT transcribe unreadable text.
+- Add a <kbd>🔴 syntax</kbd> link from the last preceeding note/rest before the unisono section. This <kbd>🔴 syntax</kbd> link may be missing if the `unisonoText` occurs at the very first measure of the staff (thus there is no preceeding note visible).
+- Add a <kbd>🔴 syntax</kbd> link to the `staff`.
+- The last preceeding note/rest that <kbd>🔴 syntax</kbd> links to the text should also <kbd>🟢 precedence</kbd> link to the next note in the part that is to be played unisono with. This <kbd>🟢 precedence</kbd> link can be omitted if it's unclear which part is to be played or the link cannot be for some reason made.
+
+This is an example unisono text:
+
+<p>
+  <img src="img/unisonoText-1.png" height="300"/>
+</p>
+
+Sometimes the unisono text looks like this symbol (do not transcribe the text here):
+
+<p>
+  <img src="img/unisonoText-2.png" height="300"/>
+</p>
+
+The text may not say "col ..." but something else as well:
+
+<p>
+  <img src="img/unisonoText-3.png" height="200"/>
+</p>
+
+The unisono section may start in the middle of a measure and also there may be a [`custos`](#custos) indicating what note is to be played as the first note of the unisono section. Treat the `custos` as a zero-duration notehead and use it for the <kbd>🔴 syntax</kbd> and <kbd>🟢 precedence</kbd> links:
+
+<p>
+  <img src="img/unisonoText-4.png" height="200"/>
+</p>
+
+When the unisono section ends, you should return from the source part via a <kbd>🟢 precedence</kbd> link:
+
+<p>
+  <img src="img/unisonoText-5.png" height="200"/>
+</p>
+
+There are three interesting things in the next example. The first `unisonoText` has no <kbd>🔴 syntax</kbd> inlink because there are no notes preceeding it (there is the <kbd>🔴 syntax</kbd> link to `staff` though). The second `unisonoText` contains instruction to play "with the Violin", but "one octave lower - 8ba". And the following unisono section only applies to one of the two voices in that part - the second voice continues with rests.
+
+<p>
+  <img src="img/unisonoText-6.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+---
+
+
+### `unisonoContinuation`
+
+*(`unisonoContinuation` does not seem to be present in SMuFL, `splitBarDivider` is the closest visually but has different meaning)*
+
+<p>
+  <img src="img/unisonoContinuation-0.png" height="200"/>
+  <img src="img/unisonoContinuation-syntax.png" height="200"/>
+</p>
+
+- Two slashes that signal that a unison section is continuing through these measures. Drawn on a barline or in the middle of a measure.
+- Use **precise mask**.
+- Add a <kbd>🔴 syntax</kbd> link to the `staff`. There may also be links to multiple staves if there are multiple instruments playing unisono next to each other, being marked with only a single `unisonoContinuation` mark.
+
+<p>
+  <img src="img/unisonoContinuation-1.png" height="200"/>
+  <img src="img/unisonoContinuation-2.png" height="200"/>
+</p>
+
+This is one mark for multiple staves:
+
+<p>
+  <img src="img/unisonoContinuation-3.png" height="200"/>
+</p>
+
+This is a unisono section that affects only one voice and then ends in the middle of a measure:
+
+<p>
+  <img src="img/unisonoContinuation-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_38de73a6-8f92-4876-bda7-c71925d04dcd
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
 
 ---
 
@@ -4050,14 +4203,219 @@ Use this class for **non-musical marks or noise** that appear on the page **only
 
 ## Precedence graph
 
-TODO ...
+Precedence graph are the green <kbd>🟢 precedence</kbd> links between nodes. They have three functions:
 
-- primary rule: when two durables meet (end-start), link is there
-- secondary rule: minimize links in-between separate voices (staffs, parts)
-- lemma: between chords, it's all-to-all connections
+1. Define onset (when a note begins within a measure)
+2. Define voices
+3. Define sequential order
 
-Here, there is a missing eighth rest, first system, last measure, bottom staff, onset 1.5 beats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
-(this breaks the central assumption for precedence links, what to do about it?)
+The third function is the simplest and applies to less-musical symbols, usually text-like symbols. Classes that use <kbd>🟢 precedence</kbd> links for sequential order are: [Time Signatures](#time-signatures), [`lyricsText`](#lyricstext), [`dynamic[Mark]`](#dynamicmark), [`tuplet[0..9]`](#tuplet09), [`tupletColon`](#tupletcolon); see those sections for more detail.
+
+Here, we will talk about the first two functions of the <kbd>🟢 precedence</kbd> graph (onset and voices), which apply mainly to notes and rests, however there are more note-like symbols it also applies to. These are the classes we will talk about:
+
+- [Noteheads](#noteheads)
+- [Rests, including multi-measure rests](#rests)
+- [Grace Notes](#grace-notes)
+- [`repeat1Bar`](#repeat1bar)
+- [Voltas](#volta)
+- [`custos`](#custos)
+TODO: unisono?
+
+The principles on how to connect these via <kbd>🟢 precedence</kbd> links are:
+
+1. When two notes/rests meet (end-to-start), link them
+2. Minimize links between separate voices
+3. Between two chords within a voice, link all-to-all
+
+These principles are expressed in more detail in the following text.
+
+
+### Defining onset
+
+*Onset* is the time, when a note (or rest) begins. It is measured from the start of a measure and is counted in beats. In MuNG, we define onset via <kbd>🟢 precedence</kbd> links between "preceeding" noteheads, i.e. when one notehead follows another (the first ends exactly when the second begins), we connect them with a <kbd>🟢 precedence</kbd> link.
+
+This is what the <kbd>🟢 precedence</kbd> graph for a monophonic piece of music looks like:
+
+<p>
+  <img src="./img/precedence-monophonic-1.png" width="620"/>
+</p>
+
+If the music has chords, they get connected all-to-all. This is done in MuNG Studio by selecting the first chord noteheads and then <kbd>Ctrl</kbd>-drag-selecting the second chord noteheads, which automatically creates all the links.
+
+<p>
+  <img src="./img/precedence-homophonic-1.png" width="620"/>
+</p>
+
+Documents with multiple instruments usually consists of many monophonic parts. These parts are independent and links between them are very rare (see [Edgecases](#edgecases) below).
+
+<p>
+  <img src="./img/precedence-multipart-monophonic-1.png" height="200"/>
+</p>
+
+Since onset is counted from the start of a measure, links across measure boundaries are not required for defining onset, however, they are needed to define the flow of multiple voices and they also make the graph easier to read.
+
+<p>
+  <img src="./img/precedence-measures-1.png" width="620"/>
+</p>
+
+This means the first note in the first measure has no incomming <kbd>🟢 precedence</kbd> links. Whenever there is such a note, it means it has 0 onset (it starts at the beginning of the measure).
+
+<p>
+  <img src="./img/precedence-no-inlinks-1.png" width="620"/>
+</p>
+
+A note without incomming links can also exist in the middle of a particello, but the note MUST start at the beginning of its measure:
+
+<p>
+  <img src="./img/precedence-particello-midstart-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Monophonic: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - Multi-part homophonic: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - Particello with mid-staff precedence start: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+
+### Defining voices
+
+In order to identify the proper flow of voices (usually in piano music), there should be no <kbd>🟢 precedence</kbd> links across different voices. The only exception is when a voice starts/ends, then a <kbd>🟢 precedence</kbd> link is present across voices (the splitting and merger).
+
+<p>
+  <img src="./img/precedence-polyphonic-1.png" width="620"/>
+</p>
+
+Don't forget that a chord is still a single voice, so the all-to-all rule applies. This is an example where two voices merge into one voice with chords:
+
+<p>
+  <img src="./img/precedence-polyphonic-2.png" height="200"/>
+</p>
+
+In piano music, a voice can cross onto the second staff:
+
+<p>
+  <img src="./img/precedence-pianoform-crossstaff.png" height="200"/>
+</p>
+
+This is a complex example of piano music where voices appear and disappear frequently:
+
+<p>
+  <img src="./img/precedence-pianoform-1.png" height="200"/>
+</p>
+
+When crossing a measure boundary, pay attention to how voices are aligned:
+
+<p>
+  <img src="./img/precedence-polyphonic-measure-boundary.png" width="620"/>
+</p>
+
+Sometimes there may be multiple voices sharing a notehead. These two voices simply align together, which looks like a voice merger:
+
+<p>
+  <img src="./img/precedence-polyphonic-shared-1.png" width="620"/>
+</p>
+
+The two voices sharing a notehead may sometimes have different durations:
+
+<p>
+  <img src="./img/precedence-polyphonic-shared-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
+
+
+### Edgecases
+
+When the music continues to the next line withing one page, there should be no <kbd>🟢 precedence</kbd> links present in the jump. This is to keep the same behaviour as in jumps to the next page:
+
+<p>
+  <img src="./img/precedence-no-links-between-systems.png" height="200"/>
+</p>
+
+There are NO <kbd>🟢 precedence</kbd> links to key changes and clef changes:
+
+<p>
+  <img src="./img/precedence-key-change.png" height="200"/>
+</p>
+
+In piano music, a voice can have a gap, that is not visually marked with a rest (either intentionally or by mistake). The voice gap cannot be connected by <kbd>🟢 precedence</kbd> links, since notes on each side do not follow immediately. Because it's a piano part, we can resolve this by a voice merger and splitting with the other voice:
+
+<p>
+  <img src="./img/precedence-piano-voice-gap.png" height="200"/>
+</p>
+
+In multi-instrument pieces, you might come across a place where there is a mistake or some unknown, rare notation, which takes up musical time, but cannot be added to the <kbd>🟢 precedence</kbd> graph. For example the image below shows an example of slash-repeat notation, which is very rare and its duration is hard to decode. In MuNG 2.0 we decided not to represent this notation. So it is annotated as `unclassified`. But we need to specify the onset of the following noteheads somehow. We do this by **borrowing the onset from another instrument**. This is one exception where it is ok to add a <kbd>🟢 precedence</kbd> link across two different instruments (parts):
+
+<p>
+  <img src="./img/precedence-borrowed-onset.png" height="300"/>
+</p>
+
+> **Note:** In a single-instrument monophonic piece, there is no other part to borrow onset from. In that case, just skip over the `unclassified` section and pretend it has zero duration.
+
+A special case of this edgecase is the end of a unisono section in the middle of a measure. There you should borrow the onset ideally from the instrument with which the unisono was played. You should also add the link even if the unisono section ends with the start with a measure and no onset borrowing is theoretically needed:
+
+<p>
+  <img src="./img/precedence-unisono-end.png" height="200"/>
+</p>
+
+When the precedence graph is broken up by an `unclassified` symbol, you don't need to borrow onset from other parts if the following music symbols start from the beginning of the next measure (have onset 0 thus don't need precedence inlinks). Therefore it is ok for the graph to look like this:
+
+<p>
+  <img src="./img/precedence-broken-graph.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+
+### Other precedence graph nodes
+
+[Grace notes](#grace-notes) have their own, separate, virtual time, which corresponds with a separate <kbd>🟢 precedence</kbd> graph. It has the same rules as the regular <kbd>🟢 precedence</kbd> graph, but may NEVER be connected with <kbd>🟢 precedence</kbd> link to the regular graph:
+
+<p>
+  <img src="./img/grace-notes-precedence.png" height="200"/>
+</p>
+
+[Voltas](#volta) utilize the fact that <kbd>🟢 precedence</kbd> links across measure boundaries do not define onset, only voice flow. Therefore they fork the <kbd>🟢 precedence</kbd> graph before prima volta and terminate it at the end of prima volta. Seconda volta gets the other half of the fork and then continues to following measures:
+
+<p>
+  <img src="./img/volta-precedence.png" width="620"/>
+</p>
+
+[Custos](#custos) behaves like a notehead with zero duration. This lets it participate in the <kbd>🟢 precedence</kbd> graph just like any other notehead would:
+
+<p>
+  <img src="./img/precedence-custos.png" height="200"/>
+</p>
+
+[Measure repeat](#repeat1bar) participates in the <kbd>🟢 precedence</kbd> graph because it stands for the same musical content as is in the previous measure.
+
+<p>
+  <img src="./img/repeat1Bar-precedence.png" height="200"/>
+</p>
+
+[Unisono section](#unisono) that starts with the `unisonoText` should have a <kbd>🟢 precedence</kbd> link at the start to the instrument to be played in unison with and then another <kbd>🟢 precedence</kbd> link at the end where the "voice" returns back into the part.
+
+<p>
+  <img src="./img/unisonoText-precedence.png" height="200"/>
+</p>
+
+---
 
 
 ## Linking objects to staves
@@ -4111,13 +4469,14 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
   - Links ALL staves it groups.
   - Must be linked manually!
   - <img src="./img/staffGrouping-to-staff.png" height="200"/>
-- TODO: repeat1Bar?
-- TODO: unisonoText?
+- **Measure repeat** (`repeat1Bar`)
+  - <img src="./img/repeat1Bar-to-staff.png" height="200"/>
+- **Unisono section** (`unisonoText`, `unisonoContinuation`)
+  - <img src="./img/unisono-section-to-staff.png" height="200"/>
 - **System divider** (`systemDivider`)
   - Links to the upper staff.
 - **Custos** (`custos`)
   - Same rules as for noteheads.
-  - Must be linked manually!
 
 TODO: extend automatic assignment to missing classes (clef changes, restHBar, custos, etc.)
 
@@ -4158,7 +4517,6 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `s
     - <img src="./img/c-clef-to-staffposition.png" height="200"/>
 - **Custos** (`custos`)
   - Same rules as for noteheads.
-  - Must be linked manually!
 
 TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff line/space / leger-line)
 
