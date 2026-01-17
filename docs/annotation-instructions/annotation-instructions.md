@@ -3367,7 +3367,11 @@ There may be a number above the symbol, which signals the number of measures tha
   <img src="img/repeat1Bar-numbers.png" width="620"/>
 </p>
 
-We assume the symbol repeats the entire measure. If it repeats less than a measure, then annotate it as `unclassified`.
+~~We assume the symbol repeats the entire measure. If it repeats less than a measure, then annotate it as `unclassified`.~~
+TODO: if it's not alone in the measure, it must have shorter duration, usually the remaining duration. See this: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/deeb2b31-d343-42b2-969a-f4641d9be9a2_1d1b1b8b-0b6a-45ce-850b-61827573835e
+(TODO: add this document to example documents)
+
+TODO: There are one-slash repeats in plenty of places... paste examples here...
 
 <details>
   <summary>❓ What about 2-bar repeats and slash-repeats?</summary>
@@ -4478,10 +4482,6 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
 - **Custos** (`custos`)
   - Same rules as for noteheads.
 
-TODO: extend automatic assignment to missing classes (clef changes, restHBar, custos, etc.)
-
-TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff)
-
 
 ### 2. Assignment to stafflines and staffspaces
 
@@ -4517,8 +4517,6 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `s
     - <img src="./img/c-clef-to-staffposition.png" height="200"/>
 - **Custos** (`custos`)
   - Same rules as for noteheads.
-
-TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff line/space / leger-line)
 
 **The following are errors that can be encountered when checking the assignment:**
 
