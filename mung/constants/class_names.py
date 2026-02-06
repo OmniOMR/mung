@@ -62,7 +62,6 @@ class Rests(AllExtendedStrEnum):
     REST_LONGA = "restLonga"
     REST_DOUBLE_WHOLE = "restDoubleWhole"
     REST_H_BAR = "restHBar"
-    REST_TEXT = "restText"
 
 
 class Accidentals(AllExtendedStrEnum):
@@ -80,6 +79,13 @@ class Clefs(AllExtendedStrEnum):
     F_CLEF_CHANGE = "fClefChange"
     C_CLEF = "cClef"
     C_CLEF_CHANGE = "cClefChange"
+
+    @staticmethod
+    def simplify(clef_name: str | AllExtendedStrEnum) -> AllExtendedStrEnum:
+        """
+        Removes the `Change` tag from the given clef name.
+        """
+        return Clefs(clef_name.replace("Change", ""))
 
 
 class KeySignature(StrEnum):
@@ -126,7 +132,8 @@ class Text(StrEnum):
     MEASURE_NUMBER = "measureNumber"
     PAGE_NUMBER = "pageNumber"
     OTHER_TEXT = "otherText"
-
+    REST_TEXT = "restText"
+    
 
 class Barlines(StrEnum):
     BARLINE_SINGLE = "barlineSingle"

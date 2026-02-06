@@ -1,5 +1,6 @@
 from typing import Optional
 from mung import Node
+from mung.constants import ClassNameConstants as C
 
 from ...logger import logger
 from .clef_base import ClefBase
@@ -11,8 +12,9 @@ def get_clef_data_from_node(clef: Optional[Node] = None, permissive: bool = Fals
         logger.warning("Returning default clef, Node is None")
         return DefaultClef()
     
+    name = C.Clefs.simplify(clef.class_name)
     for sub in ClefBase.__subclasses__():
-        if clef.class_name.startswith(sub().name):
+        if name.startswith(sub().name):
             return sub()
     
     if permissive:
