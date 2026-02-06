@@ -303,7 +303,7 @@ In sloppy handwriting they often have the same size as regular noteheads. They m
 Augmentation dot makes a note (or rest) longer by 50% (+ ½) of its natural duration. If there are two dots, it is by 75% (+ ½ + ¼) longer. More dots add an eighth, sixteenth, etc. to the duration.
 
 - <kbd>🔴 syntax</kbd> link must lead from the notehead to the augmentation dot.
-- Multiple noteheads in a chord have multiple augmentation dots, each its own with its own <kbd>🔴 syntax</kbd> link.
+- Multiple noteheads in a chord have multiple augmentation dots, each its own with its own <kbd>🔴 syntax</kbd> link. In especially dense chords, there are fewer dots than noteheads in which case a dot can be shared by many noteheads.
 - Note can have multiple augmentation dots, in which case both are linked to the notehead with a <kbd>🔴 syntax</kbd> link.
 - **Rests** can also have augmentation dots and behave exactly like noteheads.
 
@@ -319,8 +319,6 @@ Augmentation dot makes a note (or rest) longer by 50% (+ ½) of its natural dura
 </p>
 
 > **⚠️ Warning:** Not to be confused with a staccato dot, which looks similar, but is placed above/below the notehead and is usually slightly smaller.
-
-TODO: what about chords with differing number of dots and noteheads?
 
 <details>
   <summary>🔗 Example documents</summary>
@@ -1689,6 +1687,27 @@ TODO: is this an extreme melisma? Use it as an example:
 </details>
 
 ---
+
+
+### `lyricsUnisono`
+
+*(`lyricsUnisono` is not part of SMuFL; it's missing [in the category](https://w3c.github.io/smufl/latest/tables/lyrics.html))*
+
+<p>
+  <img src="./img/lyricsUnisono-1.png" height="200"/>
+  <img src="./img/lyricsUnisono-2.png" height="200"/>
+</p>
+
+- Analogous to [`unisonoContinuation`](#unisonocontinuation), but for lyrics text
+- Identical <kbd>🔴 syntax</kbd> and <kbd>🟢 precedence</kbd> link rules as for `lyricsText`.
+- Has **precise mask**, unlike `lyricsText`.
+- There NO additional links or information that would indicate what part is being sung in unisono with. Behaves exactly like lyrics.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6c14dd36-af30-46a6-afae-804bcfd6e22c_a07a2ece-0bbb-4706-9bc2-648c9f19599f
+</details>
 
 
 ## Tempo
