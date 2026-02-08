@@ -4,6 +4,7 @@ This module implements Pitch.
 It is more or less a copy of Jiri Mayer's work.
 URL: https://github.com/OMR-Research/Smashcima/blob/main/smashcima/scene/semantic/Pitch.py
 """
+
 from enum import StrEnum, IntEnum
 from typing import Self
 import re
@@ -11,8 +12,11 @@ from dataclasses import dataclass, field
 
 
 class Octave(IntEnum):
-    """Octave number of the scientific pitch notation"""
-    # https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/octave/
+    """
+    Octave number of the scientific pitch notation¨
+    
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/octave/
+    """
     o0 = 0
     o1 = 1
     o2 = 2
@@ -26,8 +30,11 @@ class Octave(IntEnum):
 
 
 class Step(StrEnum):
-    """Step name of the scientific pitch notation"""
-    # https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/step/
+    """
+    Step name of the scientific pitch notation
+    
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/step/
+    """
     C = "C"
     D = "D"
     E = "E"
@@ -37,9 +44,23 @@ class Step(StrEnum):
     B = "B"
 
 
+_STEP_MIDI_OFFSETS = {
+    Step.C: 0,
+    Step.D: 2,
+    Step.E: 4,
+    Step.F: 5,
+    Step.G: 7,
+    Step.A: 9,
+    Step.B: 11,
+}
+
+
 class Alter(IntEnum):
-    """Semitone alter number (based on MusicXML)"""
-    # https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/semitones/
+    """
+    Semitone alter number (based on MusicXML)
+
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/semitones/
+    """
     double_flat = -2
     flat = -1
     none = 0
@@ -61,7 +82,7 @@ class Alter(IntEnum):
                 return "x"
             case _:
                 raise NotImplementedError()
-    
+
     @classmethod
     def from_str(cls, text: str) -> Self:
         text = text.lower()
@@ -82,8 +103,11 @@ class Alter(IntEnum):
 
 @dataclass(frozen=True, eq=True)
 class Pitch:
-    """Represents an audible pitch in the scientific pitch notation."""
-    # https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/pitch/
+    """
+    Represents an audible pitch in the scientific pitch notation.
+    
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/pitch/
+    """
     octave: Octave
     step: Step
     alter: Alter = field(default=Alter.none)
@@ -93,15 +117,15 @@ class Pitch:
 
     def to_tuple_repr(self) -> tuple[str, int]:
         return f"{self.step}{self.alter.accidental_code}", self.octave.value
-    
+
     @staticmethod
     def _split_before_digit(text: str) -> tuple[str, str]:
         match = re.match(r"([^\d]*)(\d.*)", text)
         if match:
             return match.groups()[0], match.groups()[1]
-        
+
         raise ValueError(f"Invalid input text: {text}")
-    
+
     @classmethod
     def from_string(cls, text: str) -> Self:
         step = Step(text[0].upper())
@@ -112,11 +136,26 @@ class Pitch:
         except ValueError as _:
             raise ValueError(f"Invalid octave, not an integer: {octave_text}")
         octave = Octave(o)
-        
+
         return cls(octave, step, alter)
-    
+
     @classmethod
     def from_list_of_strings(cls, lst: list[str]) -> list[Self]:
         return [cls.from_string(x) for x in lst]
 
-        
+    def to_midi(self) -> int:
+        """
+        Convert Pitch to its corresponding MIDI note number (0-127).
+        """
+        base = _STEP_MIDI_OFFSETS[self.step]
+        midi_num = 12 * (self.octave.value + 1) + base + int(self.alter)
+
+        if not (0 <= midi_num <= 127):
+            raise ValueError(f"MIDI note out of range (0-127): {midi_num} for {self}")
+
+        return midi_num
+    
+    def __lt__(self, other: Self) -> bool:
+        if not isinstance(other, Pitch):
+            return NotImplemented
+        return self.to_midi() < other.to_midi()

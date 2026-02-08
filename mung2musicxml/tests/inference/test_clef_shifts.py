@@ -2,7 +2,7 @@ from unittest import TestCase, main
 from parameterized import parameterized
 from typing import Optional, Any
 
-from mung.constants import ClassNamesConstants as CNC
+from mung.constants import ClassNameConstants as C
 from mung2musicxml.inference import PitchInferenceEngineWrapper
 from ..utils.dummy_staff import _DummyStaffGenerator
 from ..utils.tone_generator import next_tones
@@ -34,9 +34,9 @@ class ClefShifts(TestCase):
         
     @parameterized.expand(
         [
-            ("g_clef", CNC.G_CLEF, None, next_tones(("D", 4), STAFF_POSITION_COUNT)),
-            ("c_clef", CNC.C_CLEF, None, next_tones(("E", 3), STAFF_POSITION_COUNT)),
-            ("f_clef", CNC.F_CLEF, None, next_tones(("F", 2), STAFF_POSITION_COUNT)),
+            ("g_clef", C.Clefs.G_CLEF, None, next_tones(("D", 4), STAFF_POSITION_COUNT)),
+            ("c_clef", C.Clefs.C_CLEF, None, next_tones(("E", 3), STAFF_POSITION_COUNT)),
+            ("f_clef", C.Clefs.F_CLEF, None, next_tones(("F", 2), STAFF_POSITION_COUNT)),
         ]
     )
     def test_clefs_no_snap(
@@ -52,9 +52,9 @@ class ClefShifts(TestCase):
     
     @parameterized.expand(
         [
-            ("g_clef", CNC.G_CLEF, 1, next_tones(("D", 4), STAFF_POSITION_COUNT)),
-            ("c_clef", CNC.C_CLEF, 2, next_tones(("E", 3), STAFF_POSITION_COUNT)),
-            ("f_clef", CNC.F_CLEF, 3, next_tones(("F", 2), STAFF_POSITION_COUNT)),
+            ("g_clef", C.Clefs.G_CLEF, 1, next_tones(("D", 4), STAFF_POSITION_COUNT)),
+            ("c_clef", C.Clefs.C_CLEF, 2, next_tones(("E", 3), STAFF_POSITION_COUNT)),
+            ("f_clef", C.Clefs.F_CLEF, 3, next_tones(("F", 2), STAFF_POSITION_COUNT)),
         ]
     )
     def test_clefs_with_snap_basic(
@@ -70,16 +70,16 @@ class ClefShifts(TestCase):
     
     @parameterized.expand(
         [
-            ("g_clef_delta_0", CNC.G_CLEF, 0, next_tones(("F", 4), STAFF_POSITION_COUNT)),
-            ("g_clef_delta_2", CNC.G_CLEF, 2, next_tones(("B", 3), STAFF_POSITION_COUNT)),
+            ("g_clef_delta_0", C.Clefs.G_CLEF, 0, next_tones(("F", 4), STAFF_POSITION_COUNT)),
+            ("g_clef_delta_2", C.Clefs.G_CLEF, 2, next_tones(("B", 3), STAFF_POSITION_COUNT)),
 
-            ("c_clef_delta_4", CNC.C_CLEF, 4, next_tones(("A", 2), STAFF_POSITION_COUNT)),
-            ("c_clef_delta_3", CNC.C_CLEF, 3, next_tones(("C", 3), STAFF_POSITION_COUNT)),
-            ("c_clef_delta_1", CNC.C_CLEF, 1, next_tones(("G", 3), STAFF_POSITION_COUNT)),
-            ("c_clef_delta_0", CNC.C_CLEF, 0, next_tones(("B", 3), STAFF_POSITION_COUNT)),
+            ("c_clef_delta_4", C.Clefs.C_CLEF, 4, next_tones(("A", 2), STAFF_POSITION_COUNT)),
+            ("c_clef_delta_3", C.Clefs.C_CLEF, 3, next_tones(("C", 3), STAFF_POSITION_COUNT)),
+            ("c_clef_delta_1", C.Clefs.C_CLEF, 1, next_tones(("G", 3), STAFF_POSITION_COUNT)),
+            ("c_clef_delta_0", C.Clefs.C_CLEF, 0, next_tones(("B", 3), STAFF_POSITION_COUNT)),
 
-            ("f_clef_delta_2", CNC.F_CLEF, 2, next_tones(("A", 2), STAFF_POSITION_COUNT)),
-            ("f_clef_delta_4", CNC.F_CLEF, 4, next_tones(("D", 2), STAFF_POSITION_COUNT)),
+            ("f_clef_delta_2", C.Clefs.F_CLEF, 2, next_tones(("A", 2), STAFF_POSITION_COUNT)),
+            ("f_clef_delta_4", C.Clefs.F_CLEF, 4, next_tones(("D", 2), STAFF_POSITION_COUNT)),
         ]
     )
     def test_clefs_with_snap_complex(

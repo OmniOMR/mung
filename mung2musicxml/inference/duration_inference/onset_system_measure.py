@@ -3,7 +3,7 @@ from mung import NotationGraph, Node
 from typing import Optional, Self
 
 from mung.constants import (
-    ClassNamesConstants as C,
+    ClassNameConstants as C,
     InferenceEngineConstants as I,
     OnsetDataConstants as O
 )
@@ -78,7 +78,7 @@ class _OnsetSystemMeasureWrapper:
             else:
                 output.append(node)
         
-        assert len(output) > 0
+        # assert len(output) > 0
         return output
 
     def infer_onsets(self, start_onset: Optional[Fraction] = None, permissive: bool = True) -> None:
@@ -97,8 +97,18 @@ class _OnsetSystemMeasureWrapper:
             logger.warning(f"Empty measure found on staffs {[x.id for x in self._parent_staffs]}")
             return
         
+        # Get durables whose duration is time sig dependant
+        # - they last full measure and should always be a sink and a source
+        # -> we can extract them from topological sort with no harm done
+        # - they start at the minimal onset and end at the maximal end onset
+        time_sig_dep = [x for x in self._nodes if x.class_name in I.MEASURE_LASTING_CLASS_NAMES]
+        if len(time_sig_dep) > 0:
+            logger.warning(f"Found measure lasting symbols: {[str(x) for x in time_sig_dep]}")
+
+        nodes = [x for x in self._nodes if x not in set(time_sig_dep)]
+        
         # Sort nodes for easier inference
-        topo_sort = topological_sort(self._nodes, lambda p, c: c.id in p.precedence_outlinks)
+        topo_sort = topological_sort(nodes, lambda p, c: c.id in p.precedence_outlinks)
         logger.debug(f"Inferring onset for: {[x.id for x in topo_sort]}")
 
         # Get sources, set their onset to "start", and remove them 
@@ -112,19 +122,35 @@ class _OnsetSystemMeasureWrapper:
         
         not_sources = [x for x in topo_sort if x not in sources]
 
-        def parents_in_measure(node: Node) -> list[Node]:
-            return [n for _id in node.precedence_inlinks if (n := self._graph[_id]) in self._nodes]
+        def parents_in_measure(node: Node, nodes: list[Node]) -> list[Node]:
+            return [n for _id in node.precedence_inlinks if (n := self._graph[_id]) in nodes]
 
         # For each node, look at its parents and choose the maximal onset
         for node in not_sources:
             logger.debug(f"Processing {node.class_name} {node.id}")
-            onset = self._infer_onset_for_node(parents_in_measure(node), permissive=permissive)
+            onset = self._infer_onset_for_node(parents_in_measure(node, nodes), permissive=permissive)
             self._set_onset(node, onset)
+        
+        if len(time_sig_dep) > 0:
+            sm_start_onset = start_onset
+            if len(nodes) == 0:
+                sm_duration = I.DEFAULT_MEASURE_DURATION
+            else:
+                sm_end_onset = max(node.data[O.ONSET_BEATS] + node.data[O.DURATION_BEATS] for node in nodes)
+                sm_duration = sm_end_onset - sm_start_onset
+            
+            for node in time_sig_dep:
+                logger.warning(f"Processed {node} as time signature dependant: onset={sm_start_onset}, duration={sm_duration}")
+                node.data[O.ONSET_BEATS] = sm_start_onset
+                node.data[O.DURATION_BEATS] = sm_duration
+                node.data[O.DURATION_BEATS_WO_M] = sm_duration        
     
     def is_synchronized(self) -> bool:
         sinks = self.sinks()
         ends = set(self._node_end_onset(sink) for sink in sinks)
-        assert len(ends) > 0
+        # assert len(ends) > 0
+        if len(self._nodes) == 0:
+            return True
         return len(ends) == 1
         
     @classmethod
@@ -135,7 +161,7 @@ class _OnsetSystemMeasureWrapper:
         staffs: set[Node] = set()
         for symbol in symbols:
             if symbol.class_name in I.CLASSES_BEARING_DURATIONS:
-                s = graph.children(symbol, class_filter=C.STAFF)
+                s = graph.children(symbol, class_filter=C.Staves.STAFF)
                 if len(s) != 1:
                     logger.warning(f"Unexpected number of staffs linked to symbol {symbol.class_name} {symbol.id}")
                 staffs.update(s)

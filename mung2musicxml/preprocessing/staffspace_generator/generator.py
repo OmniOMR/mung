@@ -2,7 +2,10 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Self, Optional
 from mung import Node, NotationGraph
-from mung.constants import WESTERN_NOTATION_STAFFLINE_COUNT, InferenceEngineConstants, ClassNamesConstants
+from mung.constants import (
+    WESTERN_NOTATION_STAFFLINE_COUNT,
+    ClassNameConstants as C
+)
 
 from .utils import merge_and_interpolate_top_bottom_masks, crop_node_masks_to_horizontal_overlap
 from .strategy import StaffspaceGeneratorStrategy
@@ -28,9 +31,9 @@ class _StaffWrapperForStaffspaceGenerator:
         if len(stafflines) != WESTERN_NOTATION_STAFFLINE_COUNT:
             print(len(stafflines))
             raise StafflineCountNotMultipleError()
-        if not all(x.class_name == ClassNamesConstants.STAFFLINE for x in stafflines):
+        if not all(x.class_name == C.Staves.STAFF_LINE for x in stafflines):
             raise ValueError(f"Mismatched class names in {stafflines}")
-        if not staff.class_name == ClassNamesConstants.STAFF:
+        if not staff.class_name == C.Staves.STAFF:
             raise ValueError(f"Mismatched class name in {staff}")
 
         self.staff = staff
@@ -39,10 +42,10 @@ class _StaffWrapperForStaffspaceGenerator:
     
     @classmethod
     def from_graph(cls, graph: NotationGraph) -> list[Self]:
-        staffs = sorted(graph.filter_vertices(InferenceEngineConstants.STAFF), key=lambda x: x.top)
+        staffs = sorted(graph.filter_vertices(C.Staves.STAFF), key=lambda x: x.top)
         output = []
         for staff in staffs:
-            output.append(cls(staff, graph.children(staff, class_filter=InferenceEngineConstants.STAFFLINE)))
+            output.append(cls(staff, graph.children(staff, class_filter=C.Staves.STAFF_LINE)))
         return output
     
     @property
@@ -95,7 +98,7 @@ class StaffspaceGenerator:
             for space in space_data:
                 node = Node(
                     id_=next_node_id,
-                    class_name=ClassNamesConstants.STAFFSPACE,
+                    class_name=C.Staves.STAFF_SPACE,
                     top=space.top,
                     left=space.left,
                     width=space.width,

@@ -2,7 +2,7 @@ from fractions import Fraction
 from mung import NotationGraph, Node
 from typing import Optional, Self
 
-from mung.constants import InferenceEngineConstants as I
+from mung.constants import InferenceEngineConstants as I, OnsetDataConstants as O, ClassNameConstants as C
 from mung2midi.inference import OnsetsInferenceStrategy
 from ...logger import logger
 from .utils import _add_duration_data_to_node
@@ -73,26 +73,31 @@ class _GraceGroupWrapper:
         else:
             self._notes = self._sort_left_to_right(self._notes)
 
-    def compute(self) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
+    def compute(self, graph: NotationGraph) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
         self._sort()
         onsets, durations, durations_wo_m = dict(), dict(), dict()
         for i, note in enumerate(self._notes):
             onsets[note.id] = Fraction(i)
-            durations[note.id] = Fraction(0)
-            durations_wo_m[note.id] = Fraction(0)
+            mod = len(graph.children(note, class_filter=I.FLAGS_AND_BEAMS))
+            duration = Fraction(1) if note.class_name == C.Noteheads.NOTEHEAD_BLACK_SMALL else Fraction(2)
+            if mod > 0:
+                duration = duration * Fraction(1, 2 ** mod)
+            durations[note.id] = duration
+            durations_wo_m[note.id] = duration
                 
         for node in self._notes:
             _add_duration_data_to_node(
                 node, durations[node.id], durations_wo_m[node.id]
             )
+            node.data[O.ONSET_BEATS] = onsets[node.id]
         
         return onsets, durations, durations_wo_m
 
     @classmethod
-    def compute_multiple(cls, groups: list[Self]) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
+    def compute_multiple(cls, groups: list[Self], graph: NotationGraph) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
         onsets, durations, durations_wo_m = dict(), dict(), dict()
         for g in groups:
-            o, d, w = g.compute()
+            o, d, w = g.compute(graph)
             onsets |= o
             durations |= d
             durations_wo_m |= w
@@ -146,4 +151,4 @@ class _GraceOnsetInference:
         ) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
         ggw = _GraceGroupWrapper.from_graph(graph)
         logger.info(f"We have {len(ggw)} grace note groups")
-        return _GraceGroupWrapper.compute_multiple(ggw)
+        return _GraceGroupWrapper.compute_multiple(ggw, graph)

@@ -1,5 +1,5 @@
 from mung import NotationGraph, Node
-from mung.constants import ClassNamesConstants, InferenceEngineConstants
+from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 
 from ...logger import logger
 
@@ -27,12 +27,12 @@ class PrecedenceLinker:
         self._graph = None #type: ignore
 
     def _chord_from_stem(self, stem: Node) -> list[Node]:
-        return self._graph.parents(stem, class_filter=InferenceEngineConstants.NOTEHEAD_CLASS_NAMES)
+        return self._graph.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
     
     def _chord_from_notehead(self, notehead: Node) -> list[Node]:
             output = []
 
-            stems = self._graph.children(notehead, class_filter=ClassNamesConstants.STEM)
+            stems = self._graph.children(notehead, class_filter=C.NoteheadAttachments.STEM)
             if len(stems) > 1:
                 logger.warning("Notehead with multiple stems found, returning all connected noteheads")
             
@@ -48,7 +48,7 @@ class PrecedenceLinker:
                     precedence_out = self._graph[precedence_out_id]
                     # If the succeeding symbol is a notehead,
                     # expand the list of succeeding symbols with all symbols that are with it in a chord.
-                    if precedence_out.class_name in InferenceEngineConstants.NOTEHEAD_CLASS_NAMES:
+                    if precedence_out.class_name in I.NOTEHEAD_CLASS_NAMES:
                         nodes.extend(self._chord_from_notehead(self._graph[precedence_out_id]))
                     else:
                         nodes.append(precedence_out)
@@ -61,7 +61,7 @@ class PrecedenceLinker:
                     precedence_in = self._graph[precedence_in_id]
                     # If the succeeding symbol is a notehead,
                     # expand the list of succeeding symbols with all symbols that are with it in a chord.
-                    if precedence_in.class_name in InferenceEngineConstants.NOTEHEAD_CLASS_NAMES:
+                    if precedence_in.class_name in I.NOTEHEAD_CLASS_NAMES:
                         nodes.extend(self._chord_from_notehead(self._graph[precedence_in_id]))
                     else:
                         nodes.append(precedence_in)
@@ -80,7 +80,7 @@ class PrecedenceLinker:
         Graph is modified in-place.
         """
         self._set_graph(graph)
-        stems = self._graph.filter_vertices(ClassNamesConstants.STEM)
+        stems = self._graph.filter_vertices(C.NoteheadAttachments.STEM)
         total = 0
         for stem in stems:
             chord = self._chord_from_stem(stem)

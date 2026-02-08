@@ -1,5 +1,5 @@
 from mung import NotationGraph, Node
-from mung.constants import ClassNamesConstants
+from mung.constants import ClassNameConstants as C
 from typing import TypeVar, Iterable, Optional
 
 from ..violations import InvalidSetViolation, GrammarViolation, MissingRelationViolation
@@ -30,7 +30,7 @@ class StaffGroupingSubsetValidator:
                 )
     
     def _crosscheck_two_groupings(self, parent: Node, parent_staffs: list[Node], child: Node, graph: NotationGraph) -> Optional[GrammarViolation]:
-        child_staff = graph.children(child, class_filter=ClassNamesConstants.STAFF)
+        child_staff = graph.children(child, class_filter=C.Staves.STAFF)
         
         missing = self.missing_from_superset(child_staff, parent_staffs)
         if len(missing) > 0:
@@ -38,8 +38,8 @@ class StaffGroupingSubsetValidator:
         return None
 
     def _check_single_grouping(self, grouping: Node, graph: NotationGraph) -> list[GrammarViolation]:
-        parent_staffs = graph.children(grouping, class_filter=ClassNamesConstants.STAFF)
-        children_groupings = graph.descendants(grouping, class_filter=ClassNamesConstants.STAFF_GROUPING)
+        parent_staffs = graph.children(grouping, class_filter=C.Staves.STAFF)
+        children_groupings = graph.descendants(grouping, class_filter=C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
         output: list[GrammarViolation] = []
 
         for child_group in children_groupings:
@@ -51,12 +51,12 @@ class StaffGroupingSubsetValidator:
     
     def _check_two_groupings_with_staff(self, first: Node, second: Node, graph: NotationGraph) -> Optional[MissingRelationViolation]:
         def is_descendant(first: Node, second: Node, graph: NotationGraph) -> bool:
-            descendants = graph.descendants(first, class_filter=ClassNamesConstants.STAFF_GROUPING)
+            descendants = graph.descendants(first, class_filter=C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
             return second in descendants
         
         def share_staff(first: Node, second: Node, graph: NotationGraph) -> bool:
-            first_staff = graph.children(first, class_filter=ClassNamesConstants.STAFF)
-            second_staff = graph.children(second, class_filter=ClassNamesConstants.STAFF)
+            first_staff = graph.children(first, class_filter=C.Staves.STAFF)
+            second_staff = graph.children(second, class_filter=C.Staves.STAFF)
             return len(set(first_staff).intersection(set(second_staff))) > 0
         
         if share_staff(first, second, graph):
@@ -68,7 +68,7 @@ class StaffGroupingSubsetValidator:
         return None
         
     def _check_grouping_hierarchy_based_on_staffs(self, graph: NotationGraph) -> list[GrammarViolation]:
-        groupings = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
+        groupings = graph.filter_vertices(C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
 
         violations = []
         for index in range(len(groupings) - 1):
@@ -91,7 +91,7 @@ class StaffGroupingSubsetValidator:
         and there is no relation between the two groupings,
         violation will be created.
         """
-        groupings = graph.filter_vertices(ClassNamesConstants.STAFF_GROUPING)
+        groupings = graph.filter_vertices(C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
         violations = []
         for grouping in groupings:
             violations.extend(self._check_single_grouping(grouping, graph))

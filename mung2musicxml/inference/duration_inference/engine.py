@@ -55,7 +55,8 @@ class OnsetInferenceEngineWrapper:
             logger.info(f"Inferring onset for {len(sm)} durables with start offset {offset} "
                         f"for measure {i}")
             sm.infer_onsets(offset, permissive=self._strategy.permissive_desynchronization)
-            offset = sm.get_end_onset()
+            if self._strategy.offset_next_measure_by_previous_measure:
+                offset = sm.get_end_onset()
             if not sm.is_synchronized():
                 msg = f"End of system measure {i} is not synchronized"
                 if self._strategy.permissive_desynchronization:

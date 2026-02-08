@@ -1,10 +1,11 @@
 from typing import Optional
 from mung2midi.inference import PitchInferenceEngine, PitchInferenceStrategy, Pitch
 from mung import NotationGraph
+from enum import StrEnum
 
 
-class PitchDataConstants:
-    PITCH: str = "pitch"
+class PitchDataConstants(StrEnum):
+    PITCH = "pitch"
 
 
 class PitchInferenceEngineWrapper:
@@ -16,7 +17,7 @@ class PitchInferenceEngineWrapper:
         self._engine = PitchInferenceEngine(strategy)
 
     def __call__(
-        self, graph: NotationGraph, add_data_to_nodes: bool = False
+        self, graph: NotationGraph, add_data_to_nodes: bool = True
     ) -> dict[int, Pitch]:
         """
         Infers pitches for all notes inside the graph.

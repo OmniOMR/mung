@@ -1,5 +1,5 @@
 from typing import Optional
-from mung.constants import ClassNamesConstants, WESTERN_NOTATION_STAFFLINE_COUNT
+from mung.constants import ClassNameConstants as C, WESTERN_NOTATION_STAFFLINE_COUNT
 from mung import NotationGraph
 from mung.stafflines import build_staff_nodes
 from mung.io import validate_nodes_graph_structure
@@ -36,15 +36,15 @@ class StaffGenerator:
         If it does not exist, stafflines are grouped into groups of five from top to bottom
         and assigned to their respective staff.
         """
-        staffs = sorted(graph.filter_vertices(ClassNamesConstants.STAFF), key=lambda x: x.top)
-        stafflines = sorted(graph.filter_vertices(ClassNamesConstants.STAFFLINE), key=lambda x: x.top)
+        staffs = sorted(graph.filter_vertices(C.Staves.STAFF), key=lambda x: x.top)
+        stafflines = sorted(graph.filter_vertices(C.Staves.STAFF_LINE), key=lambda x: x.top)
 
         assert len(stafflines) % len(staffs) == 0
 
         for i, staffline in enumerate(stafflines):
             # Staff index relative from top to bottom (index of upper staff is 0)
             relative_staff_index = i // WESTERN_NOTATION_STAFFLINE_COUNT
-            assigned_staffs = graph.parents(staffline.id, class_filter=[ClassNamesConstants.STAFF])
+            assigned_staffs = graph.parents(staffline.id, class_filter=[C.Staves.STAFF])
 
             if len(assigned_staffs) > 1:
                 raise ValueError(f"Staffline {staffline.id} has multiple assigned staffs")
@@ -64,7 +64,7 @@ class StaffGenerator:
     
     @staticmethod
     def _rebuild_staffs_from_existing(graph: NotationGraph) -> NotationGraph:
-        old_staffs = graph.filter_vertices(ClassNamesConstants.STAFF)
+        old_staffs = graph.filter_vertices(C.Staves.STAFF)
         new_staffs = build_staff_nodes(graph.vertices, build_links=False)
         
         assert len(old_staffs) == len(new_staffs)
@@ -94,8 +94,8 @@ class StaffGenerator:
         :param strategy: StaffGenerator strategy.
         :return: new instance of ``NotationGraph``
         """
-        staffline_c = len(graph.filter_vertices(ClassNamesConstants.STAFFLINE))
-        staff_c = len(graph.filter_vertices(ClassNamesConstants.STAFF))
+        staffline_c = len(graph.filter_vertices(C.Staves.STAFF_LINE))
+        staff_c = len(graph.filter_vertices(C.Staves.STAFF))
         logger.debug(f"{staffline_c=}, {staff_c=}")
 
         # Check staffline counts

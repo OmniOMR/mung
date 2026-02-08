@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from mung.constants import ClassNamesConstants as C, InferenceEngineConstants as I
+from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 
 from ...inference import OnsetsInferenceEngineWrapperStrategy
 
@@ -15,7 +15,7 @@ class MultistemResolverStrategy:
             + I.STAFFLINE_LIKE_CLASS_NAMES
             + I.ACCIDENTAL_CLASS_NAMES
             + I.HAIRPINS
-            + [C.AUGMENTATION_DOT, C.SLUR, C.TUPLE]
+            + [C.NoteheadAttachments.AUGMENTATION_DOT, C.Spanners.SLUR, C.Tuplets.TUPLET]
         )))
     
     # List of class names of objects to divide between original and ghost notehead

@@ -2,7 +2,7 @@ from mung import NotationGraph, Node
 from typing import Self
 import numpy as np
 from fractions import Fraction
-from mung.constants import ClassNamesConstants, OnsetDataConstants, WESTERN_NOTATION_STAFFLINE_COUNT, InferenceEngineConstants
+from mung.constants import ClassNameConstants as C, OnsetDataConstants, WESTERN_NOTATION_STAFFLINE_COUNT, InferenceEngineConstants
 from mung.graph import group_by_chord
 
 from .mask_wrapper import MaskAverageIndexWrapper
@@ -15,19 +15,19 @@ class StaffWrapper:
         self._CONST = InferenceEngineConstants()
         self._graph = graph
 
-        stafflines = graph.children(staff, ClassNamesConstants.STAFFLINE)
-        staffspaces = graph.children(staff, ClassNamesConstants.STAFFSPACE)
+        stafflines = graph.children(staff, C.Staves.STAFF_LINE)
+        staffspaces = graph.children(staff, C.Staves.STAFF_SPACE)
 
         if len(stafflines) % WESTERN_NOTATION_STAFFLINE_COUNT != 0:
             raise StafflineCountNotMultipleError()
         if len(staffspaces) % (WESTERN_NOTATION_STAFFLINE_COUNT + 1) != 0:
             raise StaffspaceCountNotMultipleError()
 
-        if not staff.class_name == ClassNamesConstants.STAFF:
+        if not staff.class_name == C.Staves.STAFF:
             raise ValueError(f"Mismatched class name in {staff}")
-        if not all(x.class_name == ClassNamesConstants.STAFFLINE for x in stafflines):
+        if not all(x.class_name == C.Staves.STAFF_LINE for x in stafflines):
             raise ValueError(f"Mismatched class names in {stafflines}")
-        if not all(x.class_name == ClassNamesConstants.STAFFSPACE for x in staffspaces):
+        if not all(x.class_name == C.Staves.STAFF_SPACE for x in staffspaces):
             raise ValueError(f"Mismatched class names in {stafflines}")
 
         self.staff = staff
@@ -52,7 +52,7 @@ class StaffWrapper:
 
     @classmethod
     def from_graph(cls, graph: NotationGraph) -> list[Self]:
-        staffs = sorted(graph.filter_vertices(ClassNamesConstants.STAFF), key=lambda x: x.top)
+        staffs = sorted(graph.filter_vertices(C.Staves.STAFF), key=lambda x: x.top)
         output = []
         for staff in staffs:
             output.append(cls(graph, staff))

@@ -1,4 +1,6 @@
-from .class_names import ClassNamesConstants as C
+from fractions import Fraction
+
+from .class_names import ClassNameConstants as C
 from .general import STEP_ORDER
 
 
@@ -12,98 +14,67 @@ class InferenceEngineConstants(C):
     is smaller than this, it means the notehead is most probably *NOT*
     on the l.l. and is next to it.'''
     
-    STAFF_CLASSES = [
-        C.STAFFLINE,
-        C.STAFFSPACE,
-        C.STAFF
-    ]
+    STAFF_CLASSES = C.Staves.ALL()
+
     STAFFLINE_CLASS_NAMES = [
-        C.STAFFLINE,
-        C.STAFFSPACE
+        C.Staves.STAFF_LINE,
+        C.Staves.STAFF_SPACE
     ]
 
     STAFFLINE_LIKE_CLASS_NAMES = [
-        C.STAFFLINE,
-        C.LEGER_LINE
+        C.NoteheadAttachments.LEGER_LINE,
+        C.Staves.STAFF_LINE
     ]
 
     STAFF_RELATED_CLASS_NAMES = {
-        C.STAFF_GROUPING,
-        C.MEASURE_SEPARATOR,
-        C.TIME_SIGNATURE,
-        C.KEY_SIGNATURE,
-        C.G_CLEF,
-        C.C_CLEF,
-        C.F_CLEF
-    }
+        C.StaffGroupingBracketsAndBraces.STAFF_GROUPING,
+        C.Barlines.MEASURE_SEPARATOR,
+        C.TimeSignatures.TIME_SIGNATURE,
+        C.KeySignature.KEY_SIGNATURE,
+    } | set(C.Clefs.ALL())
 
     SYSTEM_LEVEL_CLASS_NAMES = [
-        C.STAFF_GROUPING,
-        C.MEASURE_SEPARATOR
+        C.StaffGroupingBracketsAndBraces.STAFF_GROUPING,
+        C.Barlines.MEASURE_SEPARATOR,
     ]
 
-    NOTEHEAD_CLASS_NAMES = [
-        C.NOTEHEAD_FULL,
-        C.NOTEHEAD_HALF,
-        C.NOTEHEAD_WHOLE,
-        C.NOTEHEAD_FULL_SMALL,
-        C.NOTEHEAD_HALF_SMALL,
-    ]
+    NOTEHEAD_CLASS_NAMES = C.Noteheads.ALL()
 
     NOTEHEADS_EMPTY = [
-        C.NOTEHEAD_HALF,
-        C.NOTEHEAD_WHOLE
+        C.Noteheads.NOTEHEAD_HALF,
+        C.Noteheads.NOTEHEAD_WHOLE,
     ]
 
     GRACE_NOTEHEAD_CLASS_NAMES = [
-        C.NOTEHEAD_FULL_SMALL,
-        C.NOTEHEAD_HALF_SMALL
+        C.Noteheads.NOTEHEAD_HALF_SMALL,
+        C.Noteheads.NOTEHEAD_BLACK_SMALL,
     ]
 
     NONGRACE_NOTEHEAD_CLASS_NAMES = [
-        C.NOTEHEAD_FULL,
-        C.NOTEHEAD_HALF,
-        C.NOTEHEAD_WHOLE
+        C.Noteheads.NOTEHEAD_BLACK,
+        C.Noteheads.NOTEHEAD_HALF,
+        C.Noteheads.NOTEHEAD_WHOLE,
     ]
 
-    CLEF_CLASS_NAMES = [
-        C.G_CLEF,
-        C.C_CLEF,
-        C.F_CLEF
-    ]
+    CLEF_CLASS_NAMES = C.Clefs.ALL()
 
     MEASURE_SEPARATOR_CLASS_NAMES = [
-        C.MEASURE_SEPARATOR,
+        C.Barlines.MEASURE_SEPARATOR,
     ]
 
-    FLAGS_CLASS_NAMES = [
-        C.FLAG_8TH_UP,
-        C.FLAG_8TH_DOWN,
-        C.FLAG_16TH_UP,
-        C.FLAG_16TH_DOWN,
-        C.FLAG_32ND_UP,
-        C.FLAG_32ND_DOWN,
-        C.FLAG_64TH_UP,
-        C.FLAG_64TH_DOWN,
-    ]
+    FLAGS_CLASS_NAMES = C.Flags.ALL()
 
     BEAM_CLASS_NAMES = [
-        C.BEAM,
+        C.NoteheadAttachments.BEAM,
     ]
 
     FLAGS_AND_BEAMS = list(FLAGS_CLASS_NAMES + BEAM_CLASS_NAMES)
 
-    ACCIDENTAL_CLASS_NAMES = [
-        C.ACCIDENTAL_SHARP,
-        C.ACCIDENTAL_FLAT,
-        C.ACCIDENTAL_NATURAL,
-        C.ACCIDENTAL_DOUBLE_SHARP,
-        C.ACCIDENTAL_DOUBLE_FLAT,
-    ]
+    ACCIDENTAL_CLASS_NAMES = C.Accidentals.ALL()
 
     HAIRPINS = [
-        C.DYNAMIC_CRESHENDO,
-        C.DYNAMIC_DIMINUENDO,
+        C.Dynamics.DYNAMIC_CRESCENDO_HAIRPIN,
+        C.Dynamics.DYNAMIC_DIMINUENDO_HAIRPIN,
     ]
 
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
@@ -154,21 +125,28 @@ class InferenceEngineConstants(C):
     }
 
     # FROM clef --> TO clef. Imagine this on inline accidental delta
-    CLEF_CHANGE_DELTA = {
-        C.G_CLEF: {
-            C.G_CLEF: 0,
-            C.C_CLEF: 6,
-            C.F_CLEF: 12,
+    @staticmethod
+    def clef_change_delta(from_clef: str, to_clef: str) -> int:
+        f = from_clef.replace("Change", "")
+        t = to_clef.replace("Change", "")
+        return InferenceEngineConstants._CLEF_CHANGE_DELTA[C.Clefs(f)][C.Clefs(t)]
+    
+    CC = C.Clefs
+    _CLEF_CHANGE_DELTA = {
+        CC.G_CLEF: {
+            CC.G_CLEF: 0,
+            CC.C_CLEF: 6,
+            CC.F_CLEF: 12,
         },
-        C.C_CLEF: {
-            C.G_CLEF: -6,
-            C.C_CLEF: 0,
-            C.F_CLEF: 6,
+        CC.C_CLEF: {
+            CC.G_CLEF: -6,
+            CC.C_CLEF: 0,
+            CC.F_CLEF: 6,
         },
-        C.F_CLEF: {
-            C.G_CLEF: -12,
-            C.C_CLEF: -6,
-            C.F_CLEF: 0,
+        CC.F_CLEF: {
+            CC.G_CLEF: -12,
+            CC.C_CLEF: -6,
+            CC.F_CLEF: 0,
         }
     }
 
@@ -176,73 +154,41 @@ class InferenceEngineConstants(C):
     # Wrap around twice for easier indexing.
 
     ACCIDENTAL_CODES = {
-        C.ACCIDENTAL_SHARP: '#',
-        C.ACCIDENTAL_FLAT: 'b',
-        C.ACCIDENTAL_DOUBLE_SHARP: 'x',
-        C.ACCIDENTAL_DOUBLE_FLAT: 'bb'
+        C.Accidentals.ACCIDENTAL_SHARP: '#',
+        C.Accidentals.ACCIDENTAL_FLAT: 'b',
+        C.Accidentals.ACCIDENTAL_DOUBLE_SHARP: 'x',
+        C.Accidentals.ACCIDENTAL_DOUBLE_FLAT: 'bb'
     }
 
-    REST_CLASS_NAMES = [
-        C.REST_WHOLE,
-        C.REST_HALF,
-        C.REST_QUARTER,
-        C.REST_8TH,
-        C.REST_16TH,
-        C.REST_32ND,
-        C.REST_64TH,
-        C.MULTI_MEASURE_REST,
-        C.REST_BREVE,
-        C.REST_LONGA
-    ]
+    REST_CLASS_NAMES = C.Rests.ALL()
 
     MEASURE_LASTING_CLASS_NAMES = [
-        C.REST_WHOLE,
-        C.REST_BREVE,
-        C.REST_LONGA,
-        C.MULTI_MEASURE_REST,
-        C.REPEAT_ONE_BAR
+        C.Rests.REST_WHOLE,
+        C.Rests.REST_DOUBLE_WHOLE,
+        C.Rests.REST_LONGA,
+        C.Rests.REST_H_BAR,
+        C.Repeat.REPEAT_1_BAR
     ]
 
     TIME_SIGNATURES = [
-        C.TIME_SIGNATURE
+        C.TimeSignatures.TIME_SIGNATURE
     ]
 
     TIME_SIGNATURE_MEMBERS = [
-        C.TIME_SIG_COMMON,
-        C.TIME_SIG_CUT_COMMON,
-        C.N0,
-        C.N1,
-        C.N2,
-        C.N3,
-        C.N4,
-        C.N5,
-        C.N6,
-        C.N7,
-        C.N8,
-        C.N9,
+        # all but the container class
+        tsm for tsm in C.TimeSignatures.ALL() if tsm != C.TimeSignatures.TIME_SIGNATURE
     ]
 
-    NUMERALS = [
-        C.N0,
-        C.N1,
-        C.N2,
-        C.N3,
-        C.N4,
-        C.N5,
-        C.N6,
-        C.N7,
-        C.N8,
-        C.N9,
-    ]
+    NUMERALS = C.Numerals.ALL()
 
     IN_MEASURE = (
         TIME_SIGNATURES
-        + [C.KEY_SIGNATURE]
+        + [C.KeySignature.KEY_SIGNATURE]
         + CLEF_CLASS_NAMES
         
         + NOTEHEAD_CLASS_NAMES
         + REST_CLASS_NAMES
-        + [C.REPEAT_ONE_BAR]
+        + [C.Repeat.REPEAT_1_BAR]
     )
     
     CLASSES_AFFECTING_ONSETS = list(set(
@@ -250,11 +196,46 @@ class InferenceEngineConstants(C):
         + REST_CLASS_NAMES
         + MEASURE_SEPARATOR_CLASS_NAMES
         + TIME_SIGNATURES
-        + [C.REPEAT_ONE_BAR]
+        + [C.Repeat.REPEAT_1_BAR]
     ))
 
     CLASSES_BEARING_DURATIONS = list(set(
         NONGRACE_NOTEHEAD_CLASS_NAMES
         + REST_CLASS_NAMES
-        + [C.REPEAT_ONE_BAR]
+        + [C.Repeat.REPEAT_1_BAR]
     ))
+
+    DEFAULT_MEASURE_DURATION = Fraction(4)
+
+    @staticmethod
+    def rest_name_to_duration(rest_name: str) -> Fraction:
+        """
+        Returns the duration of a rest as a fraction based on a rest name.
+
+        :param rest_name: The rest class name.
+        :return: The duration of the rest as a Fraction.
+        """
+        
+        _LOOK_UP = {
+            C.Rests.REST_LONGA: Fraction(16, 1),  # !!! We should find the Time Signature.
+            C.Rests.REST_DOUBLE_WHOLE: Fraction(
+                8, 1
+            ),  # !!! We should find the Time Signature.
+            C.Rests.REST_WHOLE: Fraction(4, 1),  # !!! We should find the Time Signature.
+            C.Rests.REST_HALF: Fraction(2, 1),
+            C.Rests.REST_QUARTER: Fraction(1, 1),
+            C.Rests.REST_8TH: Fraction(1, 2),
+            C.Rests.REST_16TH: Fraction(1, 4),
+            C.Rests.REST_32ND: Fraction(1, 8),
+            C.Rests.REST_64TH: Fraction(1, 16),
+            # Technically, these two should just apply time sig.,
+            # but the measure-factorized precedence graph
+            # means these durations never have sounding
+            # descendants anyway:
+            C.Rests.REST_H_BAR: Fraction(4, 1),
+            C.Repeat.REPEAT_1_BAR: Fraction(4, 1),
+        }
+        duration = _LOOK_UP.get(rest_name, None)
+        if duration is None:
+            raise ValueError(f'Unknown rest name "{rest_name}"')
+        return duration

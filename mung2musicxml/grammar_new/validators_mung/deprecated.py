@@ -1,5 +1,5 @@
 from mung import Node, NotationGraph
-from mung.constants import ClassNamesConstants
+from mung.constants import ClassNameConstants as C
 
 from ..violations import ClassNameDeprecatedViolation, GrammarViolation
 from ..parts import GrammarNode
@@ -32,7 +32,7 @@ class DeprecationValidator(object):
     def _notehead_empty(self, graph: NotationGraph) -> list[GrammarViolation]:
         def has_stem(graph: NotationGraph, node: Node) -> bool:
             return (
-                len(graph.children(node, class_filter=ClassNamesConstants.STEM)) > 0
+                len(graph.children(node, class_filter=C.NoteheadAttachments.STEM)) > 0
             )
 
         output = []
@@ -40,9 +40,9 @@ class DeprecationValidator(object):
             output.append(
                 ClassNameDeprecatedViolation(
                     GrammarNode.from_mung(node),
-                    new_name=ClassNamesConstants.NOTEHEAD_HALF
+                    new_name=C.Noteheads.NOTEHEAD_HALF
                     if has_stem(graph, node)
-                    else ClassNamesConstants.NOTEHEAD_WHOLE,
+                    else C.Noteheads.NOTEHEAD_WHOLE,
                 )
             )
         return output
