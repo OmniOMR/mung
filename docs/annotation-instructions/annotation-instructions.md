@@ -1,6 +1,6 @@
-# MuNG Annotation Instructions
+# Annotation Instructions for MuNG 2.0
 
-This document is a guide for annotators on how to annotate a new document in the MuNG format properly.
+This document is a guide for annotators on how to annotate a new document in the MuNG 2.0 format properly.
 
 > **📖 New here?** Read the [Introduction](annotation-introduction.md) text first.
 
@@ -166,24 +166,44 @@ Staves are the first objects to be annotated, because lots of other objects link
   <img src="./img/staff-1.png" width="620"/>
 </p>
 
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+</details>
+
 ---
 
 
 ## Noteheads
 
+<p>
+  <img src="./img/noteheads-syntax.png" height="200"/>
+</p>
+
 - There are many <kbd>🔴 syntax</kbd> links going from noteheads to other symbols. Because there are so many, they are mentioned at those other smybols (e.g. `stem`, accidentals, flags), instead of here.
+- There are <kbd>🔴 syntax</kbd> links to `staff` and `staffLine` or `staffSpace`, there are, however, [automatically assigned](#linking-objects-to-staves) for common noteheads (black, half). They need to be assigned manually for small noteheads and verified after the assignment to make sure there are no mistakes.
 - Noteheads participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
 
 
 ### `noteheadWhole`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+*(Previously in CVAT: `notehead_empty`)*
+
 <p>
   <img src="./img/noteheadWhole-0.png" height="200"/>
-  <img src="./img/noteheadWhole-1.png" height="200"/>
 </p>
+
 
 - It does not have an attached stem.
 - Fill the entire notehead but **leave out the center**.
+
+<p>
+  <img src="./img/noteheadWhole-1.png" height="200"/>
+</p>
 
 <details>
   <summary>🤔 Why differentiate whole/half noteheads if they look identical?</summary>
@@ -202,11 +222,19 @@ Staves are the first objects to be annotated, because lots of other objects link
 
 ### `noteheadHalf`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+*(Previously in CVAT: `notehead_empty`)*
+
+<p>
+  <img src="./img/noteheadHalf-0.png" height="200"/>
+</p>
+
 - Always **leave out the center**. Don’t just outline the shape.
 
 <p>
-  <img src="./img/notehead-half-1.png" alt="noteheadHalf example" width="300"/>
-  <img src="./img/notehead-half-2.png" alt="noteheadHalf example 2" width="220"/>
+  <img src="./img/noteheadHalf-1.png" height="200"/>
+  <img src="./img/noteheadHalf-2.png" height="200"/>
 </p>
 
 ---
@@ -214,24 +242,68 @@ Staves are the first objects to be annotated, because lots of other objects link
 
 ### `noteheadBlack`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
 *(Previously in CVAT: `notehead_full`. You may find `noteheadFull` in MuNG, but **do NOT use it.**)*
 
 <p>
-  <img src="./img/notehead-black-1.png" alt="noteheadBlack Example" width="200"/>
-  <img src="./img/notehead-black-2.png" alt="noteheadBlack Example 2" width="175"/>
+  <img src="./img/noteheadBlack-0.png" height="200"/>
 </p>
+
+<p>
+  <img src="./img/noteheadBlack-1.png" height="200"/>
+  <img src="./img/noteheadBlack-2.png" height="200"/>
+</p>
+
+---
+
+
+## `noteheadBlackSmall`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/noteheads.html))*
+
+<p>
+  <img src="./img/noteheadBlackSmall-0.png" height="200"/>
+</p>
+
+- Smaller than other noteheads in the document.
+- Used in [Grace notes](#grace-notes), see that section for more info.
+- There are also variants `noteheadWholeSmall` and `noteheadHalfSmall`, but those have not yet been spotted in the data.
+
+<p>
+  <img src="./img/noteheadBlackSmall-1.png" height="200"/>
+  <img src="./img/noteheadBlackSmall-2.png" height="200"/>
+  <img src="./img/noteheadBlackSmall-3.png" height="200"/>
+</p>
+
+In sloppy handwriting they often have the same size as regular noteheads. They must be identified by the fact that they take up zero duration, because they are [grace notes](#grace-notes):
+
+<p>
+  <img src="./img/noteheadBlackSmall-sloppy1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
 
 ---
 
 
 ## `augmentationDot`
 
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/individual-notes.html))*
+
 *(Previously in CVAT: `duration_dot`)*
 
 Augmentation dot makes a note (or rest) longer by 50% (+ ½) of its natural duration. If there are two dots, it is by 75% (+ ½ + ¼) longer. More dots add an eighth, sixteenth, etc. to the duration.
 
 - <kbd>🔴 syntax</kbd> link must lead from the notehead to the augmentation dot.
-- Multiple noteheads in a chord have multiple augmentation dots, each its own with its own <kbd>🔴 syntax</kbd> link.
+- Multiple noteheads in a chord have multiple augmentation dots, each its own with its own <kbd>🔴 syntax</kbd> link. In especially dense chords, there are fewer dots than noteheads in which case a dot can be shared by many noteheads.
 - Note can have multiple augmentation dots, in which case both are linked to the notehead with a <kbd>🔴 syntax</kbd> link.
 - **Rests** can also have augmentation dots and behave exactly like noteheads.
 
@@ -247,8 +319,6 @@ Augmentation dot makes a note (or rest) longer by 50% (+ ½) of its natural dura
 </p>
 
 > **⚠️ Warning:** Not to be confused with a staccato dot, which looks similar, but is placed above/below the notehead and is usually slightly smaller.
-
-TODO: what about chords with differing number of dots and noteheads?
 
 <details>
   <summary>🔗 Example documents</summary>
@@ -414,7 +484,7 @@ Flags are divided into separate classes according to their type and direction:
   <img src="./img/flag-8th-down-1.png" alt="flag8thUp outer Example" width="220"/>
 </p>
 
-- **`flag16thUp`** / **`flag16thDown`**  
+- **`flag16thUp`** / **`flag16thDown`**
   ⚠️ *Be careful:* If a single note has **two flags**, the outer is **8th** and the inner is **16th** (and the same for three flags - 8th, 16th, 32nd... and so on).
 - **`flag32ndUp`** / **`flag32ndDown`**
 - *(and so on for higher flag counts)*
@@ -443,7 +513,7 @@ Flags are divided into separate classes according to their type and direction:
 </p>
 
 - If the beams intersects other symbols (e.g. stems), mark the mask through the intersected section. Pixels can be shared between multiple objects.
-- ⚠️ If the **noteheads are empty** you might be looking at a **tremolo beam**, check out the annotation instructions on tremolos (TODO: add link) to make sure you don't accidentally annotate multi-note tremolos as beams.
+- ⚠️ If the **noteheads are empty** you might be looking at a **tremolo beam**, check out the [annotation instructions on tremolos](#tremolo) to make sure you don't accidentally annotate multi-note tremolos as beams.
 
 ---
 
@@ -461,6 +531,21 @@ Flags are divided into separate classes according to their type and direction:
 <p>
   <img src="./img/leger-line-1.png" alt="legerLine Example" width="450"/>
 </p>
+
+If leger lines for multiple noteheads form one long line, then we split it into multiple shorter leger lines. Long leger lines would be of no benefit when processing the data:
+
+<p>
+  <img src="./img/legerLine-long.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+</details>
 
 ---
 
@@ -520,6 +605,7 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 *(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/rests.html))*
 
 - Rests participate in the <kbd>🟢 precedence</kbd> graph. See the [Precedence graph](#precedence-graph) section for more.
+- Rests are <kbd>🔴 syntax</kbd> linked to their `staff`. This is [automated](#linking-objects-to-staves) for the common rests, but needs to be done manually for the rare ones (longa, HBar).
 
 
 ### `restWhole`
@@ -530,10 +616,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restWhole-0.png" height="200"/>
+  <img src="./img/restWhole-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 4 beats.
 - Even if it does not hang from a line precisely, if it takes up 4 beats, annotate it as a whole rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it hangs from. 
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
@@ -552,10 +640,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restHalf-0.png" height="200"/>
+  <img src="./img/restHalf-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 2 beats.
 - Even if it does not sit on a line precisely, if it takes up 2 beats, annotate it as a whole rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it sits on. 
 
 <p>
@@ -573,10 +663,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restQuarter-0.png" height="200"/>
+  <img src="./img/restQuarter-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1 beat.
 - Has a large number of appearances and styles. If there's a rest and you're unsure what it is, it likely is a quarter rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/restQuarter-1.png" height="200"/>
@@ -604,9 +696,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest8th-0.png" height="200"/>
+  <img src="./img/rest8th-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/2 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/rest8th-1.png" height="200"/>
@@ -623,9 +717,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest16th-0.png" height="200"/>
+  <img src="./img/rest16th-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/4 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/rest16th-1.png" height="200"/>
@@ -642,9 +738,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/rest32nd-0.png" height="200"/>
+  <img src="./img/rest32nd-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 1/8 beat.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 ---
 
@@ -657,10 +755,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restLonga-0.png" height="200"/>
+  <img src="./img/restLonga-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 16 beats (4 whole rests).
 - Often represents a rest longer than one measure.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
 <p>
@@ -686,10 +786,12 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restDoubleWhole-0.png" height="200"/>
+  <img src="./img/restDoubleWhole-syntax.png" height="200"/>
 </p>
 
 - Represents a pause for 8 beats (2 whole rests).
 - Often represents a rest longer than one measure.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
 
 <p>
@@ -721,12 +823,14 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
 
 <p>
   <img src="./img/restHBar-0.png" height="200"/>
+  <img src="./img/restHBar-syntax.png" height="200"/>
   <img src="./img/restHBar-precedence.png" height="200"/>
 </p>
 
 - Represents a rest for a given number of measures (the number of measures is written above)
 - The number above the HBar is a `restText`, [see below](#resttext).
 - The HBar symbol participates in the <kbd>🟢 precedence</kbd> graph like any other rest.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 
 <p>
   <img src="./img/restHBar-1.png" height="200"/>
@@ -796,6 +900,11 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
   <img src="./img/accidental-sharp-1.png" alt="accidentalSharp Example" width="200"/>
 </p>
 
+<!--
+TODO: messy sharp:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+-->
+
 ---
 
 
@@ -848,45 +957,137 @@ TODO: image
 
 ### `gClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_g`)*
 
+<p>
+  <img src="./img/gClef-0.png" height="200"/>
+  <img src="./img/gClef-syntax.png" height="200"/>
+</p>
+
 - Always **leave out the center!** Don’t just outline the shape.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` it sits on (the second lowest `staffLine`).
+- The G clef almost always sits on the second-lowest staffline, therefore it is often written imprecisely. Even if it does not sit visually on that line, link it to that line, unless you are sure from the music and context (e.g. printed music is precise) that it is positioned differently.
 
 <p>
-  <img src="./img/g-clef-2.png" alt="gClef Example" width="135"/>
-  <img src="./img/g-clef-1.png" alt="gClef Example" width="140"/>
+  <img src="./img/gClef-1.png" height="150"/>
+  <img src="./img/gClef-2.png" height="150"/>
+  <img src="./img/gClef-3.png" height="150"/>
+  <img src="./img/gClef-4.png" height="150"/>
+  <img src="./img/gClef-5.png" height="150"/>
 </p>
+
+The G clef has undergone an evolution so these are the variants you may come across. All are annotated as `gClef`:
+
+<p>
+  <img src="./img/gClef-evolution.jpg" height="150"/>
+</p>
+
+> Source: Harvard Dictionary of Music and Wikipedia, [here](https://www.smithsonianmag.com/arts-culture/the-evolution-of-the-treble-clef-87122373/).
+
+This is a sloppy G clef. It does not sit on the staffline properly and is drawn quite low on the staff. However, G clef almost always sits on the second staffline from the bottom, so it is linked to that staffline:
+
+<p>
+  <img src="./img/gClef-sloppy1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
 
 ---
 
 
 ### `gClefChange`
 
-- Used when the **clef changes in the middle of the staff** to a G clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
 
-TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+<p>
+  <img src="./img/gClefChange-0.png" height="200"/>
+</p>
+
+- Used when the **clef changes in the middle of the staff** to a G clef.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `gClef`.
+
+<p>
+  <img src="./img/gClefChange-1.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+</details>
 
 ---
 
 
 ### `fClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_f`)*
 
 <p>
-  <img src="./img/f-clef-1.png" alt="fClef Example" width="200"/>
+  <img src="./img/fClef-0.png" height="200"/>
+  <img src="./img/fClef-syntax.png" height="200"/>
 </p>
+
+- Annotate **precisely** around the symbol.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` that goes in between the two dots.
+- The F clef almost always sits on the second-highest staffline, therefore it is often written imprecisely. Even if it does not sit visually on that line, link it to that line, unless you are sure from the music and context (e.g. printed music is precise) that it is positioned differently.
+
+<p>
+  <img src="./img/fClef-1.png" height="150"/>
+  <img src="./img/fClef-2.png" height="150"/>
+  <img src="./img/fClef-3.png" height="150"/>
+  <img src="./img/fClef-4.png" height="150"/>
+</p>
+
+This is a sloppy F clef. It is positioned low, but links to the second staffline from top, because it is a bass of a piano part an that's always the second staffline from top:
+
+<p>
+  <img src="./img/fClef-sloppy1.png" height="150"/>
+  <img src="./img/fClef-sloppy2.png" height="150"/>
+  <img src="./img/fClef-sloppy3.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
 
 ---
 
 
 ### `fClefChange`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
+<p>
+  <img src="img/fClefChange-0.png" height="200"/>
+</p>
+
 - Used when the **clef changes in the middle of the staff** to an F clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `fClef`.
 
 <p>
   <img src="img/fClefChange-1.png" height="150"/>
@@ -896,7 +1097,9 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  <!--TODO:
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+  -->
 </details>
 
 ---
@@ -904,20 +1107,58 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 
 ### `cClef`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
 *(Previously in CVAT `clef_c`)*
 
 <p>
-  <img src="./img/c-clef-1.png" alt="cClef Example" width="150"/>
+  <img src="./img/cClef-0.png" height="200"/>
+  <img src="./img/cClef-syntax.png" height="200"/>
 </p>
+
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staff`.
+- Add a <kbd>🔴 syntax</kbd> link from the clef to the `staffLine` that goes through the center of the clef.
+- The C clef (unlike the two others) IS OFTEN placed on different stafflines. Be careful and link it to the proper staffline.
+
+<p>
+  <img src="./img/cClef-1.png" height="150"/>
+  <img src="./img/cClef-2.png" height="150"/>
+  <img src="./img/cClef-3.png" height="150"/>
+  <img src="./img/cClef-4.png" height="150"/>
+  <img src="./img/cClef-5.png" height="150"/>
+</p>
+
+While the G and F clefs almost always sit on the same line, C clef is often placed in different positions. When <kbd>🔴 syntax</kbd> linking to a staffline, be careful and precise. Here is the same clef in three different positions:
+
+<p>
+  <img src="./img/cClef-p1.png" height="150"/>
+  <img src="./img/cClef-p2.png" height="150"/>
+  <img src="./img/cClef-p3.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+</details>
 
 ---
 
 
 ### `cClefChange`
 
+*(See the corresponding [SMuFL Group](https://www.w3.org/2021/03/smufl14/tables/clefs.html))*
+
+<p>
+  <img src="img/cClefChange-0.png" height="200"/>
+</p>
+
 - Used when the **clef changes in the middle of the staff** to a C clef.
-- These symbols are typically **smaller in size** than standard clefs.
-- Make sure to annotate them as **this object**, distinct from the regular clef symbols at the beginning of the staff.
+- These symbols are often **smaller in size** than standard clefs.
+- The same <kbd>🔴 syntax</kbd> rules apply as to `cClef`.
 
 <p>
   <img src="img/cClefChange-1.png" height="150"/>
@@ -934,13 +1175,36 @@ TODO: image - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend
 
 ## `keySignature`
 
-- A **container (parent) symbol** representing the entire key signature.
-- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
-- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it
+*(`keySignature` is not part of SMuFL, because it is a container class)*
 
 <p>
-  <img src="./img/key-signature-1.png" alt="keySignature Example" width="300"/>
+  <img src="./img/keySignature-0.png" height="200"/>
+  <img src="./img/keySignature-syntax.png" height="200"/>
 </p>
+
+- A **container object** representing the entire key signature.
+- Annotate it as a **convex hull (rough mask)** covering all the individual accidentals.
+- <kbd>🔴 syntax</kbd> links lead from `keySignature` to all accidentals within it.
+- Additional <kbd>🔴 syntax</kbd> link leads to the `staff`.
+- Individual accidentals are NOT linked to staff lines / staff spaces.
+
+<p>
+  <img src="./img/keySignature-1.png" height="150"/>
+  <img src="./img/keySignature-2.png" height="150"/>
+</p>
+
+<details>
+  <summary>🤔 Why not link accidentals to stafflines?</summary>
+
+  Accidentals are often not positioned precisely, insted their count is what matters. Moreover, even the MusicXML standard does not support key signature accidental positioning, it only counts them. Therefore we also ignore their exact position.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
 
 ---
 
@@ -1202,7 +1466,8 @@ Used to communicate the semantic grouping of beats within a measure. The example
 
 - A **container class** for grouping all elements that form a time signature (see the elements listed above).
 - Create one container for the whole time signature.
-- There is one <kbd>🔴 syntax</kbd> going from the container to each of the elements making up the time signature (numbers, slashes, plus, equals).
+- There is one <kbd>🔴 syntax</kbd> link going from the container to each of the elements making up the time signature (numbers, slashes, plus, equals).
+- There is one additional <kbd>🔴 syntax</kbd> link going to the `staff`.
 - The elements inside the time signature are linked together via <kbd>🟢 precedence</kbd> links in the order they are read (left-to-right, top-to-bottom). See the precedence diagrams above.
 
 This is what the syntax and precerence graph hierarchy for the time signature container looks like:
@@ -1279,6 +1544,11 @@ When two time signatures are written next to each other, they represent an **alt
   <img src="./img/lyricsText-melisma-1.png" height="200"/>
   <img src="./img/lyricsText-melisma-2.png" height="200"/>
 </p>
+
+<!--
+TODO: is this an extreme melisma? Use it as an example:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+-->
 
 - If two syllables are sung within one note (tied together), an undertie is used to join them. This is called an **elision**. Transcribe the undertie as this undertie character `‿` ([U+203F](https://www.compart.com/en/unicode/U+203F)) and treat the whole thing as a single syllable.
 
@@ -1419,6 +1689,27 @@ When two time signatures are written next to each other, they represent an **alt
 ---
 
 
+### `lyricsUnisono`
+
+*(`lyricsUnisono` is not part of SMuFL; it's missing [in the category](https://w3c.github.io/smufl/latest/tables/lyrics.html))*
+
+<p>
+  <img src="./img/lyricsUnisono-1.png" height="200"/>
+  <img src="./img/lyricsUnisono-2.png" height="200"/>
+</p>
+
+- Analogous to [`unisonoContinuation`](#unisonocontinuation), but for lyrics text
+- Identical <kbd>🔴 syntax</kbd> and <kbd>🟢 precedence</kbd> link rules as for `lyricsText`.
+- Has **precise mask**, unlike `lyricsText`.
+- There NO additional links or information that would indicate what part is being sung in unisono with. Behaves exactly like lyrics.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6c14dd36-af30-46a6-afae-804bcfd6e22c_a07a2ece-0bbb-4706-9bc2-648c9f19599f
+</details>
+
+
 ## Tempo
 
 - This category contains text elements that determine the tempo of the song. It is analogous to [dynamics](#dynamics), which control the volume of the song.
@@ -1521,6 +1812,12 @@ If you see some text and are unsure whether it's a tempo text, try looking it up
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_368171a0-f593-11e7-b30f-5ef3fc9ae867
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
 </details>
+
+<!--
+TODO:
+Ritenuto with spanner:
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+-->
 
 ---
 
@@ -1778,52 +2075,161 @@ What usually belongs here:
 
 ## Barlines
 
-<!--
-Ornamented terminal barline:
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_010e98cc-eab8-47d9-8424-1cfc8d3c1c1a
--->
-
 
 ### `barlineSingle`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
 *(Called `thin_barline` in CVAT)*  
+
+<p>
+  <img src="./img/barlineSingle-0.png" height="200"/>
+</p>
 
 - Represents a **single thin barline**.  
 - Annotate **precisely around the entire shape**.
+- Double-barline is annotated as two `barlineSingle` objects.
+- Must be <kbd>🔴 syntax</kbd> linked from `staffGrouping` or `measureSeparator`.
 
 <p>
-  <img src="./img/barline-single-1.png" alt="barlineSingle Example" width="180"/>
+  <img src="./img/barlineSingle-1.png" height="100"/>
+  <img src="./img/barlineSingle-2.png" height="100"/>
+  <img src="./img/barlineSingle-3.png" height="100"/>
+  <img src="./img/barlineSingle-4.png" height="200"/>
+  <img src="./img/barlineSingle-5.png" height="200"/>
+  <img src="./img/barlineSingle-6.png" height="200"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
 
 ---
 
 
 ### `barlineHeavy`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
 *(Called `barline_thick` in CVAT)*
 
+<p>
+  <img src="./img/barlineHeavy-0.png" height="200"/>
+</p>
+
 - Represents a **thick barline**, usually used at section endings.
+- Annotate **precisely around the entire shape**.
+- Must be <kbd>🔴 syntax</kbd> linked from `staffGrouping` or `measureSeparator`.
+- Differentiate between `barlineSingle` and `barlineHeavy` based on document context. If all barlines in the document are thick, they are just `barlineSingle`. Only the more-emphasized barlines are `barlineHeavy`.
 
 <p>
-  <img src="./img/barline-heavy-1.png" alt="barlineHeavy Example" width="250"/>
+  <img src="./img/barlineHeavy-1.png" height="200"/>
+  <img src="./img/barlineHeavy-2.png" height="200"/>
+  <img src="./img/barlineHeavy-3.png" height="200"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+</details>
+
+---
+
+
+### `barlineFinal`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/barlines.html))*
+
+<p>
+  <img src="./img/barlineFinal-0.png" height="200"/>
+</p>
+
+- Represents an ornamented barline, only used at the end of a song.
+- Annotate **precisely around the entire shape**.
+- Must be <kbd>🔴 syntax</kbd> linked from `measureSeparator`.
+- Annotate only as `barlineFinal`, if the barline symbol can NOT be used anywhere else, other than at the end of a song (e.g. in a repeat). Otherwise it's likely just a combination of `barlineSingle` and `barlineHeavy`.
+
+<p>
+  <img src="./img/barlineFinal-1.png" height="200"/>
+  <img src="./img/barlineFinal-2.png" height="200"/>
+  <img src="./img/barlineFinal-3.png" height="200"/>
+  <img src="./img/barlineFinal-4.png" height="200"/>
+  <img src="./img/barlineFinal-5.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+</details>
+
+---
+
+
+### `barlineWing`
+
+*(`barlineWing` is not part of SMuFL; SMuFL has bracket hooks but barline wings are not brackets)*
+
+<p>
+  <img src="./img/barlineWing-0.png" height="200"/>
+  <img src="./img/barlineWing-syntax.png" height="200"/>
+</p>
+
+- Repeats may have barlines with "wings". Each one of these strokes is a distinct `barlineWing` object.
+- Each `barlineWing` is <kbd>🔴 syntax</kbd> linked from all barlines in the barline group.
+- **⚠️ Warning**: Do not confuse winged-barline with [`bracket`](#bracket). Brackets group staves and are only present at the very beginning of a staff. Winged barlines are present in repeats, so look for [`repeatDot`](#repeatdot)s if unsure.
+
+<p>
+  <img src="./img/barlineWing-1.png" height="200"/>
+  <img src="./img/barlineWing-2.png" height="200"/>
+  <img src="./img/barlineWing-3.png" height="200"/>
+  <img src="./img/barlineWing-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+</details>
 
 ---
 
 
 ### `measureSeparator`
 
+*(`measureSeparator` is not part of SMuFL, because it is a container class)*
+
 *(Called `measure_separator` in CVAT)*
 
-- The `staffGrouping` symbols define which staves belong to the same **system** (or **subsystem**) - for example, multi-staff instruments like piano, or sectional groupings in orchestral scores.
-- ⚠️ At the **beginning of a system**, a `measureSeparator` should **not** be annotated, to avoid duplicating the final barline of the previous system.
+<p>
+  <img src="./img/measureSeparator-0.png" height="200"/>
+  <img src="./img/measureSeparator-syntax.png" height="200"/>
+</p>
 
-There should always be **exactly one continuous `measureSeparator` per system**,  
-regardless of how it appears visually:
-
-- It may be drawn as several **short individual barlines**,  
-- as one **long barline**,  
-- or a **combination** of both.
+- A **container object** that groups together all barlines that represent a measure boundary.
+- There should always be **exactly one continuous `measureSeparator` per system**, regardless of how it appears visually:
+  - It may be drawn as several **short individual barlines**,  
+  - as one **long barline**,  
+  - or a **combination** of both.
+- It has <kbd>🔴 syntax</kbd> links to all of its barlines.
+- It has <kbd>🔴 syntax</kbd> links to all staves of the system.
+- All barlines should belong to some `measureSeparator`, except for barlines at the very beginning of staves, which belong to `staffGrouping` (see below). Therefore barlines in repeats, section breaks and song endings all have a corresponding `measureSeparator`.
 
 The example below shows **four** `measureSeparator` **regions** (blue rectangles) spanning all staves, and **two** `staffGrouping` **boxes** at the start of the system.
 
@@ -1837,68 +2243,380 @@ Similar case below (annotated in MuNG): The **fourth** `measureSeparator` should
   <img src="./img/measure-separator-2.png" alt="measureSeparator Example" width="700"/>
 </p>
 
-Previous [CVAT measureSeparator rules](https://github.com/orgs/OmniOMR/discussions/24)
+Measure separators are used even in single-instrument documents:
+
+<p>
+  <img src="./img/measureSeparator-1.png" height="100"/>
+</p>
+
+Regions which do not look like measures (e.g. have no content) are also bound by measure separators, because those barlines need a parent. We interpret this area as an empty measure:
+
+<p>
+  <img src="./img/measureSeparator-2.png" height="200"/>
+</p>
+
+Measure separators are crucial in defining systems, where staff groupings are not connected together or even where staves are not connected by long barlines:
+
+<p>
+  <img src="./img/measureSeparator-3.png" height="300"/>
+  <img src="./img/measureSeparator-4.png" height="300"/>
+</p>
+
+<details>
+  <summary>🤔 Does measure separator define a system? YES! And...</summary>
+
+  All `measureSeparator` objects are responsible for grouping staves into systems. This is because they MUST reference all staves of a system, even if there is no single barline spanning all of those staves. The `staffGrouping` object is helpful and can also be used to aid in detecting systems, however there may not be a single `staffGrouping` spanning all staves if there is no visual element that does thata (bracket, brace, barline). Therefore relying on `measureSeparators` is a mandatory fallback.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/24
+</details>
 
 ---
 
 
-## Staff Grouping (brackets and braces)
+## Staff Brackets and Dividers
 
 
 ### `brace`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
 *(Previously `staff_bracket` in CVAT, together with bracket)*
 
-- Represents the **curly brace `{`** used to connect multiple staves belonging to a single instrument (e.g., piano).
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
+<p>
+  <img src="./img/brace-0.png" height="200"/>
+  <img src="./img/brace-syntax.png" height="200"/>
+</p>
+
+- Represents the **curly brace `{`** that connects related staves together.
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. Their function may be interchanged in older documents.
 - Usually connects **two staves**, but can occasionally span **three** (e.g., in organ notation).
+- Must be <kbd>🔴 syntax</kbd> linked from a parent [`staffGrouping`](#staffgrouping).
+- Does NOT <kbd>🔴 syntax</kbd> link to staves. The parent `staffGrouping` does.
 
 <p>
-  <img src="./img/brace-1.png" alt="brace Example" width="150"/>
+  <img src="./img/brace-1.png" height="300"/>
+  <img src="./img/brace-2.png" height="300"/>
+  <img src="./img/brace-3.png" height="300"/>
+  <img src="./img/brace-4.png" height="300"/>
+  <img src="./img/brace-5.png" height="300"/>
 </p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+</details>
 
 ---
 
 
 ### `bracket`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
 *(Previously `staff_bracket` in CVAT, together with brace)*
 
-- Represents the **square bracket `[`** used to group staves (e.g., for instrument families in orchestral scores).  
-- Differentiate between `brace` and `bracket` based on **appearance**, not function. In older music documents, their function is often interchanged.
-- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
-
 <p>
-  <img src="./img/bracket-1.png" alt="bracket Example" width="300"/>
+  <img src="./img/bracket-0.png" height="200"/>
+  <img src="./img/bracket-syntax.png" height="200"/>
 </p>
 
+- Represents the **square bracket `[`** that connects related staves together (e.g., instrument families in orchestral scores).  
+- Differentiate between `brace` and `bracket` based on **appearance**, not function. Their function may be interchanged in older documents.
+- ⚠️ **Important:** a second vertical line often appears near the bracket, but that line **is not part of the bracket**. It should be annotated separately as `barlineSingle`.
+- Must be <kbd>🔴 syntax</kbd> linked from a parent [`staffGrouping`](#staffgrouping).
+- Does NOT <kbd>🔴 syntax</kbd> link to staves. The parent `staffGrouping` does.
+
+<p>
+  <img src="./img/bracket-1.png" height="300"/>
+  <img src="./img/bracket-2.png" height="300"/>
+  <img src="./img/bracket-3.png" height="300"/>
+  <img src="./img/bracket-4.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_ac45624e-0846-4c6d-a079-a1f1877e1aea
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/93736ae0-d1c5-11ec-8264-005056827e51_f824ce8b-a273-4bd3-a70c-9d6381d69806
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+</details>
 
 ---
+
 
 ### `staffGrouping`
 
-- An **abstract grouping class** for combining related staves or systems.
+*(`staffGrouping` is not part of SMuFL, because it is a container class)*
 
-**Note:**  
-If a system contains **multiple brackets, braces, and a barline**, annotate them as follows:
-- Each **barline** → `barlineSingle` 
-- Each **brace or bracket** → annotated individually as `brace` or `bracket`
-- Then create:
-  - **One long `staffGrouping`** spanning the entire barline, brace or bracket (covering all connected staves)  
-  - **Several shorter `staffGrouping` boxes**, each covering one brace or bracket
+- A **container class** for wrapping visual symbols that group together staves.
+- Use **convex hull** mask.
+- There are <kbd>🔴 syntax</kbd> links from the `staffGrouping` to all of its children (`barlineSingle`, `barlineHeavy`, `brace`, `bracket`).
+- There are <kbd>🔴 syntax</kbd> links from the `staffGrouping` to all the `staff` objects that the grouping groups together.
+- `staffGrouping` objects can be nested hierarchically (see more below).
 
-- `staffGrouping` is usually annotated as a **rectangle or polygon** — not tightly around the line or brace. This means the **areas of multiple `staffGrouping` may overlap**, which is perfectly fine.
+**In single-instrument documents:**
 
-In the example below, a **long `staffGrouping`** connects all staves via the main bracket,  
-while a **shorter `staffGrouping`** encloses the brace on the left side.
+- If there are NO barlines before the first measure, there is NO `staffGrouping` object.
+- If there ARE barlines before the first measure, then:
+  - Each barline is a separate `barlineSingle` object (or `barlineHeavy`).
+  - Each barline is wrapped in a single `staffGrouping` container.
+  - There are <kbd>🔴 syntax</kbd> links from each `staffGrouping` to all of its barlines and to the `staff` they sit on.
 
 <p>
-  <img src="./img/staff-grouping-1.png" alt="staffGrouping Example" width="200"/>
+  <img src="./img/staffGrouping-mono-0.png" height="200"/>
+  <img src="./img/staffGrouping-mono-syntax.png" height="200"/>
+  <img src="./img/staffGrouping-mono-missing.png" height="200"/>
+  <img src="./img/staffGrouping-mono-double.png" height="200"/>
 </p>
 
-- Previous [CVAT staffGrouping rules](https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410)
+Here, there are no staff groupings (only measure separators), because there are no leading barlines / brackets / braces:
+
+<p>
+  <img src="./img/staffGrouping-mono-1.png" height="100"/>
+  <img src="./img/staffGrouping-mono-2.png" height="100"/>
+  <img src="./img/staffGrouping-mono-3.png" height="100"/>
+</p>
+
+Here are staff groupings for leading double or single barlines:
+
+<p>
+  <img src="./img/staffGrouping-mono-4.png" height="100"/>
+  <img src="./img/staffGrouping-mono-5.png" height="100"/>
+</p>
+
+**In piano documents:**
+
+- The `staffGrouping` <kbd>🔴 syntax</kbd> links to both `staff` objects.
+- The `staffGrouping` may have not only barlines, but also a brace as a child. It <kbd>🔴 syntax</kbd> links to its barlines and the brace.
+- The barline may be missing, which is ok. It may also be a heavy barline. Or the brace may be missing. Or there may be two barlines (of the same length).
+- The brace and barlines must span THE SAME staves. If there are two singe-staff barlines, then they define nested `staffGrouping` objects (more on nested groupings below).
+
+<p>
+  <img src="./img/staffGrouping-piano-0.png" height="200"/>
+  <img src="./img/staffGrouping-piano-syntax.png" height="200"/>
+</p>
+
+Here are piano staff groupings with a brace, two barlines and a brace and a barline:
+
+<p>
+  <img src="./img/staffGrouping-piano-1.png" height="200"/>
+  <img src="./img/staffGrouping-piano-2.png" height="200"/>
+  <img src="./img/staffGrouping-piano-3.png" height="200"/>
+</p>
+
+**In piano and voice documents:**
+
+- Piano with a voice is the simplest case of a nested `staffGrouping` (if there is a long barline joining the voice to the piano grandstaff).
+- The long barline defines the top-level `staffGrouping`, which <kbd>🔴 syntax</kbd> links to:
+  - The long `barlineSingle` spanning all staves.
+  - All `staff` objects that the barline spans.
+  - The nested `staffGrouping` which wraps the piano grandstaff.
+- The `brace` defines the nested `staffGrouping`. It is <kbd>🔴 syntax</kbd> linked FROM the top-level `staffGrouping` and it <kbd>🔴 syntax</kbd> links TO:
+  - The `brace` object.
+  - The two `staff` objects for the piano part.
+- The nested `staffGrouping` does not own the barline, because the barline spans different number staves then the brace.
+- There is a new <kbd>🔴 syntax</kbd> link between the two `staffGrouping` objects. This is because, the smaller `staffGrouping` is completely contained inside the staves of the larger `staffGrouping`.
+
+<p>
+  <img src="./img/staffGrouping-pianovoice-0.png" height="250"/>
+  <img src="./img/staffGrouping-pianovoice-syntax.png" height="250"/>
+</p>
+
+Here are two staff groupings, the smaler one groups the two piano staves and links to the `brace` and the larger one groups all three staves and links to the smaler `staffGrouping` and to the long `barline`:
+
+<p>
+  <img src="./img/staffGrouping-pianovoice-1.png" height="250"/>
+</p>
+
+**In multi-instrument documents:**
+
+In more complex pieces, use this process:
+
+1. Annotate all barlines, braces and brackets.
+2. Wrap these objects in `staffGrouping` (and those that span the same staves share the same `staffGrouping`).
+3. Add <kbd>🔴 syntax</kbd> links from each `staffGrouping` to its barlines, braces and brackets.
+4. Add <kbd>🔴 syntax</kbd> links from each `staffGrouping` to its staves.
+5. Add <kbd>🔴 syntax</kbd> links from each larger `staffGrouping` to each smaller, contained `staffGrouping`.
+
+Here, the `bracket` and the `barlineSingle` span the same staves, so they share one `staffGrouping`. It is analogous to piano parts above, just with 4 staves:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-1.png" height="250"/>
+</p>
+
+Here there's just one `brace` spanning 5 staves. Again, analogous to piano parts:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-2.png" height="250"/>
+</p>
+
+Here, there are two separate `systemGrouping`s for one system WITHOUT any parent `systemGrouping`. There is no parent grouping, because there is no barline spanning all staves. This is the reason why systems are also defined by measure separators since there is no guarantee a single `staffGrouping` will span the whole system:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-3a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-3b.png" height="300"/>
+</p>
+
+Here, there are separate short stafflines for each staff. Each defines its own little staff grouping (just like in single-insturment cases above). The hierarchy of staff groupings here is therefore quite deep and complex: a top-level one for the `brace`, another smaler one for the second `brace` and then many single-staff ones for all the `barlineSingle` objects:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-4a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-4b.png" height="300"/>
+</p>
+
+Here we have just a `barline`, a `brace`, and a `bracket`. The barline defines the top-level `staffGrouping` and then there are two shorter ones for the `brace`, and the `bracket`:
+
+<p>
+  <img src="./img/staffGrouping-multiinstrument-5a.png" height="300"/>
+  <img src="./img/staffGrouping-multiinstrument-5b.png" height="300"/>
+</p>
+
+**In particello documents:**
+
+The most complex are particello documents - documents where the whole page is just a single system and there are all the instruments. However the logic stays the same as in multi-instrument documents. There is just one additional rule to keep in mind:
+
+- If a barline spans an empty staff, that staff is ALSO CONNECTED to the `staffGrouping` defined by that barline (same applies to braces, brackets, and measure separators).
+
+This example does have the all-spanning barline. The two smaler groupings (the two braces) are nested underneath the top-level staff grouping. Again, the empty staves ARE connected:
+
+<p>
+  <img src="./img/staffGrouping-particello-2a.png" height="300"/>
+  <img src="./img/staffGrouping-particello-2b.png" height="300"/>
+</p>
+
+Here, the particello is missing the leading barline that would connect the all the staves together. This makes it a collection of separate small staff groupings. There are also the double-barline staff groupings that can be seen above in the single-instrument examples. Notice the empty staves in the middle are NOT connected by any staff grouping (beacuse there isn't any), instead they are connected by the measure separators:
+
+<p>
+  <img src="./img/staffGrouping-particello-1a.png" height="300"/>
+  <img src="./img/staffGrouping-particello-1b.png" height="300"/>
+</p>
+
+
+**Additional regards:**
+
+- `staffGrouping` is annotated as a **rectangle or polygon**. This means the **areas of multiple `staffGrouping` may overlap**, which is perfectly fine. Make groupings spanning more staves larger to make it easier to see and click on them. Also, don't be too tight so that a reviewer can clearly see the grouping object.
+- `staffGrouping` objects can be nested in which case the larger grouping <kbd>🔴 syntax</kbd> links to those smaller groupings it contains.
+- Staff grouping must always have some visible symbol that defines it (barline, brace, bracket). Empty or "artificial" staff groupings are not allowed. To group staves into a system, use measure separators instead.
+- The visual symbols of one staff grouping (barlines, braces, brackets) must span THE SAME systems. Otherwise you are looking at multiple staff groupings.
+- Empty staves should ALSO be grouped by staff groupings and measure separators. The fact that they are empty has no effect.
+
+<details>
+  <summary>🤔 Does staff grouping define a system? NO! Because...</summary>
+
+  The `staffGrouping` objects are not enough to define a system (a set of staves that play simultanously). You must also consider `measureSeparator` objects to see how are staves grouped together. Here is a counter-example where there are two separate `staffGroupings` in a single system: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+
+  Here is another example of a particello: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Single-instrument (NO staff grouping)
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_c98a8dd2-1141-48c8-a594-ee15db270b02
+  - Single-instrument (WITH staff grouping)
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/25214fee-0e1e-4c9b-b404-b57a0599acab_02c3d6a4-8ff7-4639-8fe9-9c5c122a67bb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/426ae104-28f2-4e24-a334-005273a626b7_abbcaffc-f9f8-485a-8b8b-51dd261d8fc4
+  - Piano
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_264db484-acd2-4b06-9ed7-64c7668aa6c8
+  - Piano and Voice
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - Multi-instrument
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/11ccf60d-cc2e-4843-806c-f647e910fa13_24fd65a4-6a07-4d25-a986-f95d083e6142
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - Particello
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_38de73a6-8f92-4876-bda7-c71925d04dcd
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_47f48e77-9fbc-41bb-9fb0-8c6ed0876d04
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/8136b106-6283-42c6-99eb-2f46c519c931_b71613df-c2b0-420c-9684-064e157facfb
+</details>
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/91#discussion-7177410
+</details>
 
 ---
+
+
+## `systemDivider`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
+*(Called `system_break` in CVAT)*
+
+- Two lines between staves which signal that the staves above and below this symbol belong to different systems.
+- Annotate **precisely** around the symbol.
+- Both lines form a single object.
+- `systemDivider` <kbd>🔴 syntax</kbd> links to the upper `staff`.
+
+<p>
+  <img src="./img/systemDivider-1.png" height="300"/>
+  <img src="./img/systemDivider-2.png" height="200"/>
+  <img src="./img/systemDivider-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🤔 Does a system divider define a system? NO! Because...</summary>
+
+  The `systemDivider` symbol is not mandatory - it often is not explicitly written in the document. It is only a reading aid. It cannot be relied upon to determine which staves form systems. For that, `measureSeparator` and `staffGrouping` objects must be used.
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+</details>
+
+---
+
+<!--
+## `splitBarDivider`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html))*
+
+- Any symbol at the end of the staff that mean "the measure is broken in half and the second half is on the next line/page". Check that the measure duration is shorter than expected!
+- **⚠️ Warning**: Do not confuse with [`custos`](#custos), which signals where the next note on the next line/page will be. 
+- Annotate **precisely** around the symbol.
+- `splitBarDivider` <kbd>🔴 syntax</kbd> links to the `staff`.
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - ... TO BE FOUND ...
+</details>
+
+---
+-->
 
 
 ## Articulation
@@ -2243,7 +2961,7 @@ The niente dynamics text can also sometimes be written as text, e.g. "n." or "ni
 ---
 
 
-## `dynamicNienteForHairpin`
+### `dynamicNienteForHairpin`
 
 *(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/dynamics.html))*
 
@@ -2264,89 +2982,557 @@ This symbol does NOT belong to any `dynamicText`, it belongs to the hairpin.
 
 ## Repeats
 
-> **🚧 Under construction.**
 
-TODO: smufl rozlišuje kontejner classes: repeatLeft repeatRight, my to taky zavedeme
+### `repeatLeft` and `repeatRight`
 
-<!--
-https://w3c.github.io/smufl/latest/tables/repeats.html
-Serpent segno examples:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
-- https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
 
-Half-bar repeat annotated as "otherText":
-https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
--->
-
-A **repetition mark** is composed of several elements:
-
-
-### repeatDot
-
-- The **two dots** next to the barline indicating the repeat.  
-  Each dot should be annotated individually as a separate `repeatDot`.
-
-
-### bracket / barlineSingle / barlineHeavy
-
-- The **barline or bracket components** that form the vertical part of the repeat symbol.
-
-
-### repeat
-
-- The **container mask** that encloses the entire repeat sign (as a convex hull).
-- Back-to-back repeats share the two barlines, but are two distinct repeat (containers).
-
-
-### TODO: když se vyskytne
-
-podivná repetice. Jak značit šikmé dvojčárky? - když se znovu vyskytne, volat výš, tohle je potřeba dořešit
+*(previously `repeat` in CVAT and old MuNG)*
 
 <p>
-  <img src="./img/strange-repetition.png" alt="TODO: how to annotate strange repetition" width="200"/>
+  <img src="img/repeats-0.png" width="620"/>
 </p>
 
-ODPOVĚĎ: ocasy nahoře/dole jsou barline, vlnovky jsou repeat dot, jinak barline
+- Repeats are emphasized barlines with repeat dots that mark the spot where a part of the song should be repeated (where the repeated section begin and ends).
+- Repeat barlines may have wings, which are annotated as [`barlineWing`](#barlinewing), see that section for more.
+- `repeatLeft` and  `repeatRight` are **container classes** that mark the start and end of the repeated section respectively.
+- Both repeats can coexist on a single measure boundary, marking an end of one repeated section and a start of another at the same time.
+
+<p>
+  <img src="img/repeatLeftRight-0.png" height="200"/>
+  <img src="img/repeatLeftRight-syntax.png" height="200"/>
+</p>
+
+- The repeat has <kbd>🔴 syntax</kbd> links to its children (barlines, repeat dots).
+- The repeat does NOT have <kbd>🔴 syntax</kbd> links to `staff` objects.
+- Barlines should be shared by `repeatLeft` and `repeatRight` if both repeats are on the same measure boundary. But only those barlines in the center, that make sense for each repeat, not necessarily all barlines.
+
+<p>
+  <img src="img/repeat-multistaff-0.png" width="620"/>
+</p>
+
+- The repeat spans just as many staves as the barlines it contains do. If it spans multiple staves, it <kbd>🔴 syntax</kbd> links to all repeat dots.
+
+<p>
+  <img src="img/repeats-and-measureSeparators.png" height="200"/>
+</p>
+
+- Repeats often coexist with `measureSeparator`s. They have no relationship, other than sharing the same barlines as children. However, repeats can also exist in places, where `measureSeparator`s do not, e.g. at the beginning of a staff or in the middle of a measure.
+
+This is an example of a simple `repeatRight` at the end of a staff. It coincides with a `measureSeparator`, but they have no link between each other, they just share the two barlines:
+
+<p>
+  <img src="img/repeatRight-1.png" height="200"/>
+  <img src="img/repeatRight-2.png" height="200"/>
+</p>
+
+This is a `repeatRight` that spans two staves and therefore has 4 `repeatDot`s:
+
+<p>
+  <img src="img/repeatRight-3.png" height="200"/>
+</p>
+
+These are repeats with winged barlines:
+
+<p>
+  <img src="img/repeats-winged-1.png" height="200"/>
+</p>
+
+These are places where the repeat does NOT align with a measure separator:
+
+<p>
+  <img src="img/repeat-without-separator-1.png" height="200"/>
+  <img src="img/repeat-without-separator-2.png" height="200"/>
+</p>
+
+This is an example of a piano part with four separate repeat containers and one measure separator. Both barlines in the middle are `barlineHeavy` and they have wings. The corresponding <kbd>🔴 syntax</kbd> graph is quite complex:
+
+<p>
+  <img src="img/repeat-complex-1.png" height="200"/>
+  <img src="img/repeat-complex-syntax.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Without wings
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/82ab6fe0-ea75-11ed-9f31-5ef3fc9bb22f_689af144-8232-4e60-af78-eb04fa023656
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - With wings
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+    - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+</details>
 
 ---
 
 
-### repeat1Bar
+### `repeatDot`
 
-- in CVAT `repeat_measure_sign`
-- `%`
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
 
-TODO: nad tímhle může být text (stejně jako nad multi-measure rets / whole rest), ten se linkuje v precedenčním grafu (na to je nějaká diskuze někde)
+<p>
+  <img src="img/repeatDot-0.png" height="200"/>
+  <img src="img/repeatDot-syntax.png" height="200"/>
+</p>
 
-TODO: někdy se používá pro repeat půl-taktu, to je v pohodě, je to pořád tento symbol
+- Represents one dot of a repeat sign.
+- Is <kbd>🔴 syntax</kbd> linked from its parent `repeatLeft` or `repeatRight` container.
 
-TODO: projít partitury a vychytat divnosti, je tam taky "repeat one beat", což je jen ten slash bez teček a někdy to opakuje půl-takt
+Here are various repeat dot appearances:
 
-<!--
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
--->
+<p>
+  <img src="img/repeatDot-1.png" height="200"/>
+  <img src="img/repeatDot-2.png" height="200"/>
+  <img src="img/repeatDot-3.png" height="200"/>
+  <img src="img/repeatDot-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/82ab6fe0-ea75-11ed-9f31-5ef3fc9bb22f_689af144-8232-4e60-af78-eb04fa023656
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+</details>
 
 ---
 
 
-## Col violino unisono
+### `volta`
 
-> **🚧 Under construction.**
+*(`volta` is not part of SMuFL because it cannot be rendered via a font)*
 
-- TODO: není pro to maska - je to asi podobně rozšířené jako repeat_measure_sign (%)
-- dvě čáry - Píšou se, když má nástroj hrát unisono s jiným partem (note: to je pokračování unisona)
-- "col viol" https://github.com/orgs/OmniOMR/discussions/124 stejná věc (stejné precedenční hrany) (note: tohle je začátek unisona)
+<p>
+  <img src="img/volta-0.png" width="620"/>
+  <img src="img/volta-syntax.png" width="620"/>
+  <img src="img/volta-precedence.png" width="620"/>
+</p>
 
-nějakej "unisonoMark"
+- Represents a section of music that should only be played during the first/second/third repetition of the piece.
+- Visually it is the spanner or bracket above the staff.
+- Annotate **precise mask**.
+- The number or text inside is [`voltaText`](#voltatext), see below.
+- It <kbd>🔴 syntax</kbd> links to exactly one notehead/rest of each measure it spans. For music with multiple voices or staves, pick the closest notehead/rest for each measure.
+- <kbd>🟢 precedence</kbd> links across measure boundaries have special behaviour: Preceeding music links to all volta sections. Only the last volta section links to the following music. Within volta sections, the rules are as usual.
 
-nebo "col instruction" - text nebo něco
+<p>
+  <img src="img/volta-1.png" height="200"/>
+  <img src="img/volta-2.png" height="200"/>
+  <img src="img/volta-3.png" height="200"/>
+</p>
 
-dvě čárky = "dtto", stejně jako to předtím
+<details>
+  <summary>🔗 Example documents</summary>
 
-"interpretační pokyny = čti noty jinde"
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
 
-Samples:
-- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+---
+
+
+### `voltaText`
+
+*(`voltaText` is not part of SMuFL because it is a text class)*
+
+<p>
+  <img src="img/voltaText-0.png" width="620"/>
+  <img src="img/voltaText-syntax.png" height="200"/>
+</p>
+
+- The text inside a [`volta`](#volta) bracket.
+- Annotate **convex hull mask**.
+- Transcribe the text.
+- It is <kbd>🔴 syntax</kbd> linked from the parent `volta` object.
+
+<p>
+  <img src="img/voltaText-1.png" height="200"/>
+  <img src="img/voltaText-2.png" height="200"/>
+  <img src="img/voltaText-3.png" height="200"/>
+</p>
+
+The text inside `voltaText` must be transcribed. It can look like this:
+
+```
+1.
+2.
+3.
+I.
+II.
+Prima volta
+Seconda volta
+1ma.
+2da.
+1a
+2a
+Imal
+IImal
+Einmal
+Zweimal
+```
+
+There may even be multiple repetitions under one bracket (first two times play the first bracket, third time play the second bracket), in which case the text in the first bracket may look like this:
+
+```
+1., 2.
+```
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_5f5369b3-7629-4735-80a7-d409e218d622
+</details>
+
+---
+
+
+### `segno`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+<p>
+  <img src="img/segno-0.png" height="200"/>
+  <img src="img/segno-syntax.png" height="200"/>
+</p>
+
+- A symbol that we jump to from some other place in the song.
+- Placed at the beginning of the measure we start playing after the jump. Often directly over the barline.
+- Annotate **precise mask**.
+- It is <kbd>🔴 syntax</kbd> linked from the first notehead/rest of the measure that follows the sign (that we jump to). For multi-instrument or multi-voice parts, link the sign from the closest notehead/rest to the sign.
+
+---
+
+
+### `coda`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+<p>
+  <img src="img/coda-0.png" height="200"/>
+  <img src="img/coda-syntax.png" height="200"/>
+</p>
+
+- A symbol that we jump to from some other place in the song.
+- Placed at the beginning of the measure we start playing after the jump. Often directly over the barline.
+- Annotate **precise mask**.
+- It is <kbd>🔴 syntax</kbd> linked from the first notehead/rest of the measure that follows the sign (that we jump to). For multi-instrument or multi-voice parts, link the sign from the closest notehead/rest to the sign.
+
+---
+
+
+### `segnoSerpent`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+*(`segnoSerpent` is not directly in SMuFL, because there are two variants 1 and 2 which we differentiate via attached barlines instead of numbers; but the class name is SMuFL-inspired)*
+
+<p>
+  <img src="img/segnoSerpent-0.png" height="200"/>
+  <img src="img/segnoSerpent-piano-0.png" height="200"/>
+  <img src="img/segnoSerpent-syntax.png" height="200"/>
+</p>
+
+- Older variant of the [`segno`](#segno) sign described above. Is drawn over the staff, often intersected with barlines.
+- Learn more here on [Dorico forum](https://forums.steinberg.net/t/serpent-segno/127943/15) or [Reddit](https://www.reddit.com/r/classicalmusic/comments/a7sqkj/what_is_this_swirly_thing_occurs_several_times_in/).
+- When intersected with barlines, they are annotated separately as `barlineSingle` and <kbd>🔴 syntax</kbd> linked from the `segnoSerpent` object.
+- In multi-staff pieces (e.g. piano), the barlines span all staves and there is one `segnoSerpent` object on each staff, each of them <kbd>🔴 syntax</kbd> linking to both barlines.
+- The `segnoSerpent` can be placed over a measure boundary, in which case there is a `measureSeparator` also, or it can be placed in the middle of a measure or start of a song, in which case there is NO `measureSeparator`.
+- Unlike with `segno`, there are NO <kbd>🔴 syntax</kbd> links from noteheads!
+
+Here are two `segnoSerpent` with three barlines and NO `measureSeparator`, because it is placed at the very beginning of the song:
+
+<p>
+  <img src="img/segnoSerpent-1.png" height="200"/>
+</p>
+
+Here it is in the same document at the end of a staff, so there is a `measureSeparator` now:
+
+<p>
+  <img src="img/segnoSerpent-2.png" height="200"/>
+  <img src="img/segnoSerpent-3.png" height="200"/>
+</p>
+
+Here it seems it is at the beginning of a song, but in fact there is a one-beat pick-up measure before it. So there is a `measureSeparator` present:
+
+<p>
+  <img src="img/segnoSerpent-4.png" height="200"/>
+</p>
+
+This is a long sequence of `serpentSegno`s in a particello document:
+
+<p>
+  <img src="img/segnoSerpent-5.png" height="200"/>
+</p>
+
+
+This is what it looks like in other documents:
+
+<p>
+  <img src="img/segnoSerpent-6.jpeg" width="620"/>
+  <img src="img/segnoSerpent-7.jpeg" height="150"/>
+  <img src="img/segnoSerpent-8.png" height="150"/>
+  <img src="img/segnoSerpent-9.png" height="150"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_325f277f-4747-412b-9e64-7dbc8c4ffdb9
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_9d4412a1-0cf3-4475-a022-9f37984272fb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/2f6466fb-7268-48c4-8f98-ddcdb81db881_40c339dd-cd83-40b4-9259-474fb047d00d
+</details>
+
+---
+
+
+### `repeatText`
+
+*(`repeatText` is not part of SMuFL, because it is a text class)*
+
+<p>
+  <img src="img/repeatText-0.png" height="200"/>
+  <img src="img/repeatText-syntax.png" height="200"/>
+</p>
+
+- Repeat text instructs the player to jump to a specific place in the song, usually the beginning ("Capo"), coda or segno. It may also represent a place where a repeated section ends, e.g. "Fine".
+- Annotate with **convex hull mask** and **transcribe its content**.
+- There is one <kbd>🔴 syntax</kbd> link from the last notehead/rest of the measure, after which the jump is performed. For multi-instrument or multi-voice parts, pick the closest notehead to the text element.
+  1. Text instructing the start of a jump should be <kbd>🔴 syntax</kbd> lined from the LAST notehead of the measure before jump.
+  2. Text instructing the place to stop should also be <kbd>🔴 syntax</kbd> linked from the LAST notehead before stopping.
+  3. Text indicating a place to jump to ("Coda", "Segno") should be <kbd>🔴 syntax</kbd> linked from the FIRST notehead after the jump.
+
+Here are some examples of what a `repeatText` can say, with its meaning:
+
+| Repeat text content         | Meaning                |
+|-----------------------------|------------------------|
+| `D.C.` | Da Capo - jump to beginning |
+| `D.S.` | Dal Segno - jump to the segno sign |
+| `D.C. al Fine` | Jump to beginning and play until you hit "Fine" |
+| `D.C. al Coda` | Jump to beginning and play until you hit the coda sign |
+| `Fine` | Stop playing the repeated section here |
+| `Segno` | Place of the segno landing mark, using text instead of symbol |
+| `Coda` | Place of the coda landing mark, using text instead of symbol |
+| `To Coda` | Jump to the coda sign |
+| `Da Coda` | Jump to the coda sign |
+| `Da Doppia Coda` | Jump to the second coda sign |
+| `D.D.S. al Doppia Coda` | Dal Doppio Segno al Doppia Coda |
+| any combination of these | ... |
+
+The "To Coda" can sometimes be written as "To 𝄌" (with the coda symbol). Transcribe it as text and do NOT annotate it as [`coda`](#coda), since it instructs to start the jump, not the place of landing. Similar thing may happen with segno. Copy those unicode symbols from here:
+
+```
+Coda  U+1D10C: 𝄌
+Segno U+1D10B: 𝄋
+```
+
+<p>
+  <img src="img/repeatText-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_16e3cbb5-bd89-48c2-80a6-cccbcaeb7893
+</details>
+
+---
+
+
+### `repeat1Bar`
+
+*(See the corresponding [SMuFL group](https://w3c.github.io/smufl/latest/tables/repeats.html))*
+
+*(`repeat_measure_sign` previously in CVAT)*
+
+<p>
+  <img src="img/repeat1Bar-0.png" height="200"/>
+  <img src="img/repeat1Bar-syntax.png" height="200"/>
+  <img src="img/repeat1Bar-precedence.png" height="200"/>
+</p>
+
+- Symbols takes up the entire measure and instructs the player to repeat the previous measure.
+- Annotate with **precise mask**.
+- The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
+- The symbol participates in the <kbd>🟢 precedence</kbd> graph, since it is a placeholder for notes that would otherwise be written there explicitly.
+
+<p>
+  <img src="img/repeat1Bar-1.png" width="620"/>
+  <img src="img/repeat1Bar-2.png" height="200"/>
+  <img src="img/repeat1Bar-3.png" height="200"/>
+</p>
+
+The repeat often has `tie`s attached. It's very unlikely that these are slurs, especially when there are more than one of them:
+
+<p>
+  <img src="img/repeat1Bar-ties-1.png" height="200"/>
+</p>
+
+It can sometimes repeat only one of the voices:
+
+<p>
+  <img src="img/repeat1Bar-one-voice-1.png" height="150"/>
+</p>
+
+There may be a number above the symbol, which signals the number of measures that have so far been repeated (when there are many measure repeats next to each other). Annotate the text as [`repeatText`](#repeattext) and add a <kbd>🔴 syntax</kbd> link from the `repeat1Bar` to the`repeatText` object.
+
+<p>
+  <img src="img/repeat1Bar-numbers.png" width="620"/>
+</p>
+
+~~We assume the symbol repeats the entire measure. If it repeats less than a measure, then annotate it as `unclassified`.~~
+TODO: if it's not alone in the measure, it must have shorter duration, usually the remaining duration. See this: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/deeb2b31-d343-42b2-969a-f4641d9be9a2_1d1b1b8b-0b6a-45ce-850b-61827573835e
+(TODO: add this document to example documents)
+
+TODO: There are one-slash repeats in plenty of places... paste examples here...
+
+<details>
+  <summary>❓ What about 2-bar repeats and slash-repeats?</summary>
+
+  There are niche repeats, double-percent and quadruple-percent signs that repeat 2 and 4 measures. Then there are slash-repeats that repeat a phrase or a single beat. This shash notation or "simile marks" as they may be called are very rare so we decided not to include them in the MuNG 2.0 ontology.
+
+  For any future updates to MuNG format, please learn more about these at this [MuseScore forum question](https://musescore.org/en/node/127396), [Lilypond documentation section](https://lilypond.org/doc/v2.19/Documentation/notation/short-repeats) and [MusicXML example](https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/beat-repeat-element/).
+
+  There is one example document where a double-slash phrase-repeat is used, but it is annotated as `unclassified`. These are the only two occurrences in the dataset we know of:
+  
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5895c292-1b64-41d6-acdf-c2cc77c18f71_35f19b56-c7bd-4289-9d52-a5c128197708
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/d9fede70-b9f0-11ea-b68c-005056827e52_2f8490c5-7e84-426e-8628-2bc938f47260
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+</details>
+
+---
+
+
+## Unisono
+
+In particello documents there are places where one instrument temporarily plays the same music as another one (in unison with the other one). Unison in Italian is "unisono". This unisono section usually starts with text "col Viol." - play "with the Violin".
+
+<details>
+  <summary>🧵 Relevant discussions</summary>
+
+  - https://github.com/orgs/OmniOMR/discussions/124
+</details>
+
+
+### `unisonoText`
+
+*(`unisonoText` is not part of SMuFL because it is a text class)*
+
+<p>
+  <img src="img/unisonoText-0.png" height="200"/>
+  <img src="img/unisonoText-syntax.png" height="200"/>
+  <img src="img/unisonoText-precedence.png" height="200"/>
+  <img src="img/unisonoText-syntax-staff.png" height="200"/>
+</p>
+
+- It is a text class, use **convex hull mask** and **transcribe if readable**. Do NOT transcribe unreadable text.
+- Add a <kbd>🔴 syntax</kbd> link from the last preceeding note/rest before the unisono section. This <kbd>🔴 syntax</kbd> link may be missing if the `unisonoText` occurs at the very first measure of the staff (thus there is no preceeding note visible).
+- Add a <kbd>🔴 syntax</kbd> link to the `staff`.
+- The last preceeding note/rest that <kbd>🔴 syntax</kbd> links to the text should also <kbd>🟢 precedence</kbd> link to the next note in the part that is to be played unisono with. This <kbd>🟢 precedence</kbd> link can be omitted if it's unclear which part is to be played or the link cannot be for some reason made.
+
+This is an example unisono text:
+
+<p>
+  <img src="img/unisonoText-1.png" height="300"/>
+</p>
+
+Sometimes the unisono text looks like this symbol (do not transcribe the text here):
+
+<p>
+  <img src="img/unisonoText-2.png" height="300"/>
+</p>
+
+The text may not say "col ..." but something else as well:
+
+<p>
+  <img src="img/unisonoText-3.png" height="200"/>
+</p>
+
+The unisono section may start in the middle of a measure and also there may be a [`custos`](#custos) indicating what note is to be played as the first note of the unisono section. Treat the `custos` as a zero-duration notehead and use it for the <kbd>🔴 syntax</kbd> and <kbd>🟢 precedence</kbd> links:
+
+<p>
+  <img src="img/unisonoText-4.png" height="200"/>
+</p>
+
+When the unisono section ends, you should return from the source part via a <kbd>🟢 precedence</kbd> link:
+
+<p>
+  <img src="img/unisonoText-5.png" height="200"/>
+</p>
+
+There are three interesting things in the next example. The first `unisonoText` has no <kbd>🔴 syntax</kbd> inlink because there are no notes preceeding it (there is the <kbd>🔴 syntax</kbd> link to `staff` though). The second `unisonoText` contains instruction to play "with the Violin", but "one octave lower - 8ba". And the following unisono section only applies to one of the two voices in that part - the second voice continues with rests.
+
+<p>
+  <img src="img/unisonoText-6.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf5ef9ce-00ba-4c9f-bbb3-57e542354222_f749c3aa-d105-4da2-a7af-64dc80b30a83
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+---
+
+
+### `unisonoContinuation`
+
+*(`unisonoContinuation` does not seem to be present in SMuFL, `splitBarDivider` is the closest visually but has different meaning)*
+
+<p>
+  <img src="img/unisonoContinuation-0.png" height="200"/>
+  <img src="img/unisonoContinuation-syntax.png" height="200"/>
+</p>
+
+- Two slashes that signal that a unison section is continuing through these measures. Drawn on a barline or in the middle of a measure.
+- Use **precise mask**.
+- Add a <kbd>🔴 syntax</kbd> link to the `staff`. There may also be links to multiple staves if there are multiple instruments playing unisono next to each other, being marked with only a single `unisonoContinuation` mark.
+
+<p>
+  <img src="img/unisonoContinuation-1.png" height="200"/>
+  <img src="img/unisonoContinuation-2.png" height="200"/>
+</p>
+
+This is one mark for multiple staves:
+
+<p>
+  <img src="img/unisonoContinuation-3.png" height="200"/>
+</p>
+
+This is a unisono section that affects only one voice and then ends in the middle of a measure:
+
+<p>
+  <img src="img/unisonoContinuation-4.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_ac38f0d6-ba87-4008-a540-887fc9657b4b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/33c9e218-519a-4e5d-8f6e-d4de89f4fc87_38de73a6-8f92-4876-bda7-c71925d04dcd
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/f0eb92d3-24ff-4aa8-bb21-cdebb709a276_6f750072-273e-487e-abd9-d9e8afdb767e
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
 
 ---
 
@@ -2611,6 +3797,7 @@ Half notes can afford to have the tremolo beams connected to the stem (since hal
 
 <!--
 - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+- https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
 -->
 
 
@@ -2633,27 +3820,76 @@ Half notes can afford to have the tremolo beams connected to the stem (since hal
 ---
 
 
-## Grace notes
+## Fingering
 
 > **🚧 Under construction.**
 
+Prstokladová čísla
+
+SMuFL:
+https://w3c.github.io/smufl/latest/tables/fingering.html
+
+druhý systém uprostřed v piánu:
+https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/fe2c5c10-00c6-11f0-9b34-5ef3fc9bb22f_9a377034-e508-4794-ac10-86796d56b563
+
+---
+
+
+## Grace notes
+
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
-A grace note is composed of:
-
-- `noteheadWholeSmall` / `noteheadHalfSmall` / `noteheadBlackSmall`
-
 <p>
-  <img src="./img/notehead-black-small-1.png" alt="noteheadBlackSmall Example" width="350"/>
+  <img src="./img/grace-notes.png" height="200"/>
 </p>
 
-- Uses a standard `stem`, `flag(number)th(Up/Down)`, `beam`
+- Grace notes are notes that have zero musical duration and are played fast, just before another note.
+- They are identified by having smaller noteheads, which should be annotated as [`noteheadBlackSmall`](#noteheadblacksmall), see the link.
+- Other symbols, like stems, beams, flags, accidentals are annotated with the usual classes (`stem`, `beam`, `flag8thUp`, `accidentalSharp`).
+- These other symbols are <kbd>🔴 syntax</kbd> linked from `noteheadBlackSmall` noteheads as usual.
 
 <p>
-  <img src="./img/grace-note-1.png" alt="Grace note flag and stem Example" width="350"/>
+  <img src="./img/grace-notes-syntax-internal.png" height="200"/>
 </p>
 
-- The "slash" through the grace note is `graceNoteSlashStemUp` or `graceNoteSlashStemDown` based on the stem orientation (not the slash orientation).
+- Grace noteheads are <kbd>🟢 precedence</kbd> linked just like regular noteheads, but there are NO links to regular noteheads. This is because grace notes have their own "virtual" musical time and so cannot mix with regular notes.
+
+<p>
+  <img src="./img/grace-notes-precedence.png" height="200"/>
+</p>
+
+- Grace notes are connected from their parent notehead(s) using <kbd>🔴 syntax</kbd> links. Only the last grace notes connect and if they are a chord, each grace notehead should be linked from some corresponding closest parent notehead. The link is oriented from the parent notehead, to the grace notehead.
+
+<p>
+  <img src="./img/grace-notes-syntax-external.png" height="200"/>
+</p>
+
+- There may be a `slur` or a `tie` between a grace notehead and regular notehead. Connect it with <kbd>🔴 syntax</kbd> links as usual.
+
+<p>
+  <img src="./img/grace-notes-syntax-slur.png" height="200"/>
+</p>
+
+Here are real examples of grace notes:
+
+<p>
+  <img src="./img/grace-notes-1.png" height="200"/>
+  <img src="./img/grace-notes-2.png" height="200"/>
+  <img src="./img/grace-notes-3.png" height="200"/>
+  <img src="./img/grace-notes-4.png" height="200"/>
+  <img src="./img/grace-notes-5.png" height="200"/>
+  <img src="./img/grace-notes-6.png" height="200"/>
+  <img src="./img/grace-notes-7.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+</details>
 
 <details>
   <summary>🧵 Relevant discussions</summary>
@@ -2661,15 +3897,33 @@ A grace note is composed of:
   - https://github.com/orgs/OmniOMR/discussions/61#discussioncomment-9843887
 </details>
 
-<!--
+---
+
+
+### `graceNoteSlashStemUp` / `graceNoteSlashStemDown`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+<p>
+  <img src="./img/graceNoteSlashStemUpDown-0.png" height="200"/>
+  <img src="./img/graceNoteSlashStemUpDown-syntax.png" height="200"/>
+</p>
+
+- A grace note can have a slash across the stem, making it an acciacatura (has slightly different interpretation).
+- The slash is annotated as `graceNoteSlashStemUp` if the slash points upward or `graceNoteSlashStemDown` if the slash points downward.
+- Add <kbd>🔴 syntax</kbd> link from the notehead (of the slashed stem) to the slash symbol. If it's a chord, pick the closest notehead.
+
+<p>
+  <img src="./img/graceNoteSlashStemUp-1.png" height="200"/>
+  <img src="./img/graceNoteSlashStemUp-2.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
-  - Last system, middle measure, top staff: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/09bc8dd2-c0c8-40c8-b48d-9db654d4bb7a_3d7bfbbf-6ad8-4e68-aa81-3f8dc6d633b6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_5b6164cc-5653-494b-b43f-946fbb64d440
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
 </details>
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/ae6834fa-f241-4c24-8a11-a025281b6112_7ad6c7df-d12b-4bdd-b53a-49a3e8c1799d
--->
 
 ---
 
@@ -2795,6 +4049,8 @@ indicating the continuation of the trill.
 
 ### `ornamentTurn`
 
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
 *(Previously grouped under `ornament` in CVAT.)*
 
 - <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
@@ -2807,6 +4063,8 @@ indicating the continuation of the trill.
 
 
 ### `ornamentTurnInverted`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
 
 *(Previously grouped under `ornament` in CVAT.)*
 
@@ -2826,6 +4084,30 @@ indicating the continuation of the trill.
 
 ---
 
+### `ornamentShortTrill`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/common-ornaments.html))*
+
+<p>
+  <img src="./img/ornamentShortTrill-0.png" height="200"/>
+  <img src="./img/ornamentShortTrill-syntax.png" height="200"/>
+</p>
+
+- Short trill wavy line above a notehead. If it reads "tr", then it's `ornamentTrill`, otherwise it's `ornamentShortTrill`.
+- <kbd>🔴 syntax</kbd> link from the notehead to the ornament.
+
+<p>
+  <img src="./img/ornamentShortTrill-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360
+</details>
+
+---
+
 
 ## `custos`
 
@@ -2834,7 +4116,7 @@ indicating the continuation of the trill.
 *(See the related [Wikipedia page](https://en.wikipedia.org/wiki/Direct_(music_symbol)))*
 
 <p>
-  <img src="./img/custos-1.png" height="200"/>
+  <img src="./img/custos-0.png" height="200"/>
 </p>
 
 - Mark at the end of a staff, that signals where the next note to be played (on the next page) will be positioned.
@@ -2842,41 +4124,22 @@ indicating the continuation of the trill.
 - Annotate with **precise mask**.
 - Add <kbd>🔴 syntax</kbd> links to leger lines and accidentals.
 - Link it from the preceding notehead or rest via <kbd>🟢 precedence</kbd> links, as if it was a regular notehead.
+- Add <kbd>🔴 syntax</kbd> links to the `staff` and `staffLine` or `staffSpace`, just like noteheads have.
 
 <p>
+  <img src="./img/custos-1.png" height="200"/>
   <img src="./img/custos-2.png" height="200"/>
   <img src="./img/custos-3.png" height="200"/>
+  <img src="./img/custos-4.png" height="200"/>
 </p>
 
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/db302606-78fb-4ec4-91e7-6496f610126e_63c13779-5c2c-4abd-bc68-fe0ff453cb8b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b75
 </details>
-
----
-
-
-## `systemDivider`
-
-> **🚧 Under construction.**
-
-*(Called `system_break` in CVAT)* 
-
-TODO: image
-
----
-
-
-## `splitBarDivider`
-
-> **🚧 Under construction.**
-
-- napojení taktu (ta vlnovka na konci)
-
-<p>
-  <img src="./img/split-bar-divider-1.png" alt="splitBarDivider Example" width="300"/>
-</p>
 
 ---
 
@@ -2905,21 +4168,35 @@ TODO: the first example document below also contains pedal markings
 
 ## `arpeggiato`
 
-> **🚧 Under construction.**
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/plucked-techniques.html))*
 
 *(Previously grouped under `ornament` in CVAT.)*  
 
-- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.  
-- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+<p>
+  <img src="./img/arpeggiato-0.png" height="200"/>
+  <img src="./img/arpeggiato-syntax.png" height="200"/>
+</p>
 
-<!--
+- Used for **vertical wavy lines** indicating that a chord should be **arpeggiated**.
+- Note: use the class name **`arpeggiato`**, **not** `arpeggio`.
+- If it has an arrow up/down, then it's an `arpeggiatoUp` or `arpeggiatoDown`.
+- Add <kbd>🔴 syntax</kbd> links from each affected notehead to the `arpeggiato` symbol.
+
+<p>
+  <img src="./img/arpeggiato-1.png" height="200"/>
+  <img src="./img/arpeggiato-2.png" height="200"/>
+  <img src="./img/arpeggiato-3.png" height="200"/>
+  <img src="./img/arpeggiato-4.png" height="200"/>
+</p>
+
 <details>
   <summary>🔗 Example documents</summary>
 
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/6381d3b0-00c7-11f0-9b34-5ef3fc9bb22f_a869cf3d-924f-406d-b3ee-f09f112e5a58
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
 </details>
--->
 
 ---
 
@@ -2949,14 +4226,219 @@ Use this class for **non-musical marks or noise** that appear on the page **only
 
 ## Precedence graph
 
-TODO ...
+Precedence graph are the green <kbd>🟢 precedence</kbd> links between nodes. They have three functions:
 
-- primary rule: when two durables meet (end-start), link is there
-- secondary rule: minimize links in-between separate voices (staffs, parts)
-- lemma: between chords, it's all-to-all connections
+1. Define onset (when a note begins within a measure)
+2. Define voices
+3. Define sequential order
 
-Here, there is a missing eighth rest, first system, last measure, bottom staff, onset 1.5 beats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
-(this breaks the central assumption for precedence links, what to do about it?)
+The third function is the simplest and applies to less-musical symbols, usually text-like symbols. Classes that use <kbd>🟢 precedence</kbd> links for sequential order are: [Time Signatures](#time-signatures), [`lyricsText`](#lyricstext), [`dynamic[Mark]`](#dynamicmark), [`tuplet[0..9]`](#tuplet09), [`tupletColon`](#tupletcolon); see those sections for more detail.
+
+Here, we will talk about the first two functions of the <kbd>🟢 precedence</kbd> graph (onset and voices), which apply mainly to notes and rests, however there are more note-like symbols it also applies to. These are the classes we will talk about:
+
+- [Noteheads](#noteheads)
+- [Rests, including multi-measure rests](#rests)
+- [Grace Notes](#grace-notes)
+- [Voltas](#volta)
+- [`repeat1Bar`](#repeat1bar)
+- [Unisono sections](#unisono)
+- [`custos`](#custos)
+
+The principles on how to connect these via <kbd>🟢 precedence</kbd> links are:
+
+1. When two notes/rests meet (end-to-start), link them
+2. Minimize links between separate voices
+3. Between two chords within a voice, link all-to-all
+
+These principles are expressed in more detail in the following text.
+
+
+### Defining onset
+
+*Onset* is the time, when a note (or rest) begins. It is measured from the start of a measure and is counted in beats. In MuNG, we define onset via <kbd>🟢 precedence</kbd> links between "preceeding" noteheads, i.e. when one notehead follows another (the first ends exactly when the second begins), we connect them with a <kbd>🟢 precedence</kbd> link.
+
+This is what the <kbd>🟢 precedence</kbd> graph for a monophonic piece of music looks like:
+
+<p>
+  <img src="./img/precedence-monophonic-1.png" width="620"/>
+</p>
+
+If the music has chords, they get connected all-to-all. This is done in MuNG Studio by selecting the first chord noteheads and then <kbd>Ctrl</kbd>-drag-selecting the second chord noteheads, which automatically creates all the links.
+
+<p>
+  <img src="./img/precedence-homophonic-1.png" width="620"/>
+</p>
+
+Documents with multiple instruments usually consists of many monophonic parts. These parts are independent and links between them are very rare (see [Edgecases](#edgecases) below).
+
+<p>
+  <img src="./img/precedence-multipart-monophonic-1.png" height="200"/>
+</p>
+
+Since onset is counted from the start of a measure, links across measure boundaries are not required for defining onset, however, they are needed to define the flow of multiple voices and they also make the graph easier to read.
+
+<p>
+  <img src="./img/precedence-measures-1.png" width="620"/>
+</p>
+
+This means the first note in the first measure has no incomming <kbd>🟢 precedence</kbd> links. Whenever there is such a note, it means it has 0 onset (it starts at the beginning of the measure).
+
+<p>
+  <img src="./img/precedence-no-inlinks-1.png" width="620"/>
+</p>
+
+A note without incomming links can also exist in the middle of a particello, but the note MUST start at the beginning of its measure:
+
+<p>
+  <img src="./img/precedence-particello-midstart-1.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - Monophonic: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/13abc7f9-5e3f-4e85-b753-0dab090728fe_da0e8022-a312-432a-b825-d66c024aa816
+  - Multi-part homophonic: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/30d6c780-c8fe-11e7-9c14-005056827e51_36058ae0-f593-11e7-b30f-5ef3fc9ae867
+  - Particello with mid-staff precedence start: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/049fd427-418f-4ef8-8944-4108b977d7be_b2dc7d20-babb-42a0-aa63-e33248d43fe6
+</details>
+
+
+### Defining voices
+
+In order to identify the proper flow of voices (usually in piano music), there should be no <kbd>🟢 precedence</kbd> links across different voices. The only exception is when a voice starts/ends, then a <kbd>🟢 precedence</kbd> link is present across voices (the splitting and merger).
+
+<p>
+  <img src="./img/precedence-polyphonic-1.png" width="620"/>
+</p>
+
+Don't forget that a chord is still a single voice, so the all-to-all rule applies. This is an example where two voices merge into one voice with chords:
+
+<p>
+  <img src="./img/precedence-polyphonic-2.png" height="200"/>
+</p>
+
+In piano music, a voice can cross onto the second staff:
+
+<p>
+  <img src="./img/precedence-pianoform-crossstaff.png" height="200"/>
+</p>
+
+This is a complex example of piano music where voices appear and disappear frequently:
+
+<p>
+  <img src="./img/precedence-pianoform-1.png" height="200"/>
+</p>
+
+When crossing a measure boundary, pay attention to how voices are aligned:
+
+<p>
+  <img src="./img/precedence-polyphonic-measure-boundary.png" width="620"/>
+</p>
+
+Sometimes there may be multiple voices sharing a notehead. These two voices simply align together, which looks like a voice merger:
+
+<p>
+  <img src="./img/precedence-polyphonic-shared-1.png" width="620"/>
+</p>
+
+The two voices sharing a notehead may sometimes have different durations:
+
+<p>
+  <img src="./img/precedence-polyphonic-shared-2.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_308137da-5365-4b05-8d46-2908974b1089
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/48788ad8-de8b-4d01-ace1-4adffc7ed0ad_ea864792-7020-47e7-bb7b-3a48477202cf
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/4b494e80-4cd2-11ea-a3ba-005056827e52_89218983-dac6-4e8f-9549-05f18d613154
+</details>
+
+
+### Edgecases
+
+When the music continues to the next line withing one page, there should be no <kbd>🟢 precedence</kbd> links present in the jump. This is to keep the same behaviour as in jumps to the next page:
+
+<p>
+  <img src="./img/precedence-no-links-between-systems.png" height="200"/>
+</p>
+
+There are NO <kbd>🟢 precedence</kbd> links to key changes and clef changes:
+
+<p>
+  <img src="./img/precedence-key-change.png" height="200"/>
+</p>
+
+In piano music, a voice can have a gap, that is not visually marked with a rest (either intentionally or by mistake). The voice gap cannot be connected by <kbd>🟢 precedence</kbd> links, since notes on each side do not follow immediately. Because it's a piano part, we can resolve this by a voice merger and splitting with the other voice:
+
+<p>
+  <img src="./img/precedence-piano-voice-gap.png" height="200"/>
+</p>
+
+In multi-instrument pieces, you might come across a place where there is a mistake or some unknown, rare notation, which takes up musical time, but cannot be added to the <kbd>🟢 precedence</kbd> graph. For example the image below shows an example of slash-repeat notation, which is very rare and its duration is hard to decode. In MuNG 2.0 we decided not to represent this notation. So it is annotated as `unclassified`. But we need to specify the onset of the following noteheads somehow. We do this by **borrowing the onset from another instrument**. This is one exception where it is ok to add a <kbd>🟢 precedence</kbd> link across two different instruments (parts):
+
+<p>
+  <img src="./img/precedence-borrowed-onset.png" height="300"/>
+</p>
+
+> **Note:** In a single-instrument monophonic piece, there is no other part to borrow onset from. In that case, just skip over the `unclassified` section and pretend it has zero duration.
+
+A special case of this edgecase is the end of a unisono section in the middle of a measure. There you should borrow the onset ideally from the instrument with which the unisono was played. You should also add the link even if the unisono section ends with the start with a measure and no onset borrowing is theoretically needed:
+
+<p>
+  <img src="./img/precedence-unisono-end.png" height="200"/>
+</p>
+
+When the precedence graph is broken up by an `unclassified` symbol, you don't need to borrow onset from other parts if the following music symbols start from the beginning of the next measure (have onset 0 thus don't need precedence inlinks). Therefore it is ok for the graph to look like this:
+
+<p>
+  <img src="./img/precedence-broken-graph.png" height="300"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/16c27f86-07f5-4b34-a6ca-ec8885f2b51f_445f7cea-17d1-43cb-a08b-a0e5994f17cb
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/5c5a6d8c-b434-4496-a9ac-67d518230273_918a0a32-43d2-4f0f-90bd-944aef42b750
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/43f6574c-5c31-46ce-b98b-04b0dc269ecf_e39465c0-d3eb-4288-836f-6e14bdc66972
+</details>
+
+
+### Other precedence graph nodes
+
+[Grace notes](#grace-notes) have their own, separate, virtual time, which corresponds with a separate <kbd>🟢 precedence</kbd> graph. It has the same rules as the regular <kbd>🟢 precedence</kbd> graph, but may NEVER be connected with <kbd>🟢 precedence</kbd> link to the regular graph:
+
+<p>
+  <img src="./img/grace-notes-precedence.png" height="200"/>
+</p>
+
+[Voltas](#volta) utilize the fact that <kbd>🟢 precedence</kbd> links across measure boundaries do not define onset, only voice flow. Therefore they fork the <kbd>🟢 precedence</kbd> graph before prima volta and terminate it at the end of prima volta. Seconda volta gets the other half of the fork and then continues to following measures:
+
+<p>
+  <img src="./img/volta-precedence.png" width="620"/>
+</p>
+
+[Custos](#custos) behaves like a notehead with zero duration. This lets it participate in the <kbd>🟢 precedence</kbd> graph just like any other notehead would:
+
+<p>
+  <img src="./img/precedence-custos.png" height="200"/>
+</p>
+
+[Measure repeat](#repeat1bar) participates in the <kbd>🟢 precedence</kbd> graph because it stands for the same musical content as is in the previous measure.
+
+<p>
+  <img src="./img/repeat1Bar-precedence.png" height="200"/>
+</p>
+
+[Unisono section](#unisono) that starts with the `unisonoText` should have a <kbd>🟢 precedence</kbd> link at the start to the instrument to be played in unison with and then another <kbd>🟢 precedence</kbd> link at the end where the "voice" returns back into the part.
+
+<p>
+  <img src="./img/unisonoText-precedence.png" height="200"/>
+</p>
+
+---
 
 
 ## Linking objects to staves
@@ -2989,9 +4471,9 @@ There should be no symbols left that were not linked. In case there are, validat
 
 These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
 
-- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+- **Noteheads** (`noteheadBlack`, `noteheadHalf`, `noteheadWhole`, `noteheadBlackSmall`)
   - Pay attention to noteheads in between staves and decide by the direction of leger lines.
-  - Grace note noteheads are NOT assigned to staves.
+  - Grace note noteheads are also assigned to staves.
   - <img src="./img/notehead-to-staff.png" height="200"/>
 - **Rests** (`restWhole`, `restHalf`, `restQuarter`, `rest8th`, ...)
   - <img src="./img/rest-to-staff.png" height="200"/>
@@ -3010,16 +4492,14 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staff` objects:
   - Links ALL staves it groups.
   - Must be linked manually!
   - <img src="./img/staffGrouping-to-staff.png" height="200"/>
-- TODO: repeat1Bar?
-- TODO: unisonoText?
-- TODO: systemDivider, splitBarDivider?
+- **Measure repeat** (`repeat1Bar`)
+  - <img src="./img/repeat1Bar-to-staff.png" height="200"/>
+- **Unisono section** (`unisonoText`, `unisonoContinuation`)
+  - <img src="./img/unisono-section-to-staff.png" height="200"/>
+- **System divider** (`systemDivider`)
+  - Links to the upper staff.
 - **Custos** (`custos`)
   - Same rules as for noteheads.
-  - Must be linked manually!
-
-TODO: extend automatic assignment to missing classes (clef changes, restHBar, custos, etc.)
-
-TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff)
 
 
 ### 2. Assignment to stafflines and staffspaces
@@ -3040,7 +4520,7 @@ There should be no symbols left that were not linked. In case there are, validat
 
 These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `staffSpace` objects:
 
-- **Noteheads** (`noteheadFull`, `noteheadHalf`, `noteheadWhole`)
+- **Noteheads** (`noteheadBlack`, `noteheadHalf`, `noteheadWhole`, `noteheadBlackSmall`)
   - Only noteheads that are NOT affected by leger lines.
   - The <kbd>🔴 syntax</kbd> link should point to the middle of the line of space that the notehead sits on.
   - The assignment is automatic, only check that it's correct.
@@ -3056,9 +4536,6 @@ These are the nodes that should <kbd>🔴 syntax</kbd> link to `staffLine` or `s
     - <img src="./img/c-clef-to-staffposition.png" height="200"/>
 - **Custos** (`custos`)
   - Same rules as for noteheads.
-  - Must be linked manually!
-
-TODO: add validation rules that make sure all of these classes are linked to staves (have at least or exactly one link to a staff line/space / leger-line)
 
 **The following are errors that can be encountered when checking the assignment:**
 
