@@ -31,3 +31,11 @@ class FClef(ClefBase):
     @property
     def common_staffline_deltas(self) -> list[int]:
         return [2, 0, 4]
+
+    @property
+    def deltas_sharp(self) -> list[int]:
+        return [2, 6, 3, 0, 4, 1, 5]
+
+    @property
+    def deltas_flat(self) -> list[int]:
+        return [5, 1, 4, 0, 3, 6, 2]

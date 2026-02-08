@@ -3,11 +3,10 @@ from abc import ABC, abstractmethod
 
 class ClefBase(ABC):
     _DELTA_STEP_COUNT = 8
+    _DELTA_ACCIDENTAL_COUNT = 7
     _MIN_COMMON_DELTA_COUNT = 1
-    def __init__(self):
-        self.__post_init__()
 
-    def __post_init__(self):
+    def _check(self):
         if len(self.delta_steps) != ClefBase._DELTA_STEP_COUNT:
             raise ValueError(
                 f"There have to be exactly {ClefBase._DELTA_STEP_COUNT} deltas, "
@@ -19,7 +18,17 @@ class ClefBase(ABC):
                 "in common deltas specified, "
                 f"class initialized with {len(self.common_staffline_deltas)}"
             )
-    
+        if len(self.deltas_sharp) != ClefBase._DELTA_ACCIDENTAL_COUNT:
+            raise ValueError(
+                f"There have to be exactly {ClefBase._DELTA_STEP_COUNT} deltas sharp, "
+                f"class initialized with {len(self.deltas_sharp)}"
+            )
+        if len(self.deltas_flat) != ClefBase._DELTA_ACCIDENTAL_COUNT:
+            raise ValueError(
+                f"There have to be exactly {ClefBase._DELTA_STEP_COUNT} deltas flat, "
+                f"class initialized with {len(self.deltas_flat)}"
+            )
+        
     def is_common_delta(self, delta: int) -> bool:
         return delta in self.common_staffline_deltas
         
@@ -56,4 +65,14 @@ class ClefBase(ABC):
     @property
     @abstractmethod
     def common_staffline_deltas(self) -> list[int]:
+        pass
+
+    @property
+    @abstractmethod
+    def deltas_sharp(self) -> list[int]:
+        pass
+
+    @property
+    @abstractmethod
+    def deltas_flat(self) -> list[int]:
         pass

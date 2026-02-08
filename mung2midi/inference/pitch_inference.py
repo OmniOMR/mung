@@ -212,18 +212,11 @@ class PitchInferenceEngineState(object):
 
         # The pitches (F, C, G, D, ...) have to be re-cast
         # in terms of deltas, mod 7.
-        if (self.current_clef is None) or (self.current_clef.class_name == C.Clefs.G_CLEF):
-            deltas_sharp = [4, 1, 5, 2, 6, 3, 0]
-            deltas_flat = [0, 3, 6, 2, 5, 1, 4]
-        elif self.current_clef.class_name == C.Clefs.C_CLEF:
-            deltas_sharp = [3, 0, 4, 1, 5, 2, 6]
-            deltas_flat = [6, 2, 5, 1, 4, 0, 3]
-        elif self.current_clef.class_name == C.Clefs.F_CLEF:
-            deltas_sharp = [2, 6, 3, 0, 4, 1, 5]
-            deltas_flat = [5, 1, 4, 0, 3, 6, 2]
-        else:
-            raise ValueError("Incorrect clef node set as current_clef {0}.".format(self.current_clef))
-
+        # current_clef_name_simplified = C.Clefs.simplify(self.current_clef.class_name)
+        current_clef_data = get_clef_data_from_node(self.current_clef)
+        deltas_sharp = current_clef_data.deltas_sharp
+        deltas_flat = current_clef_data.deltas_flat
+        
         for d in deltas_sharp[:number_of_sharps]:
             new_key_accidentals[d] = C.Accidentals.ACCIDENTAL_SHARP
         for d in deltas_flat[:number_of_flats]:
