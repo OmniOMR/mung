@@ -24,6 +24,9 @@ def find_staff_for_container(container: Node, graph: NotationGraph) -> tuple[Fra
     nodes = graph.parents(container, class_filter=[C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
     # find all the leftmost notes (smallest onset)
     minimal = all_min(nodes, key=lambda n: n.data[O.ONSET_BEATS])
+    if len(minimal) == 0:
+        raise ValueError(f"Unable to find leftmost durable for {container}")
+    
     onset: Fraction = minimal[0].data[O.ONSET_BEATS]
 
     # find the topmost staff
