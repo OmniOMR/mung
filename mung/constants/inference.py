@@ -33,6 +33,11 @@ class InferenceEngineConstants(C):
         C.KeySignature.KEY_SIGNATURE,
     } | set(C.Clefs.ALL())
 
+    INSTRUMENT_GROUP_BRACKETS = {
+        C.StaffGroupingBracketsAndBraces.BRACE,
+        C.StaffGroupingBracketsAndBraces.BRACKET,
+    }
+
     SYSTEM_LEVEL_CLASS_NAMES = [
         C.StaffGroupingBracketsAndBraces.STAFF_GROUPING,
         C.Barlines.MEASURE_SEPARATOR,
