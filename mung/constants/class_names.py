@@ -150,7 +150,7 @@ class StaffGroupingBracketsAndBraces(StrEnum):
     SYSTEM_DIVIDER = "systemDivider"
 
 
-class Articulation(StrEnum):
+class Articulation(AllExtendedStrEnum):
     ARTIC_ACCENT_ABOVE = "articAccentAbove"
     ARTIC_ACCENT_BELOW = "articAccentBelow"
 

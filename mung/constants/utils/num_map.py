@@ -64,3 +64,10 @@ class AllStrEnumNumeralMapped(AllExtendedStrEnum):
     
     def to_digit(self) -> int:
         return self.to_numeral().digit
+    
+    @classmethod
+    def all_numeral_members(cls) -> set[Self]:
+        """
+        Get all available digit numbers.
+        """
+        return set(cls._digit_to_self().values())
