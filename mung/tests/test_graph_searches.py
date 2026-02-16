@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 from parameterized import parameterized
 
-from .utils import load_dot_graph
+from mung.tests.utils import load_dot_graph
 from pathlib import Path
 from mung import NotationGraph
 from typing import Iterable
