@@ -73,7 +73,7 @@ class MultistemResolver:
         nodes_to_resolve = self._find_double_stemmed_in_graph_and_sort()
         for node in nodes_to_resolve:
             self._separate_double_stemmed_to_two(node)
-            logger.info(f"Resolved double stemmed {node.class_name} {node.id}")
+            logger.debug(f"Resolved double stemmed {node.class_name} {node.id}")
 
         self._check_on_end()
         t = self._graph
@@ -84,11 +84,13 @@ class MultistemResolver:
         """
         Finds all noteheads that have multiple stems.
         """
-        return [
+        to_resolve = [
             node for node in
             self._graph.filter_vertices(I.NONGRACE_NOTEHEAD_CLASS_NAMES)
             if len(self._graph.children(node, C.NoteheadAttachments.STEM)) > 1
         ]
+        logger.warning(f"Will resolve {len(to_resolve)} multistem noteheads: {to_resolve}")
+        return to_resolve
 
     def _find_double_stemmed_in_graph_and_sort(self) -> list[Node]:
         """
@@ -139,7 +141,7 @@ class MultistemResolver:
         to_share = self._graph.children(original, class_filter=self._strategy.SHARED_OBJECTS)
         for node in to_share:
             self._graph.add_edge(ghost, node)
-        logger.info(f"Shared {len(to_share)} symbols "
+        logger.debug(f"Shared {len(to_share)} symbols "
                     f"between original node {original.id} and ghost node {ghost.id}")
     
     @staticmethod
@@ -170,7 +172,7 @@ class MultistemResolver:
                 self._graph.add_edge(ghost, node)
                 logger.debug(f"Added {node.id} to ghost {ghost.id}")
         
-        logger.info(f"Split {len(to_split)} symbols "
+        logger.debug(f"Split {len(to_split)} symbols "
                     f"between original node {original.id} and ghost node {ghost.id}")
     
     def _resolve_incoming_precedence_edges(self, original: Node, ghost: Node) -> None:
