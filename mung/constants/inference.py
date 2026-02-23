@@ -82,6 +82,8 @@ class InferenceEngineConstants(C):
         C.Dynamics.DYNAMIC_DIMINUENDO_HAIRPIN,
     ]
 
+    TREMOLO_SINGLES = C.Tremolo.all_numeral_members()
+
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
         0: 'C',
         1: 'C#',

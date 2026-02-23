@@ -286,6 +286,10 @@ class OnsetsInferenceEngine:
         
         duration_modifier *= dot_duration_modifier
 
+        # Tremolo beams half the duration of a note
+        if self.__graph.has_children(notehead, class_filter=C.Tremolo.TREMOLO_BEAM):
+            duration_modifier *= Fraction(1, 2)
+
         return duration_modifier
 
     def rest_beats(self, rest: Node, ignore_modifiers=False) -> Fraction:
