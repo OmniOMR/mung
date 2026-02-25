@@ -92,8 +92,6 @@ class VoiceEngine:
             self._graph.children(n, class_filter=C.NoteheadAttachments.BEAM)
             for n in self._graph.filter_vertices([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
         ]
-        for g in UnionFind.merge_groups(groups):
-            print([x.id for x in g])
         return UnionFind.merge_groups(groups)
 
     def _compute_beams_to_staff(self) -> None:

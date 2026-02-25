@@ -108,7 +108,6 @@ class BasicTimeSignatureInterpreter(TimeSignatureInterpreter):
             assert sum(1 for c in children if c.class_name == T.TIME_SIG_SLASH) == 1
 
             children = precedence_graph_sort(children, graph)
-            print("sorted graph", children)
             slash_index = -1
             for i, c in enumerate(children):
                 if c.class_name == T.TIME_SIG_SLASH:
@@ -128,7 +127,6 @@ class BasicTimeSignatureInterpreter(TimeSignatureInterpreter):
         # all are numbers
         elif all(c.class_name in self._all_numbers for c in children):
             children = precedence_graph_sort(children, graph)
-            print("sorted graph", children)
             res = digits_to_time_signature([self.interpret_single_number(c) for c in children])
             if res is not None:
                 return TimeSigStruct(res[0], res[1])
