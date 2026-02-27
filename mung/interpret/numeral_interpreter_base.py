@@ -5,7 +5,7 @@ from .. import Node
 
 
 class NumeralInterpreterBase(ABC):
-    __enums__: type[AllStrEnumNumeralMapped] = ...
+    __enums__: type[AllStrEnumNumeralMapped] = ... # type: ignore
 
     _all_numbers: set[AllStrEnumNumeralMapped] = set()
     
