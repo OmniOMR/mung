@@ -1,17 +1,22 @@
 from dataclasses import dataclass, field
+from typing import Optional
 
-from .tokens import AboveBelowToken, ShowTupleTokens, YesNoToken
+from .tokens import AboveBelowToken, ShowTupleToken, YesNoToken
 from .time_modification import TimeModification
-from .generic_start_stop import GenericStartStop
+from .interface import GenericStartStopContinue
+from .subevent import Subevent
 
 
-# TODO: supports only simple (not nested) tuplets
+# TODO: add support for nested tuplets
 @dataclass(kw_only=True)
-class Tuplet(GenericStartStop):
+class Tuplet(GenericStartStopContinue[Subevent]):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/tuplet/
+    """
     time_modification: TimeModification
 
-    placement: AboveBelowToken = field(default=AboveBelowToken.default())
-    show_number: ShowTupleTokens = field(default=ShowTupleTokens.default())
+    placement: Optional[AboveBelowToken] = field(default=AboveBelowToken.default())
+    show_number: ShowTupleToken = field(default=ShowTupleToken.default())
     bracket: YesNoToken = field(default=YesNoToken.YES)
 
     def __post_init__(self) -> None:
@@ -21,4 +26,3 @@ class Tuplet(GenericStartStop):
         self._check_stop_is_set()
         self._check_start_stop_onset_strong()
         
-        assert not (self.placement != AboveBelowToken.NONE and self.bracket == YesNoToken.NO)

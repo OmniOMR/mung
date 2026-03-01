@@ -2,22 +2,27 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from functools import cached_property
 
-from .accidental_type import AccidentalType
-from .in_part_measure_modifier import InPartMeasureModifier
+from .tokens import AccidentalValue
+from .in_part_measure_modifier import InMeasureModifier
 if TYPE_CHECKING:
     from .accidental import Accidental
 
 
 # TODO: supports only traditional key signatures
 @dataclass
-class Key(InPartMeasureModifier):
+class Key(InMeasureModifier):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/key/
+    """
     def _compute_fifths(self) -> int:
         acc = self.accidentals
         assert len(set(a.type_ for a in acc)) == 1
-        if acc[0].type_ == AccidentalType.SHARP:
+        if acc[0].type_ == AccidentalValue.SHARP:
             return len(acc)
-        elif acc[0].type_ == AccidentalType.FLAT:
+        elif acc[0].type_ == AccidentalValue.FLAT:
             return - len(acc)
+        elif acc[0].type_ == AccidentalValue.NATURAL:
+            return 0
         else:
             raise ValueError
     

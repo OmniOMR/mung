@@ -7,7 +7,7 @@ from .scene_object import SceneObject
 from .subevent import Subevent
 from .durable import Durable
 from .repeat import RepeatBar
-from .in_part_measure_modifier import InPartMeasureModifier
+from .in_part_measure_modifier import InMeasureModifier
 from ...utils import flatten
 if TYPE_CHECKING:
     from .system_measure import SystemMeasure
@@ -16,11 +16,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class PartMeasure(SceneObject):
+    """
+    Measure of an instrument.
+
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/measure-partwise/
+    """
     id: int
     subevents: list[Subevent]
-    modifiers: list[InPartMeasureModifier]
+    modifiers: list[InMeasureModifier]
     visible: bool = True
-    all_symbols: list[Subevent | InPartMeasureModifier] = field(init=False)
+    all_symbols: list[Subevent | InMeasureModifier] = field(init=False)
 
     def __post_init__(self) -> None:
         self.subevents.sort(key=lambda s: s.in_measure_fractional_onset)

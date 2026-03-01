@@ -4,7 +4,7 @@ from functools import cached_property
 
 from .scene_object import SceneObject
 from .pitch import Pitch
-from .tokens import StemOrientationToken, NoteTypeValue
+from .tokens import StemValueToken, NoteTypeValue
 from .voice import Voice
 if TYPE_CHECKING:
     from .note import Note
@@ -12,13 +12,18 @@ if TYPE_CHECKING:
     from .beam import GraceNoteBeam
 
 # TODO: add support for slash (yes/no)
+# TODO: add support for grace note chords and other "large" objects
+# TODO: turn around grace note - durable relation (grace note remembers its parent)
 
 @dataclass
 class GraceNote(SceneObject):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/grace/
+    """
     pitch: Pitch
     type_: NoteTypeValue
     at_durable_index: int
-    stem_orientation: StemOrientationToken
+    stem_orientation: StemValueToken
 
     @cached_property
     def parent_note(self) -> "Note":

@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Optional
 from pathlib import Path
-from typing import Self
+from typing import Self, Any
 from collections import defaultdict, Counter
 from itertools import chain
 
@@ -39,7 +39,7 @@ MEASURE_INDEX_START = 1
 
 class MuNG_LoadEngine(LoadEngine):
     def __init__(self) -> None:
-        self._stem_orientation_cache: dict[Node, StemOrientationToken] = dict()
+        self._stem_orientation_cache: dict[Node, StemValueToken] = dict()
         self._btsi = BasicTimeSignatureInterpreter()
 
     
@@ -82,18 +82,18 @@ class MuNG_LoadEngine(LoadEngine):
         subevents.sort(key=lambda s: s.global_fractional_onset)
         if len(subevents) == 1:
             return DurableBeam(
-                begin=subevents[0]
+                start=subevents[0]
             )
         elif len(subevents) == 2:
             return DurableBeam(
-                begin=subevents[0],
-                end=subevents[1]
+                start=subevents[0],
+                stop=subevents[1]
             )
         else:
             return DurableBeam(
-                begin=subevents[0],
+                start=subevents[0],
                 continue_=subevents[1:-1],
-                end=subevents[-1]
+                stop=subevents[-1]
             )
     
     def _construct_tuplet(self, mung_tuplet: Node, subevents: list[Subevent], graph: NotationGraph) -> Tuplet:
@@ -122,11 +122,11 @@ class MuNG_LoadEngine(LoadEngine):
             continue_=continue_,
             time_modification=self._construct_time_modification(mung_tuplet),
             bracket=YesNoToken.from_bool(_has_bracket(mung_tuplet, graph)),
-            show_number=ShowTupleTokens.ACTUAL if _has_number(mung_tuplet, graph) else ShowTupleTokens.NONE,
+            show_number=ShowTupleToken.ACTUAL if _has_number(mung_tuplet, graph) else ShowTupleToken.NONE,
         )
     
     def _construct_time_modification(self, mung_tuplet: Node) -> TimeModification:
-            return TimeModification.from_tuple_time_modifier(
+            return TimeModification.from_fraction(
                 tuple_time_modification(mung_tuplet)
             )
 
@@ -143,15 +143,15 @@ class MuNG_LoadEngine(LoadEngine):
         assert len(subevents) > 0, f"No subevents for {mung_slur}"
         subevents.sort(key=lambda s: s.global_fractional_onset)
 
-        placement = PlacementToken.from_int(infer_vertical_object_placement_relative_to_notes(mung_slur, graph))
-        if placement == PlacementToken.ABOVE:
+        placement = AboveBelowToken.from_int(infer_vertical_object_placement_relative_to_notes(mung_slur, graph))
+        if placement == AboveBelowToken.ABOVE:
             # find the topmost subevent: lowest voice id and lowest staff id
-            start = min(subevents, key=lambda s: (s.global_fractional_onset, s.voice.id_, min(x.staff_id for x in s.staffs)))
-            stop = min(subevents, key=lambda s: (-s.global_fractional_onset, s.voice.id_, min(x.staff_id for x in s.staffs)))
+            start = min(subevents, key=lambda s: (s.global_fractional_onset, s.voice.id, min(x.id for x in s.staffs)))
+            stop = min(subevents, key=lambda s: (-s.global_fractional_onset, s.voice.id, min(x.id for x in s.staffs)))
         else:
             # find the bottom most subevent: highest voice id and highest staff id
-            start = min(subevents, key=lambda s: (s.global_fractional_onset, -s.voice.id_, max(x.staff_id for x in s.staffs)))
-            stop = min(subevents, key=lambda s: (-s.global_fractional_onset, -s.voice.id_, max(x.staff_id for x in s.staffs)))
+            start = min(subevents, key=lambda s: (s.global_fractional_onset, -s.voice.id, max(x.id for x in s.staffs)))
+            stop = min(subevents, key=lambda s: (-s.global_fractional_onset, -s.voice.id, max(x.id for x in s.staffs)))
         
         unique_onsets = set(x.global_fractional_onset for x in subevents)
 
@@ -211,9 +211,9 @@ class MuNG_LoadEngine(LoadEngine):
             
             return _slur_from_tie_input(mung_tie, durables, graph)
         
-        placement = PlacementToken.from_int(infer_horizontal_object_placement_relative_to_notes(mung_tie, graph))
+        placement = AboveBelowToken.from_int(infer_horizontal_object_placement_relative_to_notes(mung_tie, graph))
         
-        if placement == PlacementToken.ABOVE:
+        if placement == AboveBelowToken.ABOVE:
             # minimizing:
             #  - onset (minimal onset wanted)
             #  - note/rest (minimizing for notes (0))
@@ -259,7 +259,7 @@ class MuNG_LoadEngine(LoadEngine):
         assert len(subevents) > 0
         subevents.sort(key=lambda s: s.global_fractional_onset)
 
-        placement = PlacementToken.from_int(
+        placement = AboveBelowToken.from_int(
             infer_vertical_object_placement_relative_to_notes(mung_hairpin, graph)
         )
 
@@ -272,15 +272,17 @@ class MuNG_LoadEngine(LoadEngine):
                 case _:
                     raise ValueError(f"Unknown {WedgeType.__name__}: '{class_name}'")
 
-        return Wedge(
+        staff = min((s for s in subevents[0].staffs), key=lambda s: s.id)
+        w = Wedge(
             start=subevents[0],
             stop=subevents[-1],
             continue_=subevents[1:-1] if len(subevents) > 2 else None,
             type_=_from_mung_class_name(mung_hairpin.class_name),
-            placement=placement,
-            staff_id=min(s.staff_id for s in subevents[0].staffs),
+            placement=placement
         )
 
+        staff.other_symbols = staff.other_symbols + [w]
+        return w
 
     def _construct_staffs(
             self,
@@ -298,7 +300,7 @@ class MuNG_LoadEngine(LoadEngine):
 
             # single staff
             if expected_instrument_width == 1:
-                staff = Staff(durables=[], staff_id=1)
+                staff = Staff(durables=[], id=1)
 
                 # map staff nodes across multiple systems
                 # to the same staff scene object
@@ -308,8 +310,8 @@ class MuNG_LoadEngine(LoadEngine):
             
             # grand staff
             elif expected_instrument_width == 2:
-                staff_top = Staff(durables=[], staff_id=1)
-                staff_bottom = Staff(durables=[], staff_id=2)
+                staff_top = Staff(durables=[], id=1)
+                staff_bottom = Staff(durables=[], id=2)
 
                 for group in instrument:
                     assert len(group) == expected_instrument_width
@@ -341,13 +343,13 @@ class MuNG_LoadEngine(LoadEngine):
             )
 
 
-    def _acc_type_from_mung_class_name(self, class_name: str) -> AccidentalType:
+    def _acc_type_from_mung_class_name(self, class_name: str) -> AccidentalValue:
         _LOOKUP = {
-            C.Accidentals.ACCIDENTAL_DOUBLE_FLAT : AccidentalType.FLAT_FLAT,
-            C.Accidentals.ACCIDENTAL_FLAT : AccidentalType.FLAT,
-            C.Accidentals.ACCIDENTAL_NATURAL : AccidentalType.NATURAL,
-            C.Accidentals.ACCIDENTAL_SHARP : AccidentalType.SHARP,
-            C.Accidentals.ACCIDENTAL_DOUBLE_SHARP : AccidentalType.DOUBLE_SHARP
+            C.Accidentals.ACCIDENTAL_DOUBLE_FLAT : AccidentalValue.FLAT_FLAT,
+            C.Accidentals.ACCIDENTAL_FLAT : AccidentalValue.FLAT,
+            C.Accidentals.ACCIDENTAL_NATURAL : AccidentalValue.NATURAL,
+            C.Accidentals.ACCIDENTAL_SHARP : AccidentalValue.SHARP,
+            C.Accidentals.ACCIDENTAL_DOUBLE_SHARP : AccidentalValue.DOUBLE_SHARP
         }
         output = _LOOKUP.get(class_name) # type: ignore
         if output is None:
@@ -355,7 +357,7 @@ class MuNG_LoadEngine(LoadEngine):
         return output
 
 
-    def _acc_type_from_multiple_mung_class_names(self, names: list[str]) -> AccidentalType:
+    def _acc_type_from_multiple_mung_class_names(self, names: list[str]) -> AccidentalValue:
         if len(names) == 2:
             try:
                 return self._acc_type_from_two_mung_class_names(names[0], names[1])
@@ -369,34 +371,34 @@ class MuNG_LoadEngine(LoadEngine):
         return self._acc_type_from_mung_class_name(names[0])
 
 
-    def _acc_type_from_two_mung_class_names(self, class_name1: str, class_name2: str) -> AccidentalType:
+    def _acc_type_from_two_mung_class_names(self, class_name1: str, class_name2: str) -> AccidentalValue:
         if class_name1 == class_name2:
             match class_name1:
                 case C.Accidentals.ACCIDENTAL_FLAT:
-                    return AccidentalType.FLAT_FLAT
+                    return AccidentalValue.FLAT_FLAT
                 case C.Accidentals.ACCIDENTAL_SHARP:
-                    return AccidentalType.SHARP_SHARP
+                    return AccidentalValue.SHARP_SHARP
                 case _:
                     raise ValueError(f"Cannot deduce name from given class names: "
                                         f"'{class_name1}', '{class_name2}'")
         
         match set([class_name1, class_name2]):
             case set([C.Accidentals.ACCIDENTAL_NATURAL, C.Accidentals.ACCIDENTAL_FLAT]):
-                return AccidentalType.NATURAL_FLAT
+                return AccidentalValue.NATURAL_FLAT
             case set([C.Accidentals.ACCIDENTAL_NATURAL, C.Accidentals.ACCIDENTAL_SHARP]):
-                return AccidentalType.NATURAL_SHARP
+                return AccidentalValue.NATURAL_SHARP
             case _:
                 raise ValueError(f"Cannot deduce name from given class names: "
                                     f"'{class_name1}', '{class_name2}'")
 
 
     
-    def _get_stem_orientation_for_note(self, note: Node, graph: NotationGraph) -> StemOrientationToken:
+    def _get_stem_orientation_for_note(self, note: Node, graph: NotationGraph) -> StemValueToken:
         stems = graph.children(note, class_filter=C.NoteheadAttachments.STEM)
         
         # maybe a whole note
         if len(stems) == 0:
-            return StemOrientationToken.NONE
+            return StemValueToken.NONE
         
         if len(stems) > 1:
             logger.warning(f"Too many stems found for notehead {note}, using the first one")
@@ -404,7 +406,7 @@ class MuNG_LoadEngine(LoadEngine):
         stem = stems[0]
         cached_so = self._stem_orientation_cache.get(stem)
         if cached_so is None:
-            so = StemOrientationToken.from_int(infer_stem_orientation(stem, graph))
+            so = StemValueToken.from_int(infer_stem_orientation(stem, graph))
             self._stem_orientation_cache[stem] = so
             return so
         
@@ -444,8 +446,8 @@ class MuNG_LoadEngine(LoadEngine):
         output = []
         for index, note in enumerate(sorted(grace_notes, key=lambda n: onset_beats(n))):
             stem_orientation = self._get_stem_orientation_for_note(note, graph)
-            if stem_orientation == StemOrientationToken.NONE:
-                stem_orientation = StemOrientationToken.default()
+            if stem_orientation == StemValueToken.NONE:
+                stem_orientation = StemValueToken.default()
             
             gn = GraceNote(
                 pitch=pitch(note),
@@ -467,13 +469,13 @@ class MuNG_LoadEngine(LoadEngine):
         return output
     
 
-    def _mung_class_name_to_articulation_type_and_placement(self, articulation: Node) -> tuple[ArticulationType, PlacementToken]:
+    def _mung_class_name_to_articulation_type_and_placement(self, articulation: Node) -> tuple[ArticulationType, AboveBelowToken]:
         A = C.Articulation
         name = articulation.class_name.lower()
         if name.endswith("above"):
-            placement = PlacementToken.ABOVE
+            placement = AboveBelowToken.ABOVE
         elif name.endswith("below"):
-            placement = PlacementToken.BELOW
+            placement = AboveBelowToken.BELOW
         else:
             raise ValueError(f"Articulation name '{articulation.class_name}' does not contain substring 'above' nor 'below'")
         
@@ -523,9 +525,9 @@ class MuNG_LoadEngine(LoadEngine):
             
             stem_orientation = self._get_stem_orientation_for_note(durable, graph)
             note_type = note_type_from_node(durable)
-            if stem_orientation is StemOrientationToken.NONE and note_type.has_stem():
-                logger.warning(f"Note {durable} must have a stem but no was found, using default {StemOrientationToken.default()}")
-                stem_orientation = StemOrientationToken.default()
+            if stem_orientation is StemValueToken.NONE and note_type.has_stem():
+                logger.warning(f"Note {durable} must have a stem but no was found, using default {StemValueToken.default()}")
+                stem_orientation = StemValueToken.default()
             n = Note(
                 fractional_duration_=duration_beats(durable),
                 type_=note_type,
@@ -639,7 +641,7 @@ class MuNG_LoadEngine(LoadEngine):
         # print(new_system_indexes)
         
         # exit()
-        _STEM_ORIENTATION_CACHE: dict[Node, StemOrientationToken] = {}
+        _STEM_ORIENTATION_CACHE: dict[Node, StemValueToken] = {}
         
 
         # from .graph import RepeatBar
@@ -762,7 +764,7 @@ class MuNG_LoadEngine(LoadEngine):
                             TremoloSingle(
                                 subevent,
                                 len(found_tremolo_singles),
-                                PlacementToken.from_int(
+                                AboveBelowToken.from_int(
                                     infer_vertical_object_placement_relative_to_notes(
                                         found_tremolo_singles[0],
                                         graph,
@@ -809,7 +811,7 @@ class MuNG_LoadEngine(LoadEngine):
                     s_lines.sort(key=lambda l: l.top, reverse=True)
                     return s_lines.index(line) + 1
 
-                modifiers: list[InPartMeasureModifier] = []
+                modifiers: list[InMeasureModifier] = []
 
                 # CLEFS
                 def _get_clef_sign(class_name: str) -> ClefSign:
@@ -881,7 +883,7 @@ class MuNG_LoadEngine(LoadEngine):
                 staff.durables = values
             
             for staff, values in staff_to_others.items():
-                staff.other_symbols = values
+                staff.other_symbols = values # type: ignore
             
             score_part = ScorePart(part_measures=graph_measures)
             parts.append(score_part)
@@ -895,7 +897,7 @@ class MuNG_LoadEngine(LoadEngine):
                 
         for id_, measures in measures_by_id.items():
             system_measures.append(SystemMeasure(
-                id_=id_,
+                id=id_,
                 part_measures=measures,
                 is_new_system=id_ in new_system_indexes
             ))
@@ -1029,7 +1031,7 @@ class MuNG_LoadEngine(LoadEngine):
         tbs = [TremoloBeamStruct.from_list(g) for g in connected_by_tremolo_beam if len(g) == 2]
         tremolo_counts = Counter(tbs)
         for tb, c in tremolo_counts.items():
-            TremoloBeam(tb.start, tb.stop, c)
+            TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
             logger.info("Created tremolo beam")
         # print(connected_by_tremolo_beam)
 

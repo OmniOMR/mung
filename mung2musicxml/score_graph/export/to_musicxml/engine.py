@@ -6,6 +6,7 @@ from typing import Optional, Literal
 from collections import defaultdict
 
 from mung2musicxml.score_graph.graph import Score
+from mung.interpret import TimeSigStruct
 from ...graph import *
 from ....logger import logger
 from ..id_pool import IDPool
@@ -324,9 +325,15 @@ class MusicXML_ExportEngine(ExportEngine):
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/time/
         """
         time = ET.Element("time", {
-            "separator": time_sig.separator_type,
             "symbol": time_sig.symbol_type,
         })
+
+        # add separator attribute for numeral time signatures
+        if time_sig.symbol_type == TimeSymbolToken.NORMAL:
+            time.attrib.update({
+                "separator": time_sig.separator_type,
+            })
+        
         ET.SubElement(time, "beats").text = str(time_sig.numerator)
         ET.SubElement(time, "beat-type").text = str(time_sig.denominator)
         return time
@@ -396,7 +403,7 @@ class MusicXML_ExportEngine(ExportEngine):
             if tie.get("type") != TiedTypeToken.LET_RING:
                 n.append(tie)
 
-        ET.SubElement(n, "voice").text = str(note.voice.id_)
+        ET.SubElement(n, "voice").text = str(note.voice.id)
         ET.SubElement(n, "type").text = note.type_
         
         for _ in note.dots:
@@ -415,7 +422,7 @@ class MusicXML_ExportEngine(ExportEngine):
         if note.has_stem:
             ET.SubElement(n, "stem").text = note.chord_stem_orientation
 
-        ET.SubElement(n, "staff").text = str(note.staff.staff_id)
+        ET.SubElement(n, "staff").text = str(note.staff.id)
 
         if note.is_first_in_chord:
             for beam in self.xml_Beams(note):
@@ -442,7 +449,7 @@ class MusicXML_ExportEngine(ExportEngine):
             if tie.get("type") != TiedTypeToken.LET_RING:
                 r.append(tie)
 
-        ET.SubElement(r, "voice").text = str(rest.voice.id_)
+        ET.SubElement(r, "voice").text = str(rest.voice.id)
         ET.SubElement(r, "type").text = rest.type_
         
         for _ in rest.dots:
@@ -451,7 +458,7 @@ class MusicXML_ExportEngine(ExportEngine):
         if rest.tuplet is not None:
             r.append(self.xml_TimeModification(rest.tuplet.time_modification))
         
-        ET.SubElement(r, "staff").text = str(rest.staff.staff_id)
+        ET.SubElement(r, "staff").text = str(rest.staff.id)
         
         for beam in self.xml_Beams(rest):
             r.append(beam)
@@ -530,7 +537,7 @@ class MusicXML_ExportEngine(ExportEngine):
                     "bracket": tuplet.bracket,
                 }
 
-                if tuplet.placement != AboveBelowToken.NONE:
+                if tuplet.placement is not None:
                     attrs["placement"] = tuplet.placement
                 
                 return ET.Element("tuplet", attrs)
@@ -746,7 +753,7 @@ class MusicXML_ExportEngine(ExportEngine):
         ET.SubElement(n, "grace")
         n.append(self.xml_Pitch(grace.pitch))
 
-        ET.SubElement(n, "voice").text = str(grace.voice.id_)
+        ET.SubElement(n, "voice").text = str(grace.voice.id)
         ET.SubElement(n, "type").text = grace.type_
         
         ET.SubElement(n, "stem").text = grace.stem_orientation
@@ -754,7 +761,7 @@ class MusicXML_ExportEngine(ExportEngine):
         for beam in self.xml_Beams(grace):
             n.append(beam)
 
-        ET.SubElement(n, "staff").text = str(grace.staff.staff_id)
+        ET.SubElement(n, "staff").text = str(grace.staff.id)
 
         return n
     
@@ -771,7 +778,7 @@ class MusicXML_ExportEngine(ExportEngine):
             b = ET.Element("beam", {"number": beam.number})
             if isinstance(note_like, Durable):
                 assert isinstance(beam, DurableBeam)
-                b.text = beam.beam_value(note_like)
+                b.text = beam.beam_value(note_like.subevent)
             else:
                 assert isinstance(beam, GraceNoteBeam)
                 b.text = beam.beam_value(note_like)
@@ -811,7 +818,7 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         return voice_id in self.settings.first_voices
     
-    def _get_subevent_and_modifiers(self, measure: PartMeasure, subevents: list[Subevent], voice_id: int) -> list[InPartMeasureModifier | Subevent]:
+    def _get_subevent_and_modifiers(self, measure: PartMeasure, subevents: list[Subevent], voice_id: int) -> list[InMeasureModifier | Subevent]:
         """
         Returns a list of symbols that will be written in to `measure`.
 
@@ -837,14 +844,14 @@ class MusicXML_ExportEngine(ExportEngine):
             else:
                 mods = [m for m in mods if isinstance(m, Clef) and m.number == 2]
             
-            subevents_and_mods: list[InPartMeasureModifier | Subevent] = sorted(subevents + mods, key=lambda sm: (sm.in_measure_fractional_onset, not isinstance(sm, InPartMeasureModifier)))
+            subevents_and_mods: list[InMeasureModifier | Subevent] = sorted(subevents + mods, key=lambda sm: (sm.in_measure_fractional_onset, not isinstance(sm, InMeasureModifier)))
         # standard voice (without modifiers)
         else:
-            subevents_and_mods: list[InPartMeasureModifier | Subevent] = sorted(subevents, key=lambda s: s.in_measure_fractional_onset)
+            subevents_and_mods: list[InMeasureModifier | Subevent] = sorted(subevents, key=lambda s: s.in_measure_fractional_onset)
         
         return subevents_and_mods
     
-    def _xml_in_measure_modifiers(self, mods: list[InPartMeasureModifier]) -> ET.Element:
+    def _xml_in_measure_modifiers(self, mods: list[InMeasureModifier]) -> ET.Element:
         assert all(m.in_measure_onset == mods[0].in_measure_onset for m in mods)
         attributes = ET.Element("attributes")
         for mod in mods:
@@ -883,14 +890,19 @@ class MusicXML_ExportEngine(ExportEngine):
         if len(attributes) > 0:
             m.append(attributes)
         
-        subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
-        for subevent in measure.subevents:
-            subevents_by_voice[subevent.voice.id_].append(subevent)
-        
         # empty measure
         if len(measure.subevents) == 0:
-            m.append(self.create_forward(measure.system_measure.get_expected_duration_for_part_measure(measure)))
+            ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
+            if ed == 0:
+                ts = self._get_most_common_time_signature(measure.score_part.score)
+                ed = (ts * measure.score_part.divisions).numerator
+            
+            m.append(self.create_forward(ed))
             return m
+        
+        subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
+        for subevent in measure.subevents:
+            subevents_by_voice[subevent.voice.id].append(subevent)
         
         retrieved_voice_ids = sorted(subevents_by_voice.keys())
         last_voice_id = retrieved_voice_ids[-1]
@@ -913,7 +925,7 @@ class MusicXML_ExportEngine(ExportEngine):
                 # AGGREGATED MODIFIERS 
                 if isinstance(subevent_or_mods, list):
 
-                    modifiers: list[InPartMeasureModifier] = subevent_or_mods
+                    modifiers: list[InMeasureModifier] = subevent_or_mods
                     attributes = self._xml_in_measure_modifiers(modifiers)
                     
                     # shift modifiers in time, if needed
@@ -962,13 +974,22 @@ class MusicXML_ExportEngine(ExportEngine):
                 m.append(self.create_backup(expected_duration))
 
         return m
+    
+    def _get_most_common_time_signature(self, score: Score) -> TimeSigStruct:
+        """
+        Computes most common time signature in `Score`.
+        """
+        mcts = score.get_most_common_time_signature(self.settings.time_sig.canonical_time_sigs)
+        if mcts is None:
+            mcts = self.settings.time_sig.default_time_signature
+        return mcts
 
     def _xml_default_time_signature(self, score: Score) -> ET.Element:
         """
         Returns a default time signature element based on
         settings.
         """
-        mcts = score.most_common_time_signature
+        mcts = self._get_most_common_time_signature(score)
         time = ET.Element("time", {"print-object": YesNoToken.NO})
         ET.SubElement(time, "beats").text = str(mcts.numerator)
         ET.SubElement(time, "beat-type").text = str(mcts.denominator)

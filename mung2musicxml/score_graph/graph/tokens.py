@@ -1,36 +1,43 @@
 from enum import StrEnum
-from typing import Any
 from fractions import Fraction
 from mung.constants import ClassNameConstants as C
 
+from .utils import AutoOrderedStrEnum
 
-class PlacementToken(StrEnum):
+
+class AboveBelowToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/above-below/
+    """
     ABOVE = "above"
     BELOW = "below"
 
     @classmethod
-    def default(cls) -> "PlacementToken":
+    def default(cls) -> "AboveBelowToken":
         return cls.BELOW
     
     @classmethod
-    def from_int(cls, value: int) -> "PlacementToken":
+    def from_int(cls, value: int) -> "AboveBelowToken":
         if value > 0:
             return cls.ABOVE
         else:
             return cls.BELOW
     
 
-class StemOrientationToken(StrEnum):
+class StemValueToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/stem-value/
+    """
     UP = "up"
     DOWN = "down"
     NONE = "none"
 
     @classmethod
-    def default(cls) -> "StemOrientationToken":
+    def default(cls) -> "StemValueToken":
         return cls.UP
     
     @classmethod
-    def from_int(cls, value: int) -> "StemOrientationToken":
+    def from_int(cls, value: int) -> "StemValueToken":
         """
         `+1` means up, `-1` down.
         """
@@ -43,6 +50,9 @@ class StemOrientationToken(StrEnum):
 
 
 class BeamValueToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beam/
+    """
     BACKWARD_HOOK = "backward hook"
     BEGIN = "begin"
     CONTINUE = "continue"
@@ -54,29 +64,23 @@ class BeamValueToken(StrEnum):
         return cls.FORWARD_HOOK
 
 
-class AboveBelowToken(StrEnum):
-    # This element appears above the reference element.
-    ABOVE = "above"
-    # This element appears below the reference element.
-    BELOW = "below"
-    NONE = "none"
-
-    @classmethod
-    def default(cls) -> "AboveBelowToken":
-        return cls.NONE
-
-
-class ShowTupleTokens(StrEnum):
+class ShowTupleToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/show-tuplet/
+    """
     ACTUAL = "actual"
     BOTH = "both"
     NONE = "none"
 
     @classmethod
-    def default(cls) -> "ShowTupleTokens":
+    def default(cls) -> "ShowTupleToken":
         return cls.NONE
     
 
 class YesNoToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/yes-no/
+    """
     YES = "yes"
     NO = "no"
 
@@ -89,42 +93,23 @@ class YesNoToken(StrEnum):
         raise ValueError
 
 
-class AutoOrderedStrEnum(StrEnum):
-    @classmethod
-    def _order_map(cls):
-        return {name: i for i, name in enumerate(cls._member_names_)}
-
-    def _rank(self):
-        return self._order_map()[self.name]
-
-    def __lt__(self, other: Any):
-        if type(other) is type(self):
-            return self._rank() < other._rank()
-        return NotImplemented
-
-    def __le__(self, other: Any):
-        if type(other) is type(self):
-            return self._rank() <= other._rank()
-        return NotImplemented
-
-    def __gt__(self, other: Any):
-        if type(other) is type(self):
-            return self._rank() > other._rank()
-        return NotImplemented
-
-    def __ge__(self, other: Any):
-        if type(other) is type(self):
-            return self._rank() >= other._rank()
-        return NotImplemented
-
-
 class StartStopContinueToken(AutoOrderedStrEnum):
+    """
+    `start-stop-continue` tokens, also used for `start-stop`.
+
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-continue/
+
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop/
+    """
     START = "start"
     CONTINUE = "continue"
     STOP = "stop"
 
 
 class TiedTypeToken(AutoOrderedStrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tied-type/
+    """
     START = "start"
     CONTINUE = "continue"
     STOP = "stop"
@@ -132,6 +117,9 @@ class TiedTypeToken(AutoOrderedStrEnum):
 
 
 class TimeSymbolToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-symbol/
+    """
     COMMON = "common"
     CUT = "cut"
     DOTTED_NOTE = "dotted-note"
@@ -141,6 +129,9 @@ class TimeSymbolToken(StrEnum):
 
 
 class TimeSeparatorToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-separator/
+    """
     ADJACENT = "adjacent"
     DIAGONAL = "diagonal"
     HORIZONTAL = "horizontal"
@@ -176,7 +167,6 @@ class ArticulationType(StrEnum):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/articulations/
     """
-
     ACCENT = "accent"
     STACCATO = "staccato"
     TENUTO = "tenuto"
@@ -308,4 +298,49 @@ class ClefSign(StrEnum):
     def default(cls) -> "ClefSign":
         return cls.G
 
-    
+
+class AccidentalValue(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/accidental-value/
+    """
+    ARROW_DOWN = "arrow-down"
+    ARROW_UP = "arrow-up"
+    DOUBLE_SHARP = "double-sharp"
+    DOUBLE_SHARP_DOWN = "double-sharp-down"
+    DOUBLE_SHARP_UP = "double-sharp-up"
+    DOUBLE_SLASH_FLAT = "double-slash-flat"
+    FLAT = "flat"
+    FLAT_1 = "flat-1"
+    FLAT_2 = "flat-2"
+    FLAT_3 = "flat-3"
+    FLAT_4 = "flat-4"
+    FLAT_DOWN = "flat-down"
+    FLAT_FLAT = "flat-flat"
+    FLAT_FLAT_DOWN = "flat-flat-down"
+    FLAT_FLAT_UP = "flat-flat-up"
+    FLAT_UP = "flat-up"
+    KORON = "koron"
+    NATURAL = "natural"
+    NATURAL_DOWN = "natural-down"
+    NATURAL_FLAT = "natural-flat"
+    NATURAL_SHARP = "natural-sharp"
+    NATURAL_UP = "natural-up"
+    OTHER = "other"
+    QUARTER_FLAT = "quarter-flat"
+    QUARTER_SHARP = "quarter-sharp"
+    SHARP = "sharp"
+    SHARP_1 = "sharp-1"
+    SHARP_2 = "sharp-2"
+    SHARP_3 = "sharp-3"
+    SHARP_5 = "sharp-5"
+    SHARP_DOWN = "sharp-down"
+    SHARP_SHARP = "sharp-sharp"
+    SHARP_UP = "sharp-up"
+    SLASH_FLAT = "slash-flat"
+    SLASH_QUARTER_SHARP = "slash-quarter-sharp"
+    SLASH_SHARP = "slash-sharp"
+    SORI = "sori"
+    THREE_QUARTERS_FLAT = "three-quarters-flat"
+    THREE_QUARTERS_SHARP = "three-quarters-sharp"
+    TRIPLE_FLAT = "triple-flat"
+    TRIPLE_SHARP = "triple-sharp"

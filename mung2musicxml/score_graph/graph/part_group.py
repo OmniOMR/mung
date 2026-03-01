@@ -7,6 +7,9 @@ from .tokens import GroupBarlineToken, GroupSymbolToken
 
 @dataclass
 class PartGroup(SceneObject):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-group/
+    """
     parts: list[ScorePart]
     bracket_type: GroupSymbolToken
     barline_type: GroupBarlineToken = field(default=GroupBarlineToken.YES)

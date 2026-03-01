@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from ...graph import ClefSign
 from mung import __version__ as LIBRARY_VERSION
+from mung.interpret import TimeSigStruct
 
 
 PMCG_CREDIT = "Exported using the MuNG Python library.\nDeveloped and maintained by the Prague Music Computing Group (PMCG)."
@@ -19,9 +20,23 @@ class CreditSettings:
 
 @dataclass
 class TimeSignatureSettings:
-    """ """
+    """
+    If no time signatures are found, the engine
+    tries to match durations of measures
+    to one of the `canonical_time_sigs`
+    """
 
-    default_time_signature: int = -1
+    canonical_time_sigs: list[TimeSigStruct] = field(default_factory=lambda: [
+        TimeSigStruct(2, 3),
+        TimeSigStruct(4, 4),
+        TimeSigStruct(3, 4),
+        TimeSigStruct(2, 4),
+        TimeSigStruct(9, 8),
+        TimeSigStruct(3, 2),
+        TimeSigStruct(5, 4),
+        TimeSigStruct(7, 8),
+    ])
+    default_time_signature: TimeSigStruct = field(default=TimeSigStruct(4, 4))
     fallback_to_default_time_signature: bool = False
 
 

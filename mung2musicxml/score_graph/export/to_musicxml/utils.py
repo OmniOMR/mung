@@ -1,11 +1,11 @@
 from typing import Iterator
 
-from ...graph import Subevent, InPartMeasureModifier
+from ...graph import Subevent, InMeasureModifier
 
 
 def _aggregate_mods(
-    objects: list[Subevent | InPartMeasureModifier],
-) -> Iterator[Subevent | list[InPartMeasureModifier]]:
+    objects: list[Subevent | InMeasureModifier],
+) -> Iterator[Subevent | list[InMeasureModifier]]:
     """
     Iterate through objects, grouping consecutive items that meet a condition.
     
@@ -16,11 +16,11 @@ def _aggregate_mods(
     Yields:
         Either a single object or a list of consecutive objects meeting the condition
     """          
-    streak: list[InPartMeasureModifier] = []
+    streak: list[InMeasureModifier] = []
     current_id: None | int = None
     
     for obj in objects:
-        if isinstance(obj, InPartMeasureModifier):
+        if isinstance(obj, InMeasureModifier):
             obj_onset = obj.in_measure_onset
             
             # start new streak or continue if same onset

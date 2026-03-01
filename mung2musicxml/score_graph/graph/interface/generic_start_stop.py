@@ -1,18 +1,76 @@
 from dataclasses import dataclass, field
 from typing import Optional
+from typing import TypeVar, Generic
 
-from .scene_object import SceneObject
-from .subevent import Subevent
+from ..scene_object import SceneObject
+from . import InMeasureObject
+
+T = TypeVar("T", bound=InMeasureObject)
 
 
 @dataclass
-class GenericStartStop(SceneObject):
-    start: Optional[Subevent] = None
-    # Subevents included in the object that are not `start` nor `stop`
-    continue_: Optional[list[Subevent]] = None
-    stop: Optional[Subevent] = None
+class GenericStartStop(SceneObject, Generic[T]):
+    start: Optional[T] = None
+    stop: Optional[T] = None
+    all: list[T] = field(init=False, repr=False)
+    
+    def __post_init__(self) -> None:
+        """
+        Automatically checks that::
+        - Start or stop is set.
+        - Onset of start is less than or equal to onset of stop.
+        - Onsets of `continue_`, if set, 
+            are greater than or equal to onset of start
+            and less than or equal to onset of stop.
+        - `continue_` is None or not empty.
+        """
+        self._check_start_or_stop_is_set()
+        self._check_start_stop_onset()
+        self.all = self._collect()
 
-    all_subevents: list[Subevent] = field(init=False, repr=False)
+    def __len__(self) -> int:
+        return len(self.all)
+    
+    def _collect(self) -> list[T]:
+        output: list[T] = []
+        if self.start is not None:
+            output.append(self.start)
+        if self.stop is not None:
+            output.append(self.stop)
+        return list(set(output))
+    
+    def _check_start_or_stop_is_set(self) -> None:
+        assert self.start is not None or self.stop is not None, "At least one of 'start', 'stop' has to be set"
+    
+    def _check_start_is_set(self) -> None:
+        assert self.start is not None, f"{type(self).__name__} requires 'start' to be set"
+    
+    def _check_stop_is_set(self) -> None:
+        assert self.stop is not None, f"{type(self).__name__} requires 'stop' to be set"
+    
+    def _check_start_stop_onset(self) -> None:
+        if self.start is not None and self.stop is not None:
+            assert self.start.global_fractional_onset <= self.stop.global_fractional_onset
+    
+    def _check_start_stop_onset_strong(self) -> None:
+        if self.start is not None and self.stop is not None:
+            assert self.start.global_fractional_onset < self.stop.global_fractional_onset
+    
+    def is_start(self, subevent: T) -> bool:
+        if self.start is None:
+            return False
+        return self.start == subevent
+    
+    def is_stop(self, subevent: T) -> bool:
+        if self.stop is None:
+            return False
+        return self.stop == subevent
+
+
+@dataclass
+class GenericStartStopContinue(GenericStartStop[T]):
+    # objects included in the object that are not `start` nor `stop`
+    continue_: Optional[list[T]] = None
 
     def __post_init__(self) -> None:
         """
@@ -24,14 +82,12 @@ class GenericStartStop(SceneObject):
             and less than or equal to onset of stop.
         - `continue_` is None or not empty.
         """
-        self._check_any_is_set()
-        self._check_continue_onset()
-        self._check_continue_onset()
+        super().__post_init__()
         self._check_continue_none_or_not_empty()
-        self.all_subevents = self._collect()
+        self._check_continue_onset()
 
-    def _collect(self) -> list[Subevent]:
-        output: list[Subevent] = []
+    def _collect(self) -> list[T]:
+        output: list[T] = []
         if self.start is not None:
             output.append(self.start)
         if self.continue_ is not None:
@@ -71,19 +127,6 @@ class GenericStartStop(SceneObject):
                 ):
                     raise ValueError(f"Onset of {d} not in allowed range: {self.start.global_fractional_onset} < {d.global_fractional_onset} < {self.stop.global_fractional_onset}]")
     
-    def _check_any_is_set(self) -> None:
-        assert self.start is not None or self.stop is not None, "At least one of 'start', 'stop' has to be set"
-    
-    def _check_start_is_set(self) -> None:
-        assert self.start is not None, f"{type(self).__name__} requires 'start' to be set"
-    
-    def _check_stop_is_set(self) -> None:
-        assert self.stop is not None, f"{type(self).__name__} requires 'stop' to be set"
-    
-    def _check_start_stop_onset(self) -> None:
-        if self.start is not None and self.stop is not None:
-            assert self.start.global_fractional_onset <= self.stop.global_fractional_onset
-    
     def _check_start_stop_onset_strong(self) -> None:
         if self.start is not None and self.stop is not None:
             assert self.start.global_fractional_onset < self.stop.global_fractional_onset
@@ -92,17 +135,7 @@ class GenericStartStop(SceneObject):
         if self.continue_ is not None:
             assert len(self.continue_) > 0, "'continue_' cannot be set and empty"
 
-    def is_start(self, subevent: Subevent) -> bool:
-        if self.start is None:
-            return False
-        return self.start == subevent
-    
-    def is_stop(self, subevent: Subevent) -> bool:
-        if self.stop is None:
-            return False
-        return self.stop == subevent
-    
-    def is_continue(self, subevent: Subevent) -> bool:
+    def is_continue(self, subevent: T) -> bool:
         if self.continue_ is None:
             return False
         return subevent in self.continue_

@@ -11,36 +11,32 @@ if TYPE_CHECKING:
 
 @dataclass
 class SystemMeasure(SceneObject):
-    id_: int
+    """
+    Contains all `PartMeasure`s across `Score`
+    that have the same `id`.
+    """
+    id: int
     part_measures: list[PartMeasure]
     is_new_system: bool
     
     def __post_init__(self) -> None:
         assert len(self.part_measures) > 0
-        assert all(m.id == self.id_ for m in self.part_measures)
+        assert all(m.id == self.id for m in self.part_measures)
     
     @cached_property
     def previous(self) -> "SystemMeasure":
-        assert self.id_ > 1
-        return self.score.get_system_measure_by_id(self.id_ - 1)
+        assert self.id > 1
+        return self.score.get_system_measure_by_id(self.id - 1)
 
     @cached_property
     def fractional_onset(self) -> Fraction:
-        if self.id_ == 1:
+        if self.id == 1:
             return Fraction(0)
         return self.previous.fractional_end_onset
     
     @cached_property
     def fractional_duration(self) -> Fraction:
-        from .score import QUARTER_NOTE_DURATION
-        duration = self._get_duration_impl()
-
-        # if system is completely empty,
-        # retrieve most common duration from the whole score
-        # (the duration is computer over all non-zero duration system measures)
-        if duration == 0:
-            duration = self.score.most_common_time_signature.as_fraction() * QUARTER_NOTE_DURATION
-        return duration
+        return self._get_duration_impl()
     
     @cached_property
     def fractional_end_onset(self) -> Fraction:

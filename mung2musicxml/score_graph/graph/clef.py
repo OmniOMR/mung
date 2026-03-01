@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 
 from .tokens import ClefSign
-from .in_part_measure_modifier import InPartMeasureModifier
+from .in_part_measure_modifier import InMeasureModifier
 
 # TODO: support clef transposition
 
 @dataclass
-class Clef(InPartMeasureModifier):
+class Clef(InMeasureModifier):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/clef/
+    """
     __priority__ = 0
     sign: ClefSign
     line: int
@@ -17,4 +20,4 @@ class Clef(InPartMeasureModifier):
     @property
     def number(self) -> int:
         from .staff import Staff
-        return Staff.of(self, lambda s: s.other_symbols).staff_id
+        return Staff.of(self, lambda s: s.other_symbols).id

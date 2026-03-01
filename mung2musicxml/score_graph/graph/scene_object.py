@@ -171,8 +171,8 @@ class SceneObject:
 
         :param subject: The inlinked object we start from.
         :param name_probe: Lambda that given a `cls` type (dummy) instance
-        returns the field to be used for link name. It can also return string
-        to be used directly as the link name.
+            returns the field to be used for link name. It can also return string
+            to be used directly as the link name.
         :returns: An outlinked object, linking to `subject` via `name` or `None`.
         """
         if subject is None:
@@ -202,8 +202,8 @@ class SceneObject:
 
         :param subject: The inlinked object we start from.
         :param name_probe: Lambda that given a `cls` type (dummy) instance
-        returns the field to be used for link name. It can also return string
-        to be used directly as the link name.
+            returns the field to be used for link name. It can also return string
+            to be used directly as the link name.
         :returns: A list of outlinked objects, linking to `subject` via `name`.
         """
         if subject is None:

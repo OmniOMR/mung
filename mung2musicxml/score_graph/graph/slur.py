@@ -1,15 +1,17 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
-from .tokens import PlacementToken
+from .tokens import AboveBelowToken
 
-from .generic_start_stop import GenericStartStop
+from .interface import GenericStartStopContinue
 from .subevent import Subevent
 
 
 @dataclass
-class Slur(GenericStartStop):
-    placement: PlacementToken = field(default=PlacementToken.default())
+class Slur(GenericStartStopContinue[Subevent]):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/slur/
+    """
+    placement: AboveBelowToken = field(default=AboveBelowToken.default())
     
     def __post_init__(self):
         super().__post_init__()

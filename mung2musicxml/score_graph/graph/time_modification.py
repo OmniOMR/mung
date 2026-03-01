@@ -6,6 +6,9 @@ from .scene_object import SceneObject
 
 @dataclass(eq=True)
 class TimeModification(SceneObject):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/time-modification/
+    """
     actual: int
     normal: int
 
@@ -14,8 +17,8 @@ class TimeModification(SceneObject):
         assert isinstance(self.normal, int) and self.normal > 0
 
     @classmethod
-    def from_tuple_time_modifier(cls, modifier: Fraction):
+    def from_fraction(cls, modifier: Fraction):
         return cls(modifier.denominator, modifier.numerator)
 
-    def to_tuple_time_modifier(self) -> Fraction:
+    def to_fraction(self) -> Fraction:
         return Fraction(self.normal, self.actual)

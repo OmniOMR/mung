@@ -18,6 +18,12 @@ MIDI_1_0_DIVISIONS_LIMIT = 16_383
 
 @dataclass
 class ScorePart(SceneObject, IDClass):
+    """
+    Score part contains information
+    for a single instrument of `Score`.
+    
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/score-part/
+    """
     part_measures: list[PartMeasure]
 
     staffs: list[Staff] = field(init=False)
@@ -40,7 +46,7 @@ class ScorePart(SceneObject, IDClass):
             denominators.add(durable.fractional_duration.denominator)
             staffs.add(durable.staff)
         
-        self.staffs = sorted(staffs, key=lambda s: s.staff_id)
+        self.staffs = sorted(staffs, key=lambda s: s.id)
 
         if len(self.name) == 0:
             self.name = f"{self.id}-{len(self.staffs)}"

@@ -5,15 +5,20 @@ from collections import Counter
 from .subevent import Subevent
 from .scene_object import SceneObject
 from .note import Note
-from .tokens import StemOrientationToken
+from .tokens import StemValueToken
 from .durable import Durable
 from ...logger import logger
 
 
 @dataclass
 class Chord(Subevent, SceneObject):
+    """
+    Group list of notes into a single chord.
+
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/chord/
+    """
     notes: list[Note]
-    stem_orientation: StemOrientationToken = field(init=False)
+    stem_orientation: StemValueToken = field(init=False)
 
     def __post_init__(self) -> None:
         assert len(self.notes) > 0
@@ -28,7 +33,7 @@ class Chord(Subevent, SceneObject):
         self.notes.sort(key=lambda n: (-n.fractional_duration, n.pitch))
         self.stem_orientation = self._compute_stem_orientation()
     
-    def _compute_stem_orientation(self) -> StemOrientationToken:
+    def _compute_stem_orientation(self) -> StemValueToken:
         """
         Finds the most common stem orientation among given notes.
         """

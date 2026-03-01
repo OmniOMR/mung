@@ -16,7 +16,6 @@ from .part_measure import PartMeasure
 from .pitch import Pitch
 from .dot import Dot
 from .accidental import Accidental
-from .accidental_type import AccidentalType
 from .staff import Staff
 from .clef import Clef
 from .system_measure import SystemMeasure
@@ -26,7 +25,7 @@ from .beam import GraceNoteBeam
 from .rest import Rest
 from .key import Key
 from .time_signature import TimeSignature
-from .in_part_measure_modifier import InPartMeasureModifier
+from .in_part_measure_modifier import InMeasureModifier
 from .part_group import PartGroup
 from .articulation import Articulation
 from .tremolo_beam import TremoloBeam

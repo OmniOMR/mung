@@ -1,15 +1,31 @@
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from .tuplet import GenericStartStop
-from .tokens import PlacementToken, WedgeType
+from .tuplet import GenericStartStopContinue
+from .tokens import AboveBelowToken, WedgeType
+from .subevent import Subevent
+
+if TYPE_CHECKING:
+    from .staff import Staff
 
 
 @dataclass(kw_only=True)
-class Wedge(GenericStartStop):
+class Wedge(GenericStartStopContinue[Subevent]):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/wedge/
+    """
     type_: WedgeType
-    placement: PlacementToken
-    staff_id: int
+    placement: AboveBelowToken
+    # staff_id: int
+    @property
+    def staff(self) -> "Staff":
+        from .staff import Staff
+        return Staff.of(self, lambda s: s.other_symbols)
     
+    @property
+    def staff_id(self) -> int:
+        return self.staff.id
+
     def __hash__(self) -> int:
         return id(self)
 

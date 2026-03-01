@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from .durable import Durable
 from .pitch import Pitch
 from .grace_note import GraceNote
-from .tokens import StemOrientationToken
+from .tokens import StemValueToken
 if TYPE_CHECKING:
     from .staff import Staff
     from .chord import Chord
@@ -13,8 +13,11 @@ if TYPE_CHECKING:
 
 @dataclass
 class Note(Durable):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/
+    """
     pitch: Pitch
-    stem_orientation: StemOrientationToken
+    stem_orientation: StemValueToken
     grace_notes: list[GraceNote] = field(default_factory=list)
 
     @property
@@ -28,7 +31,7 @@ class Note(Durable):
         return Chord.of(self, lambda c: c.notes)
     
     @property
-    def chord_stem_orientation(self) -> StemOrientationToken:
+    def chord_stem_orientation(self) -> StemValueToken:
         return self.chord.stem_orientation
     
     @property

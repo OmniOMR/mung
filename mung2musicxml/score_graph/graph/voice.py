@@ -6,5 +6,8 @@ from .durable import Durable
 
 @dataclass
 class Voice(SceneObject):
-    id_: int
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/voice/
+    """
+    id: int
     durables: list[Durable]

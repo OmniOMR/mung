@@ -3,8 +3,8 @@ from fractions import Fraction
 from typing import TYPE_CHECKING, Optional
 
 from .tokens import NoteTypeValue
-from .interface import IDuration, IOnset
-from .scene_object import SceneObject
+from .interface import DurationObject
+
 if TYPE_CHECKING:
     from .voice import Voice
     from .dot import Dot
@@ -19,41 +19,31 @@ if TYPE_CHECKING:
     from .articulation import Articulation
     from .tremolo_beam import TremoloBeam
     from .tremolo_single import TremoloSingle
+    from .part_measure import PartMeasure
 
 
 @dataclass
-class Durable(IDuration, IOnset, SceneObject):
+class Durable(DurationObject):
+    """
+    Durable is a single symbol on a staff
+    that has duration, onset and a type.
+    """
     type_: NoteTypeValue
     fractional_duration_: Fraction
     fractional_onset_: Fraction
 
     @property
-    def duration(self) -> int:
-        duration = self.fractional_duration_ * self._get_divisions()
-        assert duration.denominator == 1
-        return duration.numerator
-
-    @property
-    def fractional_duration(self) -> Fraction:
-        return self.fractional_duration_
-    
-    @property
     def in_measure_fractional_onset(self) -> Fraction:
         return self.fractional_onset_
     
     @property
-    def in_measure_fractional_end_onset(self) -> Fraction:
-        return self.in_measure_fractional_onset + self.fractional_duration
-    
+    def fractional_duration(self) -> Fraction:
+        return self.fractional_duration_
+
     @property
-    def global_fractional_onset(self) -> Fraction:
-        # do not call global fractional onset on
-        # subevent directly - durable can be subevent
-        # -> infinite recursion
-        return self.subevent.part_measure.global_fractional_onset + self.in_measure_fractional_onset
-    
-    def _get_divisions(self) -> int:
-        return self.score_part.divisions
+    def part_measure(self) -> "PartMeasure":
+        from .part_measure import PartMeasure
+        return PartMeasure.of(self.subevent, lambda m: m.subevents)
     
     @property
     def voice(self) -> "Voice":
@@ -93,28 +83,28 @@ class Durable(IDuration, IOnset, SceneObject):
     def beams(self) -> list["DurableBeam"]:
         from .beam import DurableBeam
         subevent = self.subevent
-        return DurableBeam.many_of(subevent, lambda b: b.all_subevents)
+        return DurableBeam.many_of(subevent, lambda b: b.all)
 
     @property
     def tuplet(self) -> Optional["Tuplet"]:
         from .tuplet import Tuplet
         subevent = self.subevent
-        return Tuplet.of_or_none(subevent, lambda t: t.all_subevents)
+        return Tuplet.of_or_none(subevent, lambda t: t.all)
 
     @property
     def slurs(self) -> list["Slur"]:
         from .slur import Slur
-        return Slur.many_of(self.subevent, lambda t: t.all_subevents)
+        return Slur.many_of(self.subevent, lambda t: t.all)
 
     @property
     def ties(self) -> list["Tie"]:
         from .tie import Tie
-        return Tie.many_of(self, lambda t: t.all_durables)
+        return Tie.many_of(self, lambda t: t.all)
     
     @property
     def wedges(self) -> list["Wedge"]:
         from .wedge import Wedge
-        return Wedge.many_of(self, lambda w: w.all_subevents)
+        return Wedge.many_of(self, lambda w: w.all)
     
     @property
     def articulations(self) -> list["Articulation"]:
