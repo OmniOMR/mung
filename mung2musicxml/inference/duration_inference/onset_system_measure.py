@@ -105,10 +105,10 @@ class _OnsetSystemMeasureWrapper:
         if len(time_sig_dep) > 0:
             logger.warning(f"Found measure lasting symbols: {[str(x) for x in time_sig_dep]}")
 
-        nodes = [x for x in self._nodes if x not in set(time_sig_dep)]
+        nodes = self._nodes
         
         # Sort nodes for easier inference
-        topo_sort = topological_sort(nodes, lambda p, c: c.id in p.precedence_outlinks)
+        topo_sort = topological_sort(self._nodes, lambda p, c: c.id in p.precedence_outlinks)
         logger.debug(f"Inferring onset for: {[x.id for x in topo_sort]}")
 
         # Get sources, set their onset to "start", and remove them 
@@ -131,7 +131,7 @@ class _OnsetSystemMeasureWrapper:
             onset = self._infer_onset_for_node(parents_in_measure(node, nodes), permissive=permissive)
             self._set_onset(node, onset)
         
-        if len(time_sig_dep) > 0:
+        if len(time_sig_dep) == 1:
             sm_start_onset = start_onset
             if len(nodes) == 0:
                 sm_duration = I.DEFAULT_MEASURE_DURATION
