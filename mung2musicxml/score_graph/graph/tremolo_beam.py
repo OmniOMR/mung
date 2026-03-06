@@ -14,7 +14,6 @@ class TremoloBeam(GenericStartStop[Subevent]):
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/tremolo/
     """
     marks: int
-    all_subevents: list[Subevent] = field(init=False)
     time_modification: ClassVar[TimeModification] = TimeModification(2, 1)
 
     def __post_init__(self) -> None:

@@ -114,7 +114,7 @@ class Durable(DurationObject):
     @property
     def tremolo_beam(self) -> Optional["TremoloBeam"]:
         from .tremolo_beam import TremoloBeam
-        return TremoloBeam.of_or_none(self.subevent, lambda t: t.all_subevents)
+        return TremoloBeam.of_or_none(self.subevent, lambda t: t.all)
     
     @property
     def tremolo_single(self) -> Optional["TremoloSingle"]:
