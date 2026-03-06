@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .scene_object import SceneObject
-from .durable import Durable
+from .subevent import Subevent
 from .tokens import ArticulationType, AboveBelowToken
 
 
@@ -13,6 +13,6 @@ class Articulation(SceneObject):
 
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/articulations/
     """
-    parent: Durable
+    parent: Subevent
     type_: ArticulationType
     placement: AboveBelowToken

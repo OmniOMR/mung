@@ -109,7 +109,7 @@ class Durable(DurationObject):
     @property
     def articulations(self) -> list["Articulation"]:
         from .articulation import Articulation
-        return Articulation.many_of(self, lambda a: a.parent)
+        return Articulation.many_of(self.subevent, lambda a: a.parent)
     
     @property
     def tremolo_beam(self) -> Optional["TremoloBeam"]:

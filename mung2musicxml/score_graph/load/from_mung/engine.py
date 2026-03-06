@@ -80,22 +80,25 @@ class MuNG_LoadEngine(LoadEngine):
     def _construct_durable_beam(self, mung_beam: Node, subevents: list[Subevent]) -> DurableBeam:
         assert len(subevents) > 0, f"No subevents for {mung_beam}"
         subevents.sort(key=lambda s: s.global_fractional_onset)
-        if len(subevents) == 1:
-            return DurableBeam(
-                start=subevents[0]
-            )
-        elif len(subevents) == 2:
-            return DurableBeam(
-                start=subevents[0],
-                stop=subevents[1]
-            )
-        else:
-            return DurableBeam(
-                start=subevents[0],
-                continue_=subevents[1:-1],
-                stop=subevents[-1]
-            )
-    
+        try:
+            if len(subevents) == 1:
+                return DurableBeam(
+                    start=subevents[0]
+                )
+            elif len(subevents) == 2:
+                return DurableBeam(
+                    start=subevents[0],
+                    stop=subevents[1]
+                )
+            else:
+                return DurableBeam(
+                    start=subevents[0],
+                    continue_=subevents[1:-1],
+                    stop=subevents[-1]
+                )
+        except Exception as e:
+            raise ValueError(f"Failed to construct {DurableBeam.__name__} for node {mung_beam} for {subevents}") from e
+        
     def _construct_tuplet(self, mung_tuplet: Node, subevents: list[Subevent], graph: NotationGraph) -> Tuplet:
         assert len(subevents) > 0, f"No subevents for {mung_tuplet}"
         subevents.sort(key=lambda s: s.global_fractional_onset)
@@ -505,11 +508,9 @@ class MuNG_LoadEngine(LoadEngine):
 
         return type_, placement
 
-    def _construct_articulations(self, mung_durable: Node, durable: Durable, graph: NotationGraph) -> None:
-        articulations = graph.children(mung_durable, class_filter=C.Articulation.ALL())
-        for mung_articulation in articulations:
-            type_, placement = self._mung_class_name_to_articulation_type_and_placement(mung_articulation)
-            Articulation(durable, type_, placement)
+    def _construct_articulation(self, mung_articulation: Node, subevent: Subevent) -> None:
+        type_, placement = self._mung_class_name_to_articulation_type_and_placement(mung_articulation)
+        Articulation(subevent, type_, placement)
     
     def _construct_durable(self, durable: Node, graph: NotationGraph) -> Note | Rest | RepeatBar:
         
@@ -538,7 +539,7 @@ class MuNG_LoadEngine(LoadEngine):
             )
             self._construct_dots_for_durable_like(durable, n, graph)
             self._construct_accidental_for_notehead(durable, n, graph)
-            self._construct_articulations(durable, n, graph)
+            # self._construct_articulations(durable, n, graph)
             # construct_clef_change_for_durable(durable, n, graph)
             return n
         
@@ -672,6 +673,7 @@ class MuNG_LoadEngine(LoadEngine):
         durables_by_voice: defaultdict[int, list[Durable]] = defaultdict(list)
         subevents_by_beam: defaultdict[Node, set[Subevent]] = defaultdict(set)
         subevents_by_slur: defaultdict[Node, set[Subevent]] = defaultdict(set)
+        subevents_by_articulation: defaultdict[Node, set[Subevent]] = defaultdict(set)
         subevents_by_tremolo_beam: defaultdict[Node, set[Subevent]] = defaultdict(set)
         durables_by_tie: defaultdict[Node, set[Durable]] = defaultdict(set)
         subevent_by_hairpin: defaultdict[Node, set[Subevent]] = defaultdict(set)
@@ -708,6 +710,7 @@ class MuNG_LoadEngine(LoadEngine):
                         found_hairpins: list[Node] = []
                         found_tremolo_beams: list[Node] = []
                         found_tremolo_singles: list[Node] = []
+                        found_articulations: list[Node] = []
 
                         for dur in sub:
                             durable = self._construct_durable(dur, graph)
@@ -728,6 +731,7 @@ class MuNG_LoadEngine(LoadEngine):
                             found_hairpins.extend(graph.children(dur, class_filter=I.HAIRPINS))
                             found_tremolo_beams.extend(graph.children(dur, class_filter=C.Tremolo.TREMOLO_BEAM))
                             found_tremolo_singles.extend(graph.children(dur, class_filter=I.TREMOLO_SINGLES))
+                            found_articulations.extend(graph.children(dur, class_filter=C.Articulation.ALL()))
 
                             # register tie per durable
                             for tie in graph.children(dur, class_filter=C.Spanners.TIE):
@@ -759,6 +763,9 @@ class MuNG_LoadEngine(LoadEngine):
                         
                         for t in found_tremolo_beams:
                             subevents_by_tremolo_beam[t].add(subevent)
+                        
+                        for a in found_articulations:
+                            subevents_by_articulation[a].add(subevent)
 
                         if len(found_tremolo_singles) > 0:
                             TremoloSingle(
@@ -964,10 +971,15 @@ class MuNG_LoadEngine(LoadEngine):
 
         # print(subevents_by_beam)
         for mung_beam, subs in subevents_by_beam.items():
-            # print(mung_beam, len(subs))
             logger.debug(f"Creating beam based on {mung_beam}")
             beams.append(self._construct_durable_beam(mung_beam, list(subs)))
-            # print(len(subs))
+
+        for mung_articulation, subs in subevents_by_articulation.items():
+            logger.debug(f"Creating articulation based on {mung_articulation}")
+            if len(subs) > 1:
+                logger.warning(f"{mung_articulation} is connected to more than one subevent")
+            for sub in subs:
+                self._construct_articulation(mung_articulation, sub)
 
         tuplets: list[Tuplet] = []
         for mung_tuplet, subs in subevents_by_tuple.items():
@@ -1016,8 +1028,8 @@ class MuNG_LoadEngine(LoadEngine):
                 return cls(start, stop)
 
 
-        # print(subevents_by_tremolo_beam.values())
-        connected_by_tremolo_beam: list[list[Subevent]] = UnionFind.merge_groups([list(g) for g in subevents_by_tremolo_beam.values()])
+        # TODO: make beam filtering better, union find does not work - removes overlaps but also duplicates
+        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in subevents_by_tremolo_beam.values()]
         for mung_tremolo_beam, subs in subevents_by_tremolo_beam.items():
             if len(subs) != 2:
                 logger.warning(
@@ -1032,7 +1044,7 @@ class MuNG_LoadEngine(LoadEngine):
         tremolo_counts = Counter(tbs)
         for tb, c in tremolo_counts.items():
             TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
-            logger.info("Created tremolo beam")
+            logger.info(f"Created tremolo beam with marks {c}")
         # print(connected_by_tremolo_beam)
 
 

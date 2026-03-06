@@ -681,8 +681,9 @@ class MusicXML_ExportEngine(ExportEngine):
         if (xml_ornaments := self.xml_ornaments(durable)) is not None:
             notations.append(xml_ornaments)
 
-        if (xml_artic := self.xml_Articulations(durable)) is not None:
-            notations.append(xml_artic)
+        if not is_chord_continuation:
+            if (xml_artic := self.xml_Articulations(durable)) is not None:
+                notations.append(xml_artic)
 
         if len(notations) > 0:
             return notations
