@@ -32,6 +32,7 @@ from .utils import (
     get_durable_pitch
 )
 from ....logger import logger
+from .collector import SubeventCollector, CollectorRecord
 
 
 MEASURE_INDEX_START = 1
@@ -641,20 +642,8 @@ class MuNG_LoadEngine(LoadEngine):
             next_measure_id = offset + 1
         # print(new_system_indexes)
         
-        # exit()
-        _STEM_ORIENTATION_CACHE: dict[Node, StemValueToken] = {}
-        
-
-        # from .graph import RepeatBar
-        # from .graph.in_part_measure_modifier import InPartMeasureModifier
-        
-        # from .graph import Subevent
-        subevents: list[Subevent] = []
-        # from .graph import Durable
-        # durables: dict[Node, Durable] = {}
-        # def construct_subevents()
-        # from .graph import Chord
         mung_staffs_to_staffs = self._construct_staffs(instrument_staffs)
+
         def get_staff_from_symbol_on_staff(symbol: Node, mapping: dict[Node, Staff], graph: NotationGraph):
             """
             Durable is MuNG node that belongs to exactly one staff.
@@ -671,16 +660,21 @@ class MuNG_LoadEngine(LoadEngine):
         
         measures_by_id: defaultdict[int, list[PartMeasure]] = defaultdict(list)
         durables_by_voice: defaultdict[int, list[Durable]] = defaultdict(list)
-        subevents_by_beam: defaultdict[Node, set[Subevent]] = defaultdict(set)
-        subevents_by_slur: defaultdict[Node, set[Subevent]] = defaultdict(set)
-        subevents_by_articulation: defaultdict[Node, set[Subevent]] = defaultdict(set)
-        subevents_by_tremolo_beam: defaultdict[Node, set[Subevent]] = defaultdict(set)
         durables_by_tie: defaultdict[Node, set[Durable]] = defaultdict(set)
-        subevent_by_hairpin: defaultdict[Node, set[Subevent]] = defaultdict(set)
 
-        subevents_by_tuple: defaultdict[Node, set[Subevent]] = defaultdict(set)
         # for braces and brackets
         parts_by_group: defaultdict[Node, set[ScorePart]] = defaultdict(set)
+
+        c = SubeventCollector(
+            [
+                CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM),
+                CollectorRecord(Tuplet, C.Tuplets.TUPLET),
+                CollectorRecord(Slur, C.Spanners.SLUR),
+                CollectorRecord(Wedge, I.HAIRPINS),
+                CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM),
+                CollectorRecord(Articulation, C.Articulation.ALL())
+            ]
+        )
 
 
         for instrument in instrument_staffs:
@@ -701,16 +695,11 @@ class MuNG_LoadEngine(LoadEngine):
                 # print(measure.nodes)
                 subs = subevents_from_list_of_symbols([x for x in measure.nodes if x.class_name in I.CLASSES_BEARING_DURATIONS], graph)
                 # print(subs)
+                
                 for sub in subs:
                     try:
                         chordlike = []
-                        found_beams: list[Node] = []
-                        found_tuplets: list[Node] = []
-                        found_slurs: list[Node] = []
-                        found_hairpins: list[Node] = []
-                        found_tremolo_beams: list[Node] = []
                         found_tremolo_singles: list[Node] = []
-                        found_articulations: list[Node] = []
 
                         for dur in sub:
                             durable = self._construct_durable(dur, graph)
@@ -722,16 +711,7 @@ class MuNG_LoadEngine(LoadEngine):
 
                             durables_by_voice[voice(dur)].append(durable)
 
-                            # register beams, tuplets, slurs etc even for RepeatBar
-                            # but! then repeat beat need to be thrown out in slur construction
-                            # if isinstance(durable, Note) or isinstance(durable, Rest):
-                            found_beams.extend(graph.children(dur, class_filter=C.NoteheadAttachments.BEAM))
-                            found_tuplets.extend(graph.children(dur, class_filter=C.Tuplets.TUPLET))
-                            found_slurs.extend(graph.children(dur, class_filter=C.Spanners.SLUR))
-                            found_hairpins.extend(graph.children(dur, class_filter=I.HAIRPINS))
-                            found_tremolo_beams.extend(graph.children(dur, class_filter=C.Tremolo.TREMOLO_BEAM))
-                            found_tremolo_singles.extend(graph.children(dur, class_filter=I.TREMOLO_SINGLES))
-                            found_articulations.extend(graph.children(dur, class_filter=C.Articulation.ALL()))
+                            c.collect_nodes(dur, graph)
 
                             # register tie per durable
                             for tie in graph.children(dur, class_filter=C.Spanners.TIE):
@@ -748,25 +728,8 @@ class MuNG_LoadEngine(LoadEngine):
                             single_measure_subevents.append(chordlike[0])
                             subevent = chordlike[0]
                         
-                        # register large objects
-                        for b in found_beams:
-                            subevents_by_beam[b].add(subevent)
+                        c.add_subevent(subevent)
                         
-                        for t in found_tuplets:
-                            subevents_by_tuple[t].add(subevent)
-                        
-                        for s in found_slurs:
-                            subevents_by_slur[s].add(subevent)
-                        
-                        for h in found_hairpins:
-                            subevent_by_hairpin[h].add(subevent)
-                        
-                        for t in found_tremolo_beams:
-                            subevents_by_tremolo_beam[t].add(subevent)
-                        
-                        for a in found_articulations:
-                            subevents_by_articulation[a].add(subevent)
-
                         if len(found_tremolo_singles) > 0:
                             TremoloSingle(
                                 subevent,
@@ -863,8 +826,6 @@ class MuNG_LoadEngine(LoadEngine):
                 for ts in chain.from_iterable(graph.children(s, class_filter=C.TimeSignatures.TIME_SIGNATURE) for s in measure.nodes):
                     time_sigs_by_onset[onset_beats(ts)].append(ts)
                 
-                # from .construct import construct_accidental_for_key
-                # from .construct.construct_time_signature import construct_time_signature
                 for onset, tss in time_sigs_by_onset.items():
                     if len(tss) > 1:
                         logger.warning(f"Found multiple time signatures {[ks.id for ks in tss]} for in-measure onset {onset}, choosing the first one")
@@ -884,8 +845,7 @@ class MuNG_LoadEngine(LoadEngine):
                 
                 measures_by_id[measure.id_].append(m)
                 graph_measures.append(m)
-            # print(graph_measures)
-                # print(graph_measures[-1])
+                
             for staff, values in staff_to_durables.items():
                 staff.durables = values
             
@@ -970,11 +930,11 @@ class MuNG_LoadEngine(LoadEngine):
             # print(f"Constructed part group {g}")
 
         # print(subevents_by_beam)
-        for mung_beam, subs in subevents_by_beam.items():
+        for mung_beam, subs in c.subevents_by(DurableBeam).items():
             logger.debug(f"Creating beam based on {mung_beam}")
             beams.append(self._construct_durable_beam(mung_beam, list(subs)))
 
-        for mung_articulation, subs in subevents_by_articulation.items():
+        for mung_articulation, subs in c.subevents_by(Articulation).items():
             logger.debug(f"Creating articulation based on {mung_articulation}")
             if len(subs) > 1:
                 logger.warning(f"{mung_articulation} is connected to more than one subevent")
@@ -982,13 +942,13 @@ class MuNG_LoadEngine(LoadEngine):
                 self._construct_articulation(mung_articulation, sub)
 
         tuplets: list[Tuplet] = []
-        for mung_tuplet, subs in subevents_by_tuple.items():
+        for mung_tuplet, subs in c.subevents_by(Tuplet).items():
             logger.debug(f"Creating tuplet based on {mung_tuplet}")
             tuplets.append(self._construct_tuplet(mung_tuplet, list(subs), graph))
         
         slurs: list[Slur] = []
         ties: list[Tie] = []
-        for mung_slur, subs in subevents_by_slur.items():
+        for mung_slur, subs in c.subevents_by(Slur).items():
             obj = self._construct_slur(mung_slur, list(subs), graph)
             slurs.append(obj)
             
@@ -1005,7 +965,7 @@ class MuNG_LoadEngine(LoadEngine):
             if obj is not None:
                 logger.debug(f"Created {type(obj).__name__} based on {mung_tie}")
 
-        for mung_hairpin, subs in subevent_by_hairpin.items():
+        for mung_hairpin, subs in c.subevents_by(Wedge).items():
             self._construct_wedge(mung_hairpin, list(subs), graph)
             logger.info(f"Constructed {Wedge.__name__} base on {mung_hairpin}")
         
@@ -1029,8 +989,8 @@ class MuNG_LoadEngine(LoadEngine):
 
 
         # TODO: make beam filtering better, union find does not work - removes overlaps but also duplicates
-        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in subevents_by_tremolo_beam.values()]
-        for mung_tremolo_beam, subs in subevents_by_tremolo_beam.items():
+        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in c.subevents_by(TremoloBeam).values()]
+        for mung_tremolo_beam, subs in c.subevents_by(TremoloBeam).items():
             if len(subs) != 2:
                 logger.warning(
                     f"Invalid number of subevents connected to {mung_tremolo_beam}, "
@@ -1047,18 +1007,5 @@ class MuNG_LoadEngine(LoadEngine):
             logger.info(f"Created tremolo beam with marks {c}")
         # print(connected_by_tremolo_beam)
 
-
-            # print(staff)
-            # print(staff.score_part)
-        # print(graph_to_instruments(graph))
-        # print(beams)
-        # for part in parts:
-        #     xml_ScorePart(part)
-        # for part in parts:
-        #     print(part.id, len(part.part_measures))
-        #     print([pm.id_ for pm in part.part_measures])
-        # exit()
         return score
-        # from .export.to_musicxml.engine import MusicXML_ExportEngine
-        # ee = MusicXML_ExportEngine()
-        # ee.export_to_file(score, "temp.musicxml")
+    
