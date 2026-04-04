@@ -98,14 +98,22 @@ class _OnsetSystemMeasureWrapper:
             return
         
         # Get durables whose duration is time sig dependant
-        # - they last full measure and should always be a sink and a source
-        # -> we can extract them from topological sort with no harm done
-        # - they start at the minimal onset and end at the maximal end onset
+        # (whole note, whole rest, repeat, ...)
+        # There are multiple cases that can occur_
+        # - no TSDs -> process the measure normally
+        # - at most one TSD per staff ->
+        #       compute their duration based on other non-TSD durables in the measure
+        #       (if there are none, default to DEFAULT_MEASURE_DURATION)
+        # - other -> set TSDs duration to DEFAULT_MEASURE_DURATION and process them with other durables
         time_sig_dep = [x for x in self._nodes if x.class_name in I.MEASURE_LASTING_CLASS_NAMES]
+        not_tsd = [x for x in self._nodes if x not in time_sig_dep]
         if len(time_sig_dep) > 0:
             logger.warning(f"Found measure lasting symbols: {[str(x) for x in time_sig_dep]}")
 
-        nodes = self._nodes
+        unique_tsd_staff = {
+            self._graph.children(tsd, class_filter=C.Staves.STAFF)[0]
+            for tsd in time_sig_dep
+        }
         
         # Sort nodes for easier inference
         topo_sort = topological_sort(self._nodes, lambda p, c: c.id in p.precedence_outlinks)
@@ -128,23 +136,27 @@ class _OnsetSystemMeasureWrapper:
         # For each node, look at its parents and choose the maximal onset
         for node in not_sources:
             logger.debug(f"Processing {node.class_name} {node.id}")
-            onset = self._infer_onset_for_node(parents_in_measure(node, nodes), permissive=permissive)
+            onset = self._infer_onset_for_node(parents_in_measure(node, self._nodes), permissive=permissive)
             self._set_onset(node, onset)
         
-        if len(time_sig_dep) == 1:
+        # all TSDs have their own staff 
+        if len(unique_tsd_staff) >= len(time_sig_dep):
             sm_start_onset = start_onset
-            if len(nodes) == 0:
+
+            # there are no other nodes, use default duration
+            if len(not_tsd) == 0:
                 sm_duration = I.DEFAULT_MEASURE_DURATION
+            # there are other durables, base TSD's duration on them
             else:
-                sm_end_onset = max(node.data[O.ONSET_BEATS] + node.data[O.DURATION_BEATS] for node in nodes)
+                sm_end_onset = max(node.data[O.ONSET_BEATS] + node.data[O.DURATION_BEATS] for node in not_tsd)
                 sm_duration = sm_end_onset - sm_start_onset
             
             for node in time_sig_dep:
                 logger.warning(f"Processed {node} as time signature dependant: onset={sm_start_onset}, duration={sm_duration}")
                 node.data[O.ONSET_BEATS] = sm_start_onset
                 node.data[O.DURATION_BEATS] = sm_duration
-                node.data[O.DURATION_BEATS_WO_M] = sm_duration        
-    
+                node.data[O.DURATION_BEATS_WO_M] = sm_duration  
+            
     def is_synchronized(self) -> bool:
         sinks = self.sinks()
         ends = set(self._node_end_onset(sink) for sink in sinks)
