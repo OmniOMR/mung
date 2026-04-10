@@ -30,3 +30,4 @@ from .part_group import PartGroup
 from .articulation import Articulation
 from .tremolo_beam import TremoloBeam
 from .tremolo_single import TremoloSingle
+from .dynamics import Dynamics

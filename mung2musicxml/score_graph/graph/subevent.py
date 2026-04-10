@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .score_part import ScorePart
     from .part_measure import PartMeasure
     from .wedge import Wedge
+    from .dynamics import Dynamics
 
 
 @dataclass
@@ -84,3 +85,8 @@ class Subevent(DurationObject):
     def wedges(self) -> list["Wedge"]:
         from .wedge import Wedge
         return Wedge.many_of(self, lambda w: w.all)
+    
+    @property
+    def dynamics(self) -> list["Dynamics"]:
+        from .dynamics import Dynamics
+        return Dynamics.many_of(self, lambda d: d.parent)

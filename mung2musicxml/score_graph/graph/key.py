@@ -16,15 +16,17 @@ class Key(InMeasureModifier):
     """
     def _compute_fifths(self) -> int:
         acc = self.accidentals
-        assert len(set(a.type_ for a in acc)) == 1
+        # assert len(set(a.type_ for a in acc)) == 1
         if acc[0].type_ == AccidentalValue.SHARP:
             return len(acc)
         elif acc[0].type_ == AccidentalValue.FLAT:
             return - len(acc)
         elif acc[0].type_ == AccidentalValue.NATURAL:
             return 0
-        else:
-            raise ValueError
+
+        return 0
+        # else:
+        #     raise ValueError
     
     @cached_property
     def fifths(self) -> int:

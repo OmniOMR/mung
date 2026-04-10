@@ -371,6 +371,17 @@ class MusicXML_ExportEngine(ExportEngine):
         output = []
         
         output.extend(self.xml_Wedge(subevent, "start"))
+
+        for dynamic in subevent.dynamics:
+            dir = ET.Element("direction")
+            dir_type = ET.SubElement(dir, "direction-type")
+            dyn = ET.SubElement(dir_type, "dynamics")
+            # ET.SubElement(dir, "staff").text = "1"
+            ET.SubElement(dyn, str(dynamic.type_))
+            # print("created dynamic")
+            print(dir)
+            output.append(dir)
+        
         
         if isinstance(subevent, Chord):
             for note in subevent.notes:
@@ -725,6 +736,7 @@ class MusicXML_ExportEngine(ExportEngine):
 
             elif wedge.is_stop(subevent) and pass_name == "stop":
                 id_ = self._wedge_register.ask_id_stop(wedge)
+                print(f"closing wedge {id_}")
                 output.append(_create_wedge(id_, wedge))
 
         return output
