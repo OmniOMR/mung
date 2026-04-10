@@ -15,14 +15,13 @@ class MultistemResolverStrategy:
             + I.STAFFLINE_LIKE_CLASS_NAMES
             + I.ACCIDENTAL_CLASS_NAMES
             + I.HAIRPINS
-            + [C.NoteheadAttachments.AUGMENTATION_DOT, C.Spanners.SLUR, C.Tuplets.TUPLET]
+            + [C.NoteheadAttachments.AUGMENTATION_DOT, C.Spanners.SLUR]
         )))
     
     # List of class names of objects to divide between original and ghost notehead
     DIVIDED_OBJECTS: list[str] = field(
-        default_factory=lambda: list(set(
-            I.FLAGS_AND_BEAMS
-        )))
+        default_factory=lambda: list(
+            set(I.FLAGS_AND_BEAMS + [C.Tuplets.TUPLET])))
     
     # If set to True, shifts the ghost notehead a bit for it to be visible
     _DEBUG_GHOST_SHIFT: bool = False
