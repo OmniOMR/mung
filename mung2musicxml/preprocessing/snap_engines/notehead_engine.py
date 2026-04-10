@@ -504,7 +504,3 @@ class NoteheadSnapEngine:
             self._snap_grace_note_without_leger_lines_to_staff(grace, parent_staff.id)
             logger.debug(f"Snapping {grace} to staff position")
         return 1
-
-
-
-
