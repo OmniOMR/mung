@@ -379,7 +379,6 @@ class MusicXML_ExportEngine(ExportEngine):
             # ET.SubElement(dir, "staff").text = "1"
             ET.SubElement(dyn, str(dynamic.type_))
             # print("created dynamic")
-            print(dir)
             output.append(dir)
         
         
@@ -670,6 +669,16 @@ class MusicXML_ExportEngine(ExportEngine):
             return ornaments
         
         return None
+
+    def xml_Fermata(self, durable: Durable) -> list[ET.Element]:
+        used_types: set[FermataOrientationToken] = set()
+        output = []
+        for fermata in durable.fermatas:
+            if fermata.type_ not in used_types:
+                output.append(ET.Element("fermata", {"type": str(fermata.type_)}))
+                used_types.add(fermata.type_)
+
+        return output
     
     def xml_notations(self, durable: Durable) -> Optional[ET.Element]:
         """
@@ -695,6 +704,8 @@ class MusicXML_ExportEngine(ExportEngine):
         if not is_chord_continuation:
             if (xml_artic := self.xml_Articulations(durable)) is not None:
                 notations.append(xml_artic)
+        
+        notations.extend(self.xml_Fermata(durable))
 
         if len(notations) > 0:
             return notations

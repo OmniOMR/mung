@@ -378,3 +378,12 @@ class DynamicsTypeToken(StrEnum):
     SFZP = "sfzp"
 
     OTHER_DYNAMICS = "other-dynamics"
+
+
+class FermataOrientationToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/upright-inverted/
+    """
+    UPRIGHT = "upright" 
+    INVERTED = "inverted" 
+    

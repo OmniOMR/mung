@@ -39,6 +39,7 @@ from .construct_dynamics import construct_dynamics
 from .construct_clef import construct_clef
 from .construct_tremolo import construct_tremolo_single
 from .construct_durable import construct_durable
+from .construct_fermata import construct_fermata
 
 
 from ....logger import logger
@@ -162,7 +163,6 @@ class MuNG_LoadEngine(LoadEngine):
                         symbol for symbol in measure if is_on_staff(group, symbol, graph)
                     ]))
                     
-                    print(frozenset(group), instros_to_measures[frozenset(group)])
             next_measure_id = offset + 1
         
         
@@ -186,7 +186,8 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(Wedge, I.HAIRPINS),
                 CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM),
                 CollectorRecord(Articulation, C.Articulation.ALL()),
-                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT)
+                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT),
+                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW])
             ]
         )
 
@@ -225,6 +226,11 @@ class MuNG_LoadEngine(LoadEngine):
                             # register tie per durable
                             for tie in graph.children(dur, class_filter=C.Spanners.TIE):
                                 durables_by_tie[tie].add(durable)
+                            
+                            # register tremolo singles
+                            for tremolo_single in graph.children(dur, class_filter=I.TREMOLO_SINGLES):
+                                if tremolo_single not in found_tremolo_singles:
+                                    found_tremolo_singles.append(tremolo_single)
 
                         # all durables inside a subevent should be either notes, rests or other
                         if isinstance(chordlike[0], Note):
@@ -412,6 +418,11 @@ class MuNG_LoadEngine(LoadEngine):
         for mung_dynamics, subs in c.subevents_by(Dynamics).items():
             dynamics = construct_dynamics(mung_dynamics, subs)
             self._log_object_creation(dynamics, mung_dynamics)
+        
+        for mung_fermata, subs in c.subevents_by(Fermata).items():
+            for sub in subs:
+                fermata = construct_fermata(mung_fermata, sub)
+                self._log_object_creation(fermata, mung_fermata)
         
         @dataclass(frozen=True)
         class TremoloBeamStruct:

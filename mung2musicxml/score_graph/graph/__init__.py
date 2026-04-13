@@ -32,3 +32,4 @@ from .tremolo_beam import TremoloBeam
 from .tremolo_single import TremoloSingle
 from .dynamics import Dynamics
 from .scene_object import SceneObject
+from .fermata import Fermata

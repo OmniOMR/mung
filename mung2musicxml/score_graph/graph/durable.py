@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from .tremolo_beam import TremoloBeam
     from .tremolo_single import TremoloSingle
     from .part_measure import PartMeasure
+    from .fermata import Fermata
 
 
 @dataclass
@@ -120,4 +121,9 @@ class Durable(DurationObject):
     def tremolo_single(self) -> Optional["TremoloSingle"]:
         from .tremolo_single import TremoloSingle
         return TremoloSingle.of_or_none(self.subevent, lambda t: t.subevent)
+    
+    @property
+    def fermatas(self) -> list["Fermata"]:
+        from .fermata import Fermata
+        return Fermata.many_of(self.subevent, lambda t: t.parent)
     
