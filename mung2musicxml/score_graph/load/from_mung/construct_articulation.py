@@ -3,9 +3,9 @@ from mung.constants import ClassNameConstants as C
 
 from ...graph import *
 
-def construct_articulation(mung_articulation: Node, subevent: Subevent) -> None:
+def construct_articulation(mung_articulation: Node, subevent: Subevent) -> Articulation:
     type_, placement = _mung_class_name_to_articulation_type_and_placement(mung_articulation)
-    Articulation(subevent, type_, placement)
+    return Articulation(subevent, type_, placement)
     
 
 def _mung_class_name_to_articulation_type_and_placement(articulation: Node) -> tuple[ArticulationType, AboveBelowToken]:

@@ -15,13 +15,13 @@ def try_match_dynamics(mung_dynamics: Node) -> DynamicsTypeToken:
         return DynamicsTypeToken.OTHER_DYNAMICS
 
 
-def construct_dynamics(mung_dynamics: Node, subs: set[Subevent]) -> None:
+def construct_dynamics(mung_dynamics: Node, subs: set[Subevent]) -> Dynamics:
     if any(s.global_fractional_onset != next(iter(subs)).global_fractional_onset for s in subs):
         logger.warning(f"Subevents linked to {mung_dynamics} differ in onsets, choosing the first one")
     
     sub = min(subs, key=lambda s: (s.global_fractional_onset, s.voice))
     type_ = try_match_dynamics(mung_dynamics)
     if type_ != DynamicsTypeToken.OTHER_DYNAMICS:
-        Dynamics(sub, type_)
+        return Dynamics(sub, type_)
     else:
-        Dynamics(sub, type_, mung_dynamics.text_transcription)
+        return Dynamics(sub, type_, mung_dynamics.text_transcription)

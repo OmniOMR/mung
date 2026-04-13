@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import Optional
+from typing import Optional, Type
 from pathlib import Path
 from typing import Self, Any
 from collections import defaultdict, Counter
@@ -46,6 +46,7 @@ from .collector import SubeventCollector, CollectorRecord
 
 
 MEASURE_INDEX_START = 1
+MAX_VOICES = 8
 
 
 class MuNG_LoadEngine(LoadEngine):
@@ -101,6 +102,14 @@ class MuNG_LoadEngine(LoadEngine):
 
         return mung_staff_to_staff
     
+    def _log_object_creation(self, obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
+        if isinstance(source_mung_node_or_nodes, Node):
+            source_str = str(source_mung_node_or_nodes)
+        else:
+            source_str = ", ".join(str(x) for x in source_mung_node_or_nodes)
+        
+        logger.info(f"Added {type(obj).__name__} based on {source_str}")
+    
     def load_from_file(self, file_name: Path | str) -> Score:
         return self.load(NotationGraph.from_file(file_name))
  
@@ -117,7 +126,7 @@ class MuNG_LoadEngine(LoadEngine):
             """
             return any(graph.is_child_of(staff, node) for staff in staffs)
         
-        class Struct:
+        class _InstrumentMeasureStruct:
             def __init__(self, i: int, nodes: list[Node]) -> None:
                 self.id_ = i
                 self.nodes = nodes
@@ -128,32 +137,34 @@ class MuNG_LoadEngine(LoadEngine):
             def __repr__(self) -> str:
                 return str(self)
 
-        instros_to_measures: defaultdict[frozenset[Node], list[Struct]] = defaultdict(list)
+        instros_to_measures: defaultdict[frozenset[Node], list[_InstrumentMeasureStruct]] = defaultdict(list)
         
         instrument_staffs = graph_to_instruments(graph)
-        # print(instrument_staffs)
 
-        # exit()
         new_system_indexes: list[int] = []
-        # loop through system, count measures visited
+
+        # loop through system, index measures visited
+        # for system:
+        #   for instrument in system: (instrument is defined by one or two staffs)
+        #       retrieve all nodes linked to these staff
         next_measure_id = MEASURE_INDEX_START
         for instrument_groups, sys in zip(instros, systems):
             offset = next_measure_id
             if offset != MEASURE_INDEX_START:
                 new_system_indexes.append(offset)
+            
             for group in instrument_groups:
-                # print(group)
-                # print(sys)
                 for offset, measure in enumerate(sys, start=next_measure_id):
                     
+                    # retrieve all symbols linked to instrument staffs
                     instros_to_measures[frozenset(group)].append(
-                        Struct(offset, [
+                        _InstrumentMeasureStruct(offset, [
                         symbol for symbol in measure if is_on_staff(group, symbol, graph)
                     ]))
                     
-                    # print(frozenset(group), instros_to_measures[frozenset(group)])
+                    print(frozenset(group), instros_to_measures[frozenset(group)])
             next_measure_id = offset + 1
-        # print(new_system_indexes)
+        
         
         mung_staffs_to_staffs = self._construct_staff_mapping(instrument_staffs)
 
@@ -186,18 +197,13 @@ class MuNG_LoadEngine(LoadEngine):
             staff_to_durables: defaultdict[Staff, list[Durable]] = defaultdict(list)
             staff_to_others: defaultdict[Staff, list[Clef]] = defaultdict(list)
             logger.info(f"processing instrument: {instrument}")
-            # for instro_staffs, content in instros_to_measures.items():
+            
             graph_measures: list[PartMeasure] = []
 
             for measure in (chain.from_iterable(instros_to_measures[frozenset(s)] for s in instrument)):
-                # print(measure)
-                # continue
-                # print(instros_to_measures[frozenset(instrument[0])])
-
                 single_measure_subevents: list[Subevent] = []
-                # print(measure.nodes)
+
                 subs = subevents_from_list_of_symbols([x for x in measure.nodes if x.class_name in I.CLASSES_BEARING_DURATIONS], graph)
-                # print(subs)
                 
                 for sub in subs:
                     try:
@@ -206,8 +212,8 @@ class MuNG_LoadEngine(LoadEngine):
 
                         for dur in sub:
                             durable = construct_durable(dur, graph)
-                            # durables[dur] = durable
                             chordlike.append(durable)
+
                             staff_to_durables[
                                 self._get_symbols_staff(dur, mung_staffs_to_staffs, graph)
                             ].append(durable)
@@ -246,6 +252,7 @@ class MuNG_LoadEngine(LoadEngine):
                 
                 modifiers: list[InMeasureModifier] = []
 
+                # CLEFS
                 for node in measure.nodes:
                     for mung_clef in graph.children(node, class_filter=I.CLEF_CLASS_NAMES):
                         clef = construct_clef(mung_clef, graph)
@@ -254,7 +261,7 @@ class MuNG_LoadEngine(LoadEngine):
                         staff_to_others[
                             self._get_symbols_staff(mung_clef, mung_staffs_to_staffs, graph)
                         ].append(clef)
-                        # logger.info(f"Added clef based on {symbol}")
+                        self._log_object_creation(clef, mung_clef)
                 
                 # KEY SIGNATURES
                 key_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -268,7 +275,7 @@ class MuNG_LoadEngine(LoadEngine):
 
                     key = construct_key_signature(ks, onset, graph)
                     modifiers.append(key)
-                    logger.info(f"Added key based on {ks}")
+                    self._log_object_creation(key, ks)
                 
                 # TIME SIGNATURES
                 time_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -284,7 +291,7 @@ class MuNG_LoadEngine(LoadEngine):
                         logger.warning(f"Could not interpret {ts}")
                         continue
                     modifiers.append(time_sig)
-                    logger.info(f"Added time signature based on {ts}")
+                    self._log_object_creation(time_sig, ts)
                 
                 m = PartMeasure(
                     id=measure.id_,
@@ -320,15 +327,12 @@ class MuNG_LoadEngine(LoadEngine):
         
         score = Score(score_parts=parts, system_measures=system_measures)
         
-        MAX_VOICES = 8
         for id_ in durables_by_voice.keys():
             assert id_ <= MAX_VOICES, f"Unsupported number of voices. {id_}"
         
         voices: list[Voice] = []
         for id_ in range(1, MAX_VOICES + 1):
             voices.append(Voice(id_, durables_by_voice[id_]))
-
-        beams: list[DurableBeam] = []
         
 
         @dataclass(frozen=True)
@@ -375,41 +379,39 @@ class MuNG_LoadEngine(LoadEngine):
         
         for g in gs:
             PartGroup(list(g.parts), bracket_type=g.bracket_type)
-            # print(f"Constructed part group {g}")
 
-        # print(subevents_by_beam)
         for mung_beam, subs in c.subevents_by(DurableBeam).items():
-            logger.debug(f"Creating beam based on {mung_beam}")
-            beams.append(construct_durable_beam(mung_beam, list(subs)))
+            beam = construct_durable_beam(mung_beam, list(subs))
+            self._log_object_creation(beam, mung_beam)
 
         for mung_articulation, subs in c.subevents_by(Articulation).items():
-            logger.debug(f"Creating articulation based on {mung_articulation}")
             if len(subs) > 1:
                 logger.warning(f"{mung_articulation} is connected to more than one subevent")
             for sub in subs:
-                construct_articulation(mung_articulation, sub)
+                articulation = construct_articulation(mung_articulation, sub)
+                self._log_object_creation(articulation, mung_articulation)
 
         for mung_tuplet, subs in c.subevents_by(Tuplet).items():
-            construct_tuplet(mung_tuplet, list(subs), graph)
-            logger.debug(f"Creating tuplet based on {mung_tuplet}")
+            tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
+            self._log_object_creation(tuplet, mung_tuplet)
         
         for mung_slur, subs in c.subevents_by(Slur).items():
             slur = construct_slur(mung_slur, list(subs), graph)
-            
-            logger.debug(f"Created {type(slur).__name__} based on {mung_slur}")
+            self._log_object_creation(slur, mung_slur)
 
         for mung_tie, durs in durables_by_tie.items():
             obj = try_construct_tie(mung_tie, list(durs), graph)
 
             if obj is not None:
-                logger.debug(f"Created {type(obj).__name__} based on {mung_tie}")
+                self._log_object_creation(obj, mung_tie)
 
         for mung_hairpin, subs in c.subevents_by(Wedge).items():
-            construct_wedge(mung_hairpin, list(subs), graph)
-            logger.info(f"Constructed {Wedge.__name__} base on {mung_hairpin}")
+            wedge = construct_wedge(mung_hairpin, list(subs), graph)
+            self._log_object_creation(wedge, mung_hairpin)
         
         for mung_dynamics, subs in c.subevents_by(Dynamics).items():
-            construct_dynamics(mung_dynamics, subs)
+            dynamics = construct_dynamics(mung_dynamics, subs)
+            self._log_object_creation(dynamics, mung_dynamics)
         
         @dataclass(frozen=True)
         class TremoloBeamStruct:
