@@ -61,6 +61,11 @@ class InferenceEngineConstants(C):
         C.Noteheads.NOTEHEAD_WHOLE,
     ]
 
+    NOTEHEADS_AND_RESTS = (
+        NONGRACE_NOTEHEAD_CLASS_NAMES
+        + C.Rests.ALL()
+    )
+
     CLEF_CLASS_NAMES = C.Clefs.ALL()
 
     MEASURE_SEPARATOR_CLASS_NAMES = [

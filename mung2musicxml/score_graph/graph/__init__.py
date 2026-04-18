@@ -33,3 +33,6 @@ from .tremolo_single import TremoloSingle
 from .dynamics import Dynamics
 from .scene_object import SceneObject
 from .fermata import Fermata
+from .lyric import Lyric
+from .lyric_level import LyricLevel
+from .verse_number import VerseNumber

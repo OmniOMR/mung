@@ -1,5 +1,4 @@
 from fractions import Fraction
-from typing import Optional, Type
 from pathlib import Path
 from typing import Self, Any
 from collections import defaultdict, Counter
@@ -9,14 +8,8 @@ from dataclasses import dataclass
 from mung import NotationGraph, Node
 from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 from mung.subevents_from_nodes import subevents_from_list_of_symbols
-from mung.interpret import BasicTimeSignatureInterpreter, TimeSigStruct
-from mung.graph import (
-    UnionFind,
-    group_by_system_measure_and_system,
-    infer_stem_orientation,
-    infer_vertical_object_placement_relative_to_notes,
-    infer_horizontal_object_placement_relative_to_notes
-)
+from mung.interpret import BasicTimeSignatureInterpreter
+from mung.graph import group_by_system_measure_and_system
 from ..load_engine import LoadEngine
 from ....preprocessing.instruments import (
     graph_to_instruments,
@@ -40,6 +33,7 @@ from .construct_clef import construct_clef
 from .construct_tremolo import construct_tremolo_single
 from .construct_durable import construct_durable
 from .construct_fermata import construct_fermata
+from .construct_lyric import construct_lyric
 
 
 from ....logger import logger
@@ -102,8 +96,61 @@ class MuNG_LoadEngine(LoadEngine):
                 raise ValueError(f"Unsupported number of staff in instrument {instrument}")
 
         return mung_staff_to_staff
-    
+
+    def _construct_lyric_level_mapping(
+        self,
+        instrument: list[list[Node]],
+        graph: NotationGraph,
+        debug_tag: bool = False
+    ) -> dict[Node, LyricLevel]:
+        """
+        Instrument is a collection (outer list) of staffs belonging to one
+        instrument through multiple systems (inner list).
+
+        Creates LyricLevel scene objects for single instrument
+        and returns mapping from lyric MuNG nodes to LyricLevel.
+        """
+        from .utils import find_subgraphs_bfs
+
+        lyrics_per_system: list[set[Node]] = []
+
+        # collect lyrics per system per instrument
+        for instrument_system in instrument:
+            lyrics = set()
+
+            for staff in instrument_system:
+                durables = graph.parents(staff, class_filter=I.NOTEHEADS_AND_RESTS)
+                print(durables)
+                for durable in durables:
+                    lyrics.update(graph.children(durable, class_filter=C.Lyrics.LYRICS_TEXT))
+            
+            lyrics_per_system.append(lyrics)
+
+        output: dict[Node, LyricLevel] = {}
+        for system_lyrics in lyrics_per_system:
+            def _has_edge(lyric1: Node, lyric2: Node) -> bool:
+                return (
+                    graph.is_precedence_parent_of(lyric1, lyric2)
+                    or graph.is_precedence_parent_of(lyric2, lyric1)
+                )
+            # sort 
+            groups = find_subgraphs_bfs(list(system_lyrics), _has_edge)
+            groups.sort(key=lambda g: g[0].vertical_center)
+
+            for index, group in enumerate(groups, start=1):
+                level = LyricLevel(index, [])
+
+                for lyric in group:
+                    output[lyric] = level
+                    if debug_tag:
+                        lyric.data["lyric_number"] = index
+        
+        return output
+
     def _log_object_creation(self, obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
+        """
+        Logs object into console creations via the mung2musicxml logger.
+        """
         if isinstance(source_mung_node_or_nodes, Node):
             source_str = str(source_mung_node_or_nodes)
         else:
@@ -183,15 +230,21 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM),
                 CollectorRecord(Tuplet, C.Tuplets.TUPLET),
                 CollectorRecord(Slur, C.Spanners.SLUR),
-                CollectorRecord(Wedge, I.HAIRPINS),
+                CollectorRecord(Wedge, I.HAIRPINS), # type: ignore
                 CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM),
-                CollectorRecord(Articulation, C.Articulation.ALL()),
+                CollectorRecord(Articulation, C.Articulation.ALL()), #type: ignore
                 CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT),
-                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW])
+                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW]),
+                CollectorRecord(Lyric, C.Lyrics.LYRICS_TEXT),
             ]
         )
 
+        lyrics_to_level: dict[Node, LyricLevel] = {}
+        for instrument in instrument_staffs:
+            lyrics_to_level.update(self._construct_lyric_level_mapping(instrument, graph))
 
+        SOURCE = Path("/home/mayer/public_html/mung-studio-simple-php-backend/documents")
+        graph.save_to_file(SOURCE / "-0- PREPROCESSING_OUTPUT/mung.xml")
         for instrument in instrument_staffs:
             # instrument is a list of lists of staffs
             # instrument -> staffs in a system -> staffs
@@ -423,6 +476,17 @@ class MuNG_LoadEngine(LoadEngine):
             for sub in subs:
                 fermata = construct_fermata(mung_fermata, sub)
                 self._log_object_creation(fermata, mung_fermata)
+
+        l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
+        for mung_lyric, subs in c.subevents_by(Lyric).items():
+            lyric = construct_lyric(mung_lyric, list(subs), graph)
+            if lyric is not None:
+                l_to_l[lyrics_to_level[mung_lyric]].append(lyric)
+                self._log_object_creation(lyric, mung_lyric)
+
+        for l_level, lyrics in l_to_l.items():
+            l_level.lyrics = lyrics
+            
         
         @dataclass(frozen=True)
         class TremoloBeamStruct:

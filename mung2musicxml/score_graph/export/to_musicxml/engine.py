@@ -442,6 +442,10 @@ class MusicXML_ExportEngine(ExportEngine):
         if notations is not None:
             n.append(notations)
 
+        if not note.is_chord_continuation:
+            lyrics = self.xml_Lyrics(note)
+            n.extend(lyrics)
+        
         return n
         
     def xml_Rest(self, rest: Rest) -> ET.Element:
@@ -476,7 +480,7 @@ class MusicXML_ExportEngine(ExportEngine):
         notations = self.xml_notations(rest)
         if notations is not None:
             r.append(notations)
-        
+
         return r
     
     def xml_Ties(self, durable: Durable, notations: bool) -> list[ET.Element]:
@@ -529,6 +533,32 @@ class MusicXML_ExportEngine(ExportEngine):
         # first, stop ties, then start them
         xml_ties.sort(key=lambda t: t[1], reverse=True)
         return [t[0] for t in xml_ties]
+
+    def xml_Lyrics(self, durable: Durable) -> list[ET.Element]:
+        output = []
+        for lyric in sorted(durable.lyrics, key=lambda l: l.lyric_level.number):
+            if lyric.is_start(durable.subevent):
+                l = ET.Element("lyric", {"number": str(lyric.lyric_level.number)})
+                ET.SubElement(l, "syllabic").text = lyric.syllabic_type
+                l_text = lyric.clear_text
+                if lyric.verse_number is not None:
+                    l_text = lyric.verse_number.text + " " + l_text
+                ET.SubElement(l, "text").text = l_text
+                if lyric.is_extend:
+                    if lyric.has_start_and_stop_set:
+                        ET.SubElement(l, "extend", {"type": StartStopContinueToken.START})
+                    else:
+                        ET.SubElement(l, "extend")
+                output.append(l)
+            elif lyric.is_stop(durable.subevent) and lyric.is_extend:
+                l = ET.Element("lyric", {"number": str(lyric.lyric_level.number)})
+                ET.SubElement(l, "extend", {"type": StartStopContinueToken.STOP})
+                
+                output.append(l)
+                print(f"created exnted")
+
+        return output
+
     
     def xml_Tuplet(self, durable: Durable) -> Optional[ET.Element]:
         """

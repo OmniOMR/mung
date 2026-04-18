@@ -57,14 +57,33 @@ class GenericStartStop(SceneObject, Generic[T]):
             assert self.start.global_fractional_onset < self.stop.global_fractional_onset
     
     def is_start(self, subevent: T) -> bool:
+        """
+        Returns true, if the given `subevent`
+        is start of this object.
+        """
         if self.start is None:
             return False
         return self.start == subevent
     
     def is_stop(self, subevent: T) -> bool:
+        """
+        Returns true, if the given `subevent`
+        is stop of this object.
+        """
         if self.stop is None:
             return False
         return self.stop == subevent
+    
+    @property
+    def has_start_and_stop_set(self) -> bool:
+        """
+        True, if both start and stop
+        are set.
+        """
+        return (
+            self.start is not None
+            and self.stop is not None
+        )
 
 
 @dataclass
@@ -135,7 +154,11 @@ class GenericStartStopContinue(GenericStartStop[T]):
         if self.continue_ is not None:
             assert len(self.continue_) > 0, "'continue_' cannot be set and empty"
 
-    def is_continue(self, subevent: T) -> bool:
+    def is_continue(self, subevent: T) -> bool:        
+        """
+        Returns true, if the given `subevent`
+        is continue of this object.
+        """
         if self.continue_ is None:
             return False
         return subevent in self.continue_

@@ -386,4 +386,13 @@ class FermataOrientationToken(StrEnum):
     """
     UPRIGHT = "upright" 
     INVERTED = "inverted" 
-    
+
+
+class SyllabicTypeToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/syllabic/
+    """
+    BEGIN = "begin"
+    END = "end"
+    MIDDLE = "middle"
+    SINGLE = "single"

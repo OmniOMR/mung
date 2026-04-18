@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from .tremolo_single import TremoloSingle
     from .part_measure import PartMeasure
     from .fermata import Fermata
+    from .lyric import Lyric
 
 
 @dataclass
@@ -126,4 +127,9 @@ class Durable(DurationObject):
     def fermatas(self) -> list["Fermata"]:
         from .fermata import Fermata
         return Fermata.many_of(self.subevent, lambda t: t.parent)
+    
+    @property
+    def lyrics(self) -> list["Lyric"]:
+        from .lyric import Lyric
+        return Lyric.many_of(self.subevent, lambda t: t.all)
     
