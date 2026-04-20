@@ -1,22 +1,24 @@
 # ScoreGraph
 
-ScoreGraph is a graph representation of music notation heavily inspired by the [MusicXML 4.0 standard](https://www.w3.org/2021/06/musicxml40/).
+ScoreGraph is a graph representation of music notation heavily inspired by the [MusicXML 4.0 standard](https://www.w3.org/2021/06/musicxml40/). ScoreGraph is a cluster of dataclass instances that are interlinked. The architecture is derived from [Smashcima](https://github.com/OMR-Research/Smashcima).
 
-The class structure is designed in such way, that it *should not* be hard to implement loaders or exporters from or to any format.
+Abstract classes for loaders and exporters are provided. Once the graph is loaded it can be exported to any format for which the exported is implemented.
+
+## Limitations of MuNG to MusicXML conversion
+
+These documents cover potential issues that the user might run into while using our convertor and MuseScore:
+
+- [MuseScore Limitations](docs/musescore-limitations.md)
+- [MusicXML Exporter Limitations](docs/musicxml-exporter-limitations.md)
+- [MusicXML Limitations](docs/musicxml-limitations.md)
 
 ## Design principles
 
 - Object names and their design should be defined with respect to their MusicXML 4.0 equivalent.
-- ScoreGraph construction and its export (to MusicXML) should be two separate procedures.
-- During ScoreGraph construction, decisions should not be made based on the output format (MusicXML). Some examples:
-    - The "Slurs are represented with two `<slur>` elements: one with a start type, and one with a stop type. ", but sometimes, in MuNG, a slur is linked to one durable only.
-        - The ScoreGraph should contain that slur.
-        - The export script has to solve it on its own.
-    - `Repeat1Bar` symbol cannot be linked (in MusicXML) to accents, slurs, etc. because the repeat is a property of its measure, it is not a symbol on staff.
-        - Again, the ScoreGraph loader should treat it as a valid durable, symbol on a staff.
-        - The export script has to solve it on its own.
-- The output script should try to follow conventions set by MuseScore Studio 4 (referred to sometimes as only MuseScore 4) as our main goal is to make the documents readable and editable in this software.
-- Any discrepancy found, should be logged for the user to see when any work is done on/with the graph.
+- ScoreGraph construction and its export should be two separate procedures.
+- During ScoreGraph construction, decisions should not be made based on the output format.
+- Implementation of MusicXML exporter should follow conventions set by MuseScore Studio 4 (MSS4) as our main goal is to make the documents readable and editable in this software.
+- Any discrepancy found withing the graph while loading and exporting should be logged for the user to see.
 
 <!-- 
 # Convertor documentation
