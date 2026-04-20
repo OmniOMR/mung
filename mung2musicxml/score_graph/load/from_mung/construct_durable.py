@@ -7,7 +7,7 @@ from mung.constants import (
 
 from ...graph import *
 from ....logger import logger
-from .utils import pitch, duration_beats, duration_beats_w_m, onset_beats
+from .utils import get_pitch, get_duration_beats, get_duration_beats_w_m, get_onset_beats
 from .construct_note import construct_note
 from .construct_rest import construct_rest
 from .construct_repeat import construct_repeat

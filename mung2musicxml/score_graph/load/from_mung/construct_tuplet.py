@@ -5,7 +5,7 @@ from mung.constants import (
 )
 
 from ...graph import *
-from .utils import tuple_time_modification
+from .utils import get_tuple_time_modification
 
 
 def construct_tuplet(mung_tuplet: Node, subevents: list[Subevent], graph: NotationGraph) -> Tuplet:
@@ -42,5 +42,5 @@ def construct_tuplet(mung_tuplet: Node, subevents: list[Subevent], graph: Notati
 
 def _construct_time_modification(mung_tuplet: Node) -> TimeModification:
         return TimeModification.from_fraction(
-            tuple_time_modification(mung_tuplet)
+            get_tuple_time_modification(mung_tuplet)
         )

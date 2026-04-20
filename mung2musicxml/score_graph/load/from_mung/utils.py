@@ -12,27 +12,27 @@ from ...graph import *
 from ....logger import logger
 
 
-def duration_beats(durable: Node) -> Fraction:
+def get_duration_beats(durable: Node) -> Fraction:
     return durable.data[O.DURATION_BEATS]
 
 
-def duration_beats_w_m(durable: Node) -> Fraction:
+def get_duration_beats_w_m(durable: Node) -> Fraction:
     return durable.data[O.DURATION_BEATS_WO_M]
 
 
-def onset_beats(durable: Node) -> Fraction:
+def get_onset_beats(durable: Node) -> Fraction:
     return durable.data[O.ONSET_BEATS]
 
 
-def pitch(durable: Node) -> Pitch:
+def get_pitch(durable: Node) -> Pitch:
     return durable.data[P.PITCH]
 
 
-def voice(durable: Node) -> int:
+def get_voice(durable: Node) -> int:
     return durable.data[V.VOICE_ID]
 
 
-def tuple_time_modification(tuplet: Node) -> Fraction:
+def get_tuple_time_modification(tuplet: Node) -> Fraction:
     return tuplet.data[O.TUPLE_TIME_MODIFICATION]
 
 

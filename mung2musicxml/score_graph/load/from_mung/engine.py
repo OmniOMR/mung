@@ -17,8 +17,8 @@ from ....preprocessing.instruments import (
 )
 from ...graph import *
 from .utils import (
-    voice,
-    onset_beats,
+    get_voice,
+    get_onset_beats,
 )
 from .construct_key_signature import construct_key_signature
 from .construct_time_signature import construct_time_signature
@@ -272,7 +272,7 @@ class MuNG_LoadEngine(LoadEngine):
                                 self._get_symbols_staff(dur, mung_staffs_to_staffs, graph)
                             ].append(durable)
 
-                            durables_by_voice[voice(dur)].append(durable)
+                            durables_by_voice[get_voice(dur)].append(durable)
 
                             c.collect_nodes(dur, graph)
 
@@ -325,7 +325,7 @@ class MuNG_LoadEngine(LoadEngine):
                 # KEY SIGNATURES
                 key_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
                 for ks in chain.from_iterable(graph.children(s, class_filter=C.KeySignature.KEY_SIGNATURE) for s in measure.nodes):
-                    key_sigs_by_onset[onset_beats(ks)].append(ks)
+                    key_sigs_by_onset[get_onset_beats(ks)].append(ks)
                 
                 for onset, kss in key_sigs_by_onset.items():
                     if len(kss) > 1:
@@ -339,13 +339,13 @@ class MuNG_LoadEngine(LoadEngine):
                 # TIME SIGNATURES
                 time_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
                 for ts in chain.from_iterable(graph.children(s, class_filter=C.TimeSignatures.TIME_SIGNATURE) for s in measure.nodes):
-                    time_sigs_by_onset[onset_beats(ts)].append(ts)
+                    time_sigs_by_onset[get_onset_beats(ts)].append(ts)
                 
                 for onset, tss in time_sigs_by_onset.items():
                     if len(tss) > 1:
                         logger.warning(f"Found multiple time signatures {[ks.id for ks in tss]} for in-measure onset {onset}, choosing the first one")
                     ts = tss[0]
-                    time_sig = construct_time_signature(ts, onset_beats(ts), graph, self._btsi)
+                    time_sig = construct_time_signature(ts, get_onset_beats(ts), graph, self._btsi)
                     if time_sig is None:
                         logger.warning(f"Could not interpret {ts}")
                         continue

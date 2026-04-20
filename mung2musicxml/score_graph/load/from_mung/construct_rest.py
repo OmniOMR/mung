@@ -4,15 +4,15 @@ from mung.constants import (
 )
 
 from ...graph import *
-from .utils import  duration_beats, duration_beats_w_m, onset_beats
+from .utils import  get_duration_beats, get_duration_beats_w_m, get_onset_beats
 from .construct_dots import construct_dots_for_durable_like
 
 
 def construct_rest(durable: Node, graph: NotationGraph) -> Rest:
     r = Rest(
-        fractional_duration_=duration_beats(durable),
+        fractional_duration_=get_duration_beats(durable),
         type_=_rest_type_from_node(durable),
-        fractional_onset_=onset_beats(durable),
+        fractional_onset_=get_onset_beats(durable),
     )
     construct_dots_for_durable_like(durable, r, graph)
     return r
@@ -37,4 +37,4 @@ def _rest_type_from_node(node: Node) -> NoteTypeValue:
         case C.Rests.REST_LONGA:
             return NoteTypeValue.LONG
         case _:
-            return NoteTypeValue.from_fraction(duration_beats_w_m(node))
+            return NoteTypeValue.from_fraction(get_duration_beats_w_m(node))

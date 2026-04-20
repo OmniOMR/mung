@@ -5,9 +5,9 @@ from mung.constants import InferenceEngineConstants as I
 from ...graph import *
 from .utils import (
     get_note_stem_orientation,
-    duration_beats_w_m,
-    onset_beats,
-    pitch
+    get_duration_beats_w_m,
+    get_onset_beats,
+    get_pitch
 )
 from .construct_accidental import construct_accidental_for_notehead
 from .construct_dots import construct_dots_for_durable_like
@@ -21,14 +21,14 @@ def construct_grace_notes_for_durable(durable: Node, graph: NotationGraph) -> li
     beams_to_grace: defaultdict[Node, set[GraceNote]] = defaultdict(set)
     
     output = []
-    for index, note in enumerate(sorted(grace_notes, key=lambda n: onset_beats(n))):
+    for index, note in enumerate(sorted(grace_notes, key=lambda n: get_onset_beats(n))):
         stem_orientation = get_note_stem_orientation(note, graph)
         if stem_orientation == StemValueToken.NONE:
             stem_orientation = StemValueToken.default()
         
         gn = GraceNote(
-            pitch=pitch(note),
-            type_=NoteTypeValue.from_fraction(duration_beats_w_m(note)),
+            pitch=get_pitch(note),
+            type_=NoteTypeValue.from_fraction(get_duration_beats_w_m(note)),
             at_durable_index=index,
             stem_orientation=stem_orientation
             )
