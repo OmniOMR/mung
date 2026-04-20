@@ -89,6 +89,13 @@ class InferenceEngineConstants(C):
 
     TREMOLO_SINGLES = C.Tremolo.all_numeral_members()
 
+    IN_MEASURE_MODIFIERS = [
+        C.Clefs.C_CLEF_CHANGE, C.Clefs.G_CLEF_CHANGE, C.Clefs.F_CLEF_CHANGE,
+        C.Clefs.C_CLEF, C.Clefs.F_CLEF, C.Clefs.G_CLEF,
+        C.KeySignature.KEY_SIGNATURE,
+        C.TimeSignatures.TIME_SIGNATURE
+    ]
+
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
         0: 'C',
         1: 'C#',
@@ -193,7 +200,7 @@ class InferenceEngineConstants(C):
 
     NUMERALS = C.Numerals.ALL()
 
-    IN_MEASURE = (
+    IN_MEASURE_SYMBOLS = (
         TIME_SIGNATURES
         + [C.KeySignature.KEY_SIGNATURE]
         + CLEF_CLASS_NAMES
