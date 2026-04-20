@@ -6,6 +6,7 @@ from mung.constants import (
     OnsetDataConstants as O
 )
 from mung.graph import infer_stem_orientation
+from mung2midi.inference.clefs_impl import get_clef_data_from_node
 from ....inference import PitchDataConstants as P
 from ....preprocessing.voices.engine import VoiceDataConstants as V
 from ...graph import *
@@ -81,7 +82,6 @@ def get_default_clef_line_from_node(clef: Node) -> int:
     is an index of its staff line from bottom to top,
     starting from 1.
     """
-    from mung2midi.inference.clefs_impl import get_clef_data_from_node
     base = get_clef_data_from_node(clef)
     return (base.default_staffline_delta // 2) + 3
 
