@@ -1,4 +1,5 @@
 from mung import Node, NotationGraph
+from mung.graph import infer_vertical_object_placement_relative_to_notes
 from mung.constants import (
     ClassNameConstants as C,
     InferenceEngineConstants as I
@@ -35,6 +36,7 @@ def construct_tuplet(mung_tuplet: Node, subevents: list[Subevent], graph: Notati
             time_modification=_construct_time_modification(mung_tuplet),
             bracket=YesNoToken.from_bool(_has_bracket(mung_tuplet, graph)),
             show_number=ShowTupleToken.ACTUAL if _has_number(mung_tuplet, graph) else ShowTupleToken.NONE,
+            placement=AboveBelowToken.from_int(infer_vertical_object_placement_relative_to_notes(mung_tuplet, graph))
         )
     except ValueError as e:
         raise ValueError(f"Unable to construct {Tuplet.__name__} from MuNG tuplet {mung_tuplet}") from e
