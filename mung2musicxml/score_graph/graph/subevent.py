@@ -47,6 +47,12 @@ class Subevent(DurationObject):
             return self.fractional_duration_
         return max(d.fractional_duration for d in self.all_durables)
     
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
+    
     @property
     def staffs(self) -> list["Staff"]:
         return list({d.staff for d in self.all_durables})

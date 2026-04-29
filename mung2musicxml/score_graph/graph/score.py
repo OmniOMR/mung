@@ -3,11 +3,16 @@ from itertools import chain
 from fractions import Fraction
 from typing import Optional, Iterable
 from collections import Counter
+import numpy as np
 
 from mung.interpret import TimeSigStruct
 from .scene_object import SceneObject
 from .score_part import ScorePart
 from .system_measure import SystemMeasure
+from ...logger import logger
+
+
+MIDI_1_0_DIVISIONS_LIMIT = 16_383
 
 
 def closest_signature(
@@ -41,9 +46,11 @@ class Score(SceneObject):
     system_measures: list[SystemMeasure]
 
     max_measure_index: int = field(init=False)
+    divisions: int = field(init=False)
     _mapping: dict[int, SystemMeasure] = field(
         init=False, repr=False, default_factory=dict
     )
+
 
     def __post_init__(self) -> None:
         self.max_measure_index = max(
@@ -54,6 +61,22 @@ class Score(SceneObject):
 
         for sm in self.system_measures:
             self._mapping[sm.id] = sm
+        
+        denominators = set()
+        for durable in chain.from_iterable(m.all_durables for m in self.score_parts):
+            denominators.add(durable.fractional_duration.denominator)
+
+        self.divisions = self._compute_divisions(list(denominators))
+
+    def _compute_divisions(self, denominators: list[int]) -> int:
+        if len(denominators) == 0:
+            logger.warning("Score is empty, divisions set to 1")
+            return 1
+        
+        divisions = np.lcm.reduce(denominators)
+        if divisions > MIDI_1_0_DIVISIONS_LIMIT:
+            logger.warning(f"Incompatible with MIDI 1.0, divisions value {divisions} exceeds {MIDI_1_0_DIVISIONS_LIMIT}")
+        return divisions
 
     def get_most_common_time_signature(
         self, canonical: Iterable[TimeSigStruct]

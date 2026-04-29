@@ -72,7 +72,19 @@ class PartMeasure(SceneObject):
 
     @cached_property
     def has_full_repeat(self) -> bool:
+        """
+        Returns True, if there is `RepeatBar`
+        measure's durables.
+        """
         return any(isinstance(s, RepeatBar) for s in self.subevents)
+    
+    @cached_property
+    def is_full_repeat(self) -> bool:
+        """
+        Returns True, if the measure is only
+        a `RepeatBar`.
+        """
+        return len(self.subevents) == 1 and self.has_full_repeat
     
     def get_previous(self) -> Optional["PartMeasure"]:
         # only second+ measure has previous measure
