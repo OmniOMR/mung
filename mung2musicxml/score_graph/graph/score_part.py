@@ -52,11 +52,11 @@ class ScorePart(SceneObject, IDClass):
         return id(self)
 
     def __eq__(self, other: object) -> bool:
-        return self is other  
+        return self is other
 
     @property
     def divisions(self) -> int:
-        return self.score.divisions     
+        return self.score.divisions
 
     @property
     def id(self) -> str:
