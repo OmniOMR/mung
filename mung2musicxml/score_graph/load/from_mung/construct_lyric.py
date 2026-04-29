@@ -22,12 +22,12 @@ def construct_lyric(
     
     # subs = _filter_lyrics_subevents(subs)
     subs.sort(key=lambda s: s.global_fractional_onset)
-
-    if len(subs) == 0:
-        logger.warning(f"No subevents with first voices found for {mung_lyric}")
-        return None
+    # solve multiple links from subevents with the same onset
+    # (choose one with the lowest voice)
+    if subs[0].global_fractional_onset == subs[-1].global_fractional_onset:
+        subs = [min(subs, key=lambda s: s.voice.id)]
     
-    elif len(subs) == 1:
+    if len(subs) == 1:
         lyric = Lyric(start=subs[0], text=mung_lyric.text_transcription)
     else:
         lyric = Lyric(start=subs[0], stop=subs[-1], text=mung_lyric.text_transcription)

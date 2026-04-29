@@ -51,21 +51,33 @@ def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGr
             placement=placement
         )
     
+    stop_onset = max(unique_onsets)
+
     # try match start with stop based on pitch
-    possible_stops = sorted([
-        d for d in durables 
-        # find durables that start at the maximal onset and immediately after the start durable
-        if (d.in_measure_fractional_onset == max(unique_onsets)
-            and start.in_measure_fractional_end_onset == d.in_measure_fractional_onset
-            # if durable is Note, check that pitches are the same (if start is Note)
-            and (not isinstance(d, Note) or (isinstance(start, Note) and d.pitch == start.pitch))
+    possible_stops = [
+        d for d in durables
+        if (
+            isinstance(d, Rest)
+            or isinstance(start, Rest)
+            or (isinstance(d, Note) and isinstance(start, Note) and d.pitch == start.pitch)
         )
-        # prefer notes over rests
-    ], key=lambda d: not isinstance(d, Note))
+        and d.global_fractional_onset == stop_onset
+    ]
 
     if len(possible_stops) == 0:
         logger.warning(f"Unable to find same pitch notes for {mung_tie}, processing as {Slur.__name__}")
         return _slur_from_tie_input(mung_tie, durables, graph)
+
+    # try match voice
+    for stop in possible_stops:
+        if stop.voice.id == start.voice.id:
+            return Tie(
+                start=start,
+                stop=stop,
+                placement=placement
+            )
+    
+    logger.warning(f"Unable to match voice for {mung_tie}")
     
     return Tie(
         start=start,
