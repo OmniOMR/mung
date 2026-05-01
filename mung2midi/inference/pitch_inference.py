@@ -683,18 +683,22 @@ class PitchInferenceEngine(object):
         staffline_objects = self.__children(notehead,
                                             I.STAFFLINE_CLASS_NAMES)
 
+        lls = self.__children(notehead, [C.NoteheadAttachments.LEGER_LINE])
+
+        if len(staffline_objects) != 0 and len(lls) != 0:
+            logger.warning(f"{notehead} is connected both to staff line/space and leger line")
+        
         # Leger lines
         # ------------
-        if len(staffline_objects) == 0:
+        if len(lls) > 0:
 
             # Processing leger lines:
             #  - count leger lines
-            lls = self.__children(notehead, [C.NoteheadAttachments.LEGER_LINE])
             n_lls = len(lls)
             if n_lls == 0:
                 raise ValueError('Notehead with no staffline or staffspace,'
                                  ' but also no leger lines: {0}'
-                                 ''.format(notehead.id))
+                                 ''.format(notehead))
 
             #  Determine: is notehead above or below staff?
             is_above_staff = (notehead.top < current_staff.top)
