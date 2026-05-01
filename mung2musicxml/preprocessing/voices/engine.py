@@ -194,7 +194,7 @@ class VoiceEngine:
                     logger.debug(f"Unable to find any precedence ancestor in voice for {node}")
                 else:
                     parent = potential_parent
-                    logger.warning(f"Filling in gap, connecting {parent} -> {node}")
+                    logger.warning(f"Filling in gap for voice inference, connecting {parent} -> {node}")
                     wg.add_edge(parent, node)
         
         return wg
