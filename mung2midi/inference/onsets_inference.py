@@ -344,34 +344,34 @@ class OnsetsInferenceEngine:
         staffs = self.__graph.children(node, class_filter=[C.Staves.STAFF])
 
         if len(staffs) == 0:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
-                            ' it is not attached to any staff! Returning default: 4'
-                            ''.format(node.id))
+            # logger.warning('Interpreting object {0} as measure-lasting, but'
+            #                 ' it is not attached to any staff! Returning default: 4'
+            #                 ''.format(node.id))
             return Fraction(4)
 
         if len(staffs) > 1:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
-                            ' it is connected to more than 1 staff: {1}'
-                            ' Returning default: 4'
-                            ''.format(node.id, [s.id for s in staffs]))
+            # logger.warning('Interpreting object {0} as measure-lasting, but'
+            #                 ' it is connected to more than 1 staff: {1}'
+            #                 ' Returning default: 4'
+            #                 ''.format(node.id, [s.id for s in staffs]))
             return Fraction(4)
 
-        logger.info('Found staffs: {0}'.format([s.id for s in staffs]))
+        logger.debug('Found staffs: {0}'.format([s.id for s in staffs]))
 
         staff = staffs[0]
         time_signatures = self.__graph.ancestors(staff, class_filter=I.TIME_SIGNATURES)
 
-        logger.info('Time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.debug('Time signatures: {0}'.format([t.id for t in time_signatures]))
 
         applicable_time_signatures = sorted([t for t in time_signatures
                                              if t.left < node.left],
                                             key=operator.attrgetter('left'))
-        logger.info('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.debug('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
 
         if len(applicable_time_signatures) == 0:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
+            logger.warning('Interpreting {0} as measure-lasting, but'
                             ' there is no applicable time signature. Returnig'
-                            ' default: 4'.format(node.id))
+                            ' default: 4'.format(node))
             return Fraction(4)
 
         valid_time_signature = applicable_time_signatures[-1]
