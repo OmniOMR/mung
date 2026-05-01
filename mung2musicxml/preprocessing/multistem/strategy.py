@@ -20,11 +20,14 @@ class MultistemResolverStrategy:
     
     # List of class names of objects to divide between original and ghost notehead
     DIVIDED_OBJECTS: list[str] = field(
-        default_factory=lambda: list(
-            set(I.FLAGS_AND_BEAMS + [C.Tuplets.TUPLET])))
+        default_factory=lambda: list(set(
+            I.FLAGS_AND_BEAMS
+            + [C.Tuplets.TUPLET]
+            + C.Tremolo.ALL()
+        )))
     
     # If set to True, shifts the ghost notehead a bit for it to be visible
-    _DEBUG_GHOST_SHIFT: bool = False
+    _GHOST_SHIFT: int = 1
 
     # Strategy for notehead duration inference - crucial when filling in outlinks 
     ONSET_STRATEGY: OnsetsInferenceEngineWrapperStrategy = field(
@@ -36,3 +39,5 @@ class MultistemResolverStrategy:
     def _validate(self) -> None:
         if len(set(self.SHARED_OBJECTS) & set(self.DIVIDED_OBJECTS)) > 0:
             raise ValueError(f"{self.SHARED_OBJECTS=} and {self.DIVIDED_OBJECTS=} must have an empty intersection")
+        
+        assert self._GHOST_SHIFT >= 0

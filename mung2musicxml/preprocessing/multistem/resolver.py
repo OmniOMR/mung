@@ -39,7 +39,7 @@ class MultistemResolver:
     def __init__(self, strategy: Optional[MultistemResolverStrategy] = None):
         self._graph: NotationGraph = None # type: ignore
         self._strategy = strategy if strategy is not None else MultistemResolverStrategy()
-        if self._strategy._DEBUG_GHOST_SHIFT:
+        if self._strategy._GHOST_SHIFT > 0:
             logger.warning(f"{type(self).__name__} running in DEBUG MODE, all created noteheads will be shifted")
         self._onset_engine = OnsetsInferenceEngine(self._strategy.ONSET_STRATEGY)
 
@@ -89,7 +89,6 @@ class MultistemResolver:
             self._graph.filter_vertices(I.NONGRACE_NOTEHEAD_CLASS_NAMES)
             if len(self._graph.children(node, C.NoteheadAttachments.STEM)) > 1
         ]
-        logger.warning(f"Will resolve {len(to_resolve)} multistem noteheads: {to_resolve}")
         return to_resolve
 
     def _find_double_stemmed_in_graph_and_sort(self) -> list[Node]:
@@ -98,7 +97,9 @@ class MultistemResolver:
         that have exactly two stems.
         """
         multi_stem = self._find_multistem_in_graph()
-
+        if len(multi_stem) > 0:
+            logger.warning(f"Will resolve {len(multi_stem)} multistem noteheads: {multi_stem}")
+        
         # filter
         double_stemmed: list[Node] = []
         for node in multi_stem:
@@ -119,8 +120,8 @@ class MultistemResolver:
         ghost_node = Node(
             self._graph.next_node_id,
             node.class_name,
-            node.top + node.height // 2 if self._strategy._DEBUG_GHOST_SHIFT else node.top,
-            node.left + node.width // 2 if self._strategy._DEBUG_GHOST_SHIFT else node.left,
+            node.top + self._strategy._GHOST_SHIFT,
+            node.left,
             node.width,
             node.height,
             mask=node.mask.copy() if node.mask is not None else None,
