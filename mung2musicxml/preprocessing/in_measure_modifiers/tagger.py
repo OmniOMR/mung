@@ -26,4 +26,4 @@ def tag_in_measure_part_modifiers_with_onset(graph: NotationGraph) -> None:
 
         graph.add_edge(closest, modifier)
         modifier.data[O.ONSET_BEATS] = closest.data[O.ONSET_BEATS]
-        logger.info(f"Snapped clef change {modifier} to {closest}")
+        logger.debug(f"Snapped {modifier} to {closest}")
