@@ -901,7 +901,7 @@ def group_staffs_into_systems(nodes: list[Node],
 
     empty_staffs = [s for s in graph.filter_vertices(C.Staves.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
-        logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
+        logger.debug(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # For simplicity, add non-empty staffs as potential systems.
     staff_groups += [s for s in graph.filter_vertices(C.Staves.STAFF) if s not in empty_staffs]
