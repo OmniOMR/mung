@@ -150,6 +150,10 @@ class _OnsetSystemMeasureWrapper:
                 parents = set.intersection(set(self._graph.precedence_parents(tsd)), self._nodes)
 
                 if len(children) == 0 and len(parents) == 0:
+                    c_o = tsd.data.get(O.DURATION_BEATS)
+                    if c_o is not None and c_o != I.DEFAULT_MEASURE_DURATION:
+                        continue
+
                     logger.warning(f"Processed {tsd} as 'time signature dependant': onset={tsd_start_onset}, duration={tsd_duration}")
                     tsd.data[O.ONSET_BEATS] = tsd_start_onset
                     tsd.data[O.DURATION_BEATS] = tsd_duration
