@@ -53,6 +53,7 @@ class InferenceEngineConstants(C):
     GRACE_NOTEHEAD_CLASS_NAMES = [
         C.Noteheads.NOTEHEAD_HALF_SMALL,
         C.Noteheads.NOTEHEAD_BLACK_SMALL,
+        C.Noteheads.NOTEHEAD_WHOLE_SMALL
     ]
 
     NONGRACE_NOTEHEAD_CLASS_NAMES = [

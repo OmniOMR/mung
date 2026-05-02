@@ -20,6 +20,7 @@ class Noteheads(AllExtendedStrEnum):
 
     NOTEHEAD_HALF_SMALL = "noteheadHalfSmall"
     NOTEHEAD_BLACK_SMALL = "noteheadBlackSmall"
+    NOTEHEAD_WHOLE_SMALL = "noteheadWholeSmall"
 
 
 class Flags(AllExtendedStrEnum):
