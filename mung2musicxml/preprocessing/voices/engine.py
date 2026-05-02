@@ -181,7 +181,13 @@ class VoiceEngine:
             """
             Finds the closest preceding Voice Node for a given Voice Node.
             """
-            output = [o for o in others if o.obj.get_end_onset() <= child.obj.get_start_onset()]
+            output = [
+                o for o in others
+                if (
+                    o.obj.get_end_onset() <= child.obj.get_start_onset()
+                    and o != child
+                )
+            ]
             if len(output) == 0:
                 return None
             return max(output, key=lambda vn: (vn.obj.get_end_onset(), vn.obj.get_priority()))
