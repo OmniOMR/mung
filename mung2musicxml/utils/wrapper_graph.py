@@ -365,6 +365,10 @@ def assign_voices(
     for source in graph.get_sources():
         graph.add_edge(start_node, source)
     new_graph = WrapperGraph(graph._nodes + [start_node])
+
+    if len(widest_sorted) == 0:
+        return voices
+
     
 
     while not q.empty():
@@ -428,7 +432,6 @@ def assign_voices(
     
     for l, layer in enumerate(layers):
         layer = sorted(layer, key=lambda n: voices[n])
-        print(layer)
         for n, node in enumerate(layer):
             
             pos[node] = np.array([l / num_layers, - n / max_height]) # - len(layer) / max_height / 2])
