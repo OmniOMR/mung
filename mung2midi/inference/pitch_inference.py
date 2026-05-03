@@ -13,6 +13,7 @@ from .clefs_impl import get_clef_data_from_node
 @dataclass(frozen=True)
 class PitchInferenceStrategy:
     permissive: bool = True
+    chain_clefs_and_keys_from_previous_system: bool = True
 
 
 class PitchInferenceEngineState(object):
@@ -418,8 +419,69 @@ class PitchInferenceEngine(object):
         # self.durations_beats = None
         # self.durations_beats_per_staff = None
 
+        self._previous_staff: dict[Node, Node] = None
+
     def reset(self):
         self.__init__()
+
+    def _collect_previous_staff(self, nodes: list[Node]) -> None:
+        from mung2musicxml.preprocessing.instruments import graph_to_instruments
+        instruments = graph_to_instruments(NotationGraph(nodes))
+        self._previous_staff: dict[Node, Node] = dict()
+
+        for instrument in instruments:
+            previous: None | list[Node] = None
+            for system in instrument:
+                if previous is not None:
+                    for i, staff in enumerate(system):
+                        if i >= len(previous):
+                            prev_staff = previous[-1]
+                        else:
+                            prev_staff = previous[i]
+                        
+                        self._previous_staff[staff] = prev_staff
+
+                previous = system
+    
+    def _get_previous_staff_for_staff(self, staff: Node) -> Optional[Node]:
+        return self._previous_staff.get(staff)
+    
+    def _chain_preceding_nodes_affecting_pitch(self, staff: Node) -> list[Node]:
+        """
+        Returns a list of clefs and key signatures
+        that may effect pitches on the given staff
+        and are from previous systems.
+
+        Used to determine correct pitches for scores that
+        have explicitly written clefs on the first system,
+        but none in the next ones. We suppose that this
+        is author's abbreviation and that the next system
+        (continuation of the instrument) should use the same
+        clefs as its preceding system.
+
+        Staffs that have their own clef and key signature
+        explicitly written are not affected by this,
+        as all the changed computed from the preceding
+        system will be overwritten by these its own nodes.
+        """
+        assert self.staff_to_clef_map is not None
+        assert self.staff_to_key_map is not None
+
+        prev_staff = self._get_previous_staff_for_staff(staff)
+        nodes_affecting_pitch: list[Node] = []
+        while prev_staff is not None:
+            # print(f"trying {prev_staff}")
+            nodes_affecting_pitch.extend(
+                sorted(
+                    self.staff_to_clef_map[prev_staff.id]
+                    + self.staff_to_key_map[prev_staff.id],
+                    key=lambda x: x.left
+                )
+            )
+
+            prev_staff = self._get_previous_staff_for_staff(prev_staff)
+        
+        return nodes_affecting_pitch
 
     def infer_pitches(self, nodes: list[Node], with_names=False, with_pitch_objects=False):
         """The main workhorse for pitch inference.
@@ -476,6 +538,7 @@ class PitchInferenceEngine(object):
 
         # Initialize pitch temp data.
         self._collect_symbols_for_pitch_inference(nodes)
+        self._collect_previous_staff(nodes)
 
         # Staff processing: this is where the inference actually
         # happens.
@@ -519,13 +582,24 @@ class PitchInferenceEngine(object):
         self.pitch_state.reset()
         self.pitch_state.init_base_pitch()
 
-        queue = sorted(
+        # collect symbols from previous systems that might
+        # have effect on resulting pitch
+        if self.strategy.chain_clefs_and_keys_from_previous_system:
+            queue = self._chain_preceding_nodes_affecting_pitch(staff)
+            logger.debug(f"Chaining {len(queue)} symbols affecting pitch from previous systems "
+                         f"for {staff}")
+        else:
+            queue = []
+        
+        # add symbols on staff
+        queue: list[Node] = queue + sorted(
             self.staff_to_clef_map[staff.id]
             + self.staff_to_key_map[staff.id]
             + self.staff_to_msep_map[staff.id]
             + self.staff_to_noteheads_map[staff.id],
-            key=lambda x: x.left)
-
+            key=lambda x: x.left
+        )
+        
         for q in queue:
             q: Node
             logger.debug(f"Processing staff object {q.class_name} {q.id}")
