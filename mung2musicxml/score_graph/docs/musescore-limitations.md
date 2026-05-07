@@ -33,7 +33,7 @@ MusicXML chord definition can be interpreted as *notes with the same onset conne
 
 In most cases `<duration>`s of notes in a chord are the same. However it can be shorter in situations such as multiple stops for string instruments. Here is an example from Mozart's Concerto No. 3 for Violin, K. 216:
 
-<p style="background-color: white; display: inline-block; padding: 10px;">
+<p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/elements/chord-multiple-stop.png" height="200">
 </p>
 
@@ -72,3 +72,37 @@ Above-mentioned line shuffling causes huge white spaces to appear, as shown in t
 Is breaking, if MSS4 is used for MusicXML normalization.
 
 This issues was reporter in MS 3.5, [issue](https://musescore.org/en/node/309953).
+
+### Lyrics `<extend>` not showing (:eyes:, potentially :boom:)
+
+The extend element creates a line after a lyric that can extend further than simple textual `_`. It can be used in two ways: simple extend defined inside one durable or one that spans multiple durables (with `start` and `stop` elements). The example below shows extend that starts at the first note and stops at the second one.
+
+<p style="background-color: white; display: inline-block; ">
+  <img src="https://www.w3.org/2021/06/musicxml40/static/examples/extend-element-lyric.png" height="200">
+</p>
+
+MSS4 sometimes does not show nor save simple extends that start and stop at the same durable.
+
+Is breaking, if MSS4 is used for MusicXML normalization.
+
+### Multi-staff chords (:eyes:, potentially :boom:)
+
+Chords that span over two staffs can be defined in MusicXML. MSS4 renders them as if all belong to the first staff. Their pitch is kept.
+
+<p>
+<img src="images/multi-staff-chord.png" height="200">
+</p>
+
+There exists a [trick](https://musescore.org/en/node/8717) to achieve this to render properly in MSS4.
+
+Is breaking, if MSS4 is used for MusicXML normalization.
+
+### Immediate Clefs (:eyes:, potentially :boom:)
+
+MSS displays only the last clef defined in attributes. Displaying score in the example below (G clef and than F clef) is therefore not possible:
+
+<p>
+<img src="images/immediate-clefs.png" height="200">
+</p>
+
+The symbol disappears from the file, if MSS4 is used for MusicXML normalization. But we would not call this *breaking*.

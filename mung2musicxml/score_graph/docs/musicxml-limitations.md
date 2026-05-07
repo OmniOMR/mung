@@ -17,6 +17,6 @@ Slurs must have start and end, so hanging slurs at the end of a staff or at the 
 
 In the example below, the second tie uses `let-ring`:
 
-<p style="background-color: white; display: inline-block; padding: 10px;">
+<p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/tied-element.png" height="200">
 </p>

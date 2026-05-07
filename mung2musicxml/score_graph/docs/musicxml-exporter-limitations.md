@@ -22,3 +22,48 @@ In MuNG and the ScoreGraph, these are two separate objects, each linked to only 
 
 Further info on how these special cases of slurs are processed can be found in [MusicXML Limitations](./musicxml-limitations.md).
 
+### Complex repeats: slash repeat, repeat one beat, repeat phrase
+
+There are multiple repeat types that can appear as symbols in measure. MuNG only defines one - `repeat1Bar` ([Annotation Instructions, Feb 6 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md#slur)).
+
+<p>
+<img src="images/repeats-simple-one-bar.png" height="50">
+</p>
+
+But, they can be used to repeat only a part of a measure:
+
+<p>
+<img src="images/repeats-sub-one-bar.png" height="100">
+</p>
+
+This is problematic, as our underlying engine thinks that this symbol should take up the whole measure. And MusicXML symbol equivalent to `repeat1Bar` is not actually a symbol but an attribute of the measure object.
+
+If `repeat1Bar` symbol appears in a measure, and it is not there alone (some other durables are present), we ignore it and replace it with a `forward` element (equivalent to a hidden rest). Render of MusicXML with ignored `repeat1Bar` from the example above:
+
+<p>
+<img src="images/repeats-sub-one-bar-resolved.png" height="100">
+</p>
+
+Slashes and other types are ignored as they are not defined by MuNG.
+
+<p>
+<img src="https://lilypond.org/doc/v2.19/Documentation/08/lily-f37e9759.png" height="100">
+</p>
+
+### Complex tuplets
+
+Our exporter is unable to process complex tuplets where there are multiple voices inside a single tuplet. This is problem not only for duration inference but also for voice inference. 
+
+For example, the tuplet highlighted in red contains three voices
+
+<p>
+<img src="images/multi-voice-tuplet.png" height="200">
+</p>
+
+This is an interpretation of the score above with highlighted voices (one of many possible):
+
+<p>
+<img src="images/multi-voice-tuplet-render.png" height="200">
+</p>
+
+The library is not able to process these cases correctly until there are updates made to all the the other preprocessing engines.
