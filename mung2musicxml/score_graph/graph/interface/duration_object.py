@@ -26,3 +26,8 @@ class DurationObject(InMeasureObject, ABC):
     @property
     def in_measure_fractional_end_onset(self) -> Fraction:
         return self.in_measure_fractional_onset + self.fractional_duration
+
+    @property
+    def global_fractional_end_onset(self) -> Fraction:
+        return self.global_fractional_onset + self.fractional_duration
+    

@@ -15,6 +15,8 @@ from ..export_engine import ExportEngine
 from .settings import MusicXMLExportSettings
 
 
+SKIP_BROKEN_MEASURE: bool = False
+
 class MusicXML_ExportEngine(ExportEngine):
     """
     Graph to MusicXML 4.0 exporter.
@@ -31,7 +33,9 @@ class MusicXML_ExportEngine(ExportEngine):
         self._part_group_register = IDPool()
     
     def export(self, score: Score) -> ET.Element:
-        return self.xml_Score(score)
+        output = self.xml_Score(score)
+        # self._reset()
+        return output
     
     def export_to_file(self, score: Score, file_name: Path | str) -> None:
         """
@@ -135,7 +139,6 @@ class MusicXML_ExportEngine(ExportEngine):
         for part in score.score_parts:
             s.append(self.xml_ScorePart(part))
         
-        self._reset()
         return s
 
     def _str_xml(self, root: ET.Element, indent: int | str = 2) -> str:
@@ -159,7 +162,7 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-partwise/
         """
-        logger.info(f"Creating score part: {score_part.id}")
+        logger.info(f"Writing score part: {score_part.id}")
         sc = ET.Element("part", {"id": score_part.id})
         for id_ in range(1, score_part.score.max_measure_index + 1):
             measure = score_part.get_part_measure_by_id(id_)
@@ -378,9 +381,7 @@ class MusicXML_ExportEngine(ExportEngine):
             dyn = ET.SubElement(dir_type, "dynamics")
             # ET.SubElement(dir, "staff").text = "1"
             ET.SubElement(dyn, str(dynamic.type_))
-            # print("created dynamic")
             output.append(dir)
-        
         
         if isinstance(subevent, Chord):
             for note in subevent.notes:
@@ -555,7 +556,6 @@ class MusicXML_ExportEngine(ExportEngine):
                 ET.SubElement(l, "extend", {"type": StartStopContinueToken.STOP})
                 
                 output.append(l)
-                print(f"created exnted")
 
         return output
 
@@ -769,6 +769,12 @@ class MusicXML_ExportEngine(ExportEngine):
             ET.SubElement(directions, "staff").text = str(wedge.staff_id)
             ET.SubElement(dtype, "wedge", {"type": wedge.type_, "number": str(id_)})
             return directions
+        
+        def _close_wedge(id_: int, wedge: Wedge) -> ET.Element:
+            directions = ET.Element("direction", {"placement": wedge.placement})
+            dtype = ET.SubElement(directions, "direction-type")
+            ET.SubElement(dtype, "wedge", {"type": WedgeDirectionType.STOP, "number": str(id_)})
+            return directions
 
         for wedge in wedges:
             if wedge.is_start(subevent) and pass_name == "start":
@@ -777,8 +783,8 @@ class MusicXML_ExportEngine(ExportEngine):
 
             elif wedge.is_stop(subevent) and pass_name == "stop":
                 id_ = self._wedge_register.ask_id_stop(wedge)
-                print(f"closing wedge {id_}")
-                output.append(_create_wedge(id_, wedge))
+                logger.debug(f"Closing wedge {id_}")
+                output.append(_close_wedge(id_, wedge))
 
         return output
     
@@ -839,28 +845,36 @@ class MusicXML_ExportEngine(ExportEngine):
             output.append(b)
         return output
     
-    def _resolve_full_repeat(self, measure: PartMeasure) -> list[ET.Element]:
+    def _resolve_repeat_repeat(self, measure: PartMeasure) -> list[ET.Element]:
         """
         If previous measure is a full repeat, closes it.
         If current measure is a full repeat, opens it.
 
         Returns list of subelements of `attributes`, if any full measure repeats are found.
         """
+
+        def _repeat_alone_on_staff_in_measure(repeat: RepeatBar) -> bool:
+            i = set.intersection(set(repeat.staff.durables), repeat.part_measure.all_durables)
+            return len(i) == 1
+        
         previous = measure.get_previous()
         frs: list[ET.Element] = []
-        if previous is not None:
-            if previous.has_full_repeat:
-                for repeat in (r for r in previous.subevents if isinstance(r, RepeatBar)):
+        
+        # if previous.has_full_repeat:
+        if previous is not None and previous.has_full_repeat:
+            for repeat in (r for r in previous.subevents if isinstance(r, RepeatBar)):
+                if _repeat_alone_on_staff_in_measure(repeat):
                     ms = ET.Element("measure-style", {"number": str(repeat.number)})
                     ET.SubElement(ms, "measure-repeat", {"type": StartStopContinueToken.STOP})
                     frs.append(ms)
-                    # print("output measure repeat stop")
         
+        # if measure.has_full_repeat:
         if measure.has_full_repeat:
             for repeat in (r for r in measure.subevents if isinstance(r, RepeatBar)):
-                ms = ET.Element("measure-style", {"number": str(repeat.number)})
-                ET.SubElement(ms, "measure-repeat", {"type": StartStopContinueToken.START}).text = "1"
-                frs.append(ms)
+                if _repeat_alone_on_staff_in_measure(repeat):
+                    ms = ET.Element("measure-style", {"number": str(repeat.number)})
+                    ET.SubElement(ms, "measure-repeat", {"type": StartStopContinueToken.START}).text = "1"
+                    frs.append(ms)
         
         return frs
     
@@ -936,22 +950,39 @@ class MusicXML_ExportEngine(ExportEngine):
             attributes = self._xml_first_Measure_attributes(measure, attributes)
 
         # resolve repeat one bars
-        # TODO: make this more robust
-        full_repeat_attr = self._resolve_full_repeat(measure)
+        full_repeat_attr = self._resolve_repeat_repeat(measure)
+        
+        if measure.is_full_repeat:
+            assert full_repeat_attr is not None
+            logger.debug(f"{measure.score_part.name} {measure.id} measure is full repeat")
+            attributes.extend(full_repeat_attr)
+            m.append(attributes)
+            m.append(self.create_forward(
+                measure.system_measure.get_expected_duration_for_part_measure(measure)
+            ))
+            return m
+        
         if full_repeat_attr is not None:
             attributes.extend(full_repeat_attr)
+
+        # if full_repeat_attr is not None:
+        #     attributes.extend(full_repeat_attr)
 
         if len(attributes) > 0:
             m.append(attributes)
         
-        # empty measure
-        if len(measure.subevents) == 0:
+        def _add_empty_measure(m_element: ET.Element, measure: PartMeasure) -> ET.Element:
             ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
             if ed == 0:
                 ts = self._get_most_common_time_signature(measure.score_part.score)
                 ed = (ts * measure.score_part.divisions).numerator
             
-            m.append(self.create_forward(ed))
+            m_element.append(self.create_forward(ed))
+            return m_element
+        
+        # empty measure
+        if len(measure.subevents) == 0:
+            m = _add_empty_measure(m, measure)
             return m
         
         subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
@@ -964,69 +995,96 @@ class MusicXML_ExportEngine(ExportEngine):
         # relative start of every measure is at 0 (even if the measure is not first)
         expected_duration = measure.system_measure.get_expected_duration_for_part_measure(measure)
         
-        logger.info(f"Outputting measure {measure.id}")
-        logger.info(f"{expected_duration=}")
-        for voice_id in retrieved_voice_ids:
-            logger.info(f"Outputting voice {voice_id}")
-            subevents = subevents_by_voice[voice_id]
+        logger.debug(f"- Writing measure {measure.id}")
+        logger.debug(f"Expected measure duration: {expected_duration}")
+        
+        # buffer to handle potential crashes
+        m_buffer: list[ET.Element] = []
 
-            subevents_and_mods = self._get_subevent_and_modifiers(measure, subevents, voice_id)
-            current_onset = 0
-            
-            for subevent_or_mods in _aggregate_mods(subevents_and_mods):
-                logger.info(f"Current onset {current_onset}")
+        try:
+            for voice_id in retrieved_voice_ids:
+                logger.debug(f"-- Writing voice {voice_id} of {retrieved_voice_ids}")
+                subevents = subevents_by_voice[voice_id]
+
+                subevents_and_mods = self._get_subevent_and_modifiers(measure, subevents, voice_id)
+                current_onset = 0
                 
-                # AGGREGATED MODIFIERS 
-                if isinstance(subevent_or_mods, list):
+                for subevent_or_mods in _aggregate_mods(subevents_and_mods):
+                    logger.debug(f"Current onset {current_onset}")
+                    logger.debug(f"Writing {subevent_or_mods}")
 
-                    modifiers: list[InMeasureModifier] = subevent_or_mods
-                    attributes = self._xml_in_measure_modifiers(modifiers)
                     
-                    # shift modifiers in time, if needed
-                    mod_shift = modifiers[0].in_measure_onset - current_onset
-                    if mod_shift > 0:
-                        m.append(self.create_forward(mod_shift))
-                        m.append(attributes)
-                        m.append(self.create_backup(mod_shift))
-                    elif mod_shift < 0:
-                        m.append(self.create_backup(mod_shift))
-                        m.append(attributes)
-                        m.append(self.create_forward(mod_shift))
+                    # AGGREGATED MODIFIERS 
+                    if isinstance(subevent_or_mods, list):
+
+                        modifiers: list[InMeasureModifier] = subevent_or_mods
+                        attributes = self._xml_in_measure_modifiers(modifiers)
+                        
+                        # shift modifiers in time, if needed
+                        mod_shift = modifiers[0].in_measure_onset - current_onset
+                        if mod_shift > 0:
+                            m_buffer.append(self.create_forward(mod_shift))
+                            m_buffer.append(attributes)
+                            m_buffer.append(self.create_backup(mod_shift))
+                        elif mod_shift < 0:
+                            m_buffer.append(self.create_backup(mod_shift))
+                            m_buffer.append(attributes)
+                            m_buffer.append(self.create_forward(mod_shift))
+                        else:
+                            m_buffer.append(attributes)
+                        
+                        logger.debug(f"Wrote {modifiers}")
+                    
+                    # SUBEVENT
                     else:
-                        m.append(attributes)                    
+                        subevent: Subevent = subevent_or_mods
+
+                        if isinstance(subevent, RepeatBar):
+                            logger.warning(f"Skipped {RepeatBar.__name__} in {measure.score_part.name} {measure.id}, it is not a full repeat")
+                            continue
+
+                        assert subevent.in_measure_onset >= current_onset, f"{subevent.in_measure_onset}, {current_onset}"
+                        # there exists a space between last and current subevent
+                        if current_onset < subevent.in_measure_onset:
+                            logger.warning(f"Filling in gap, {current_onset=}, {subevent.in_measure_onset=}")
+                            m_buffer.append(self.create_forward(subevent.in_measure_onset - current_onset))
+                            current_onset = subevent.in_measure_onset
+                        
+                        assert subevent.in_measure_onset == current_onset
+                        
+                        # write subevent to output
+                        for d in self.xml_Subevent(subevent):
+                            m_buffer.append(d)
+                        
+                        # advance time by subevent duration
+                        current_onset += subevent.duration
+                    
+                # end of measure, make sure, that written time matches expected end onset
+                if current_onset < expected_duration:
+                    logger.warning(f"Filling in gap at the end of measure {measure.id}, from {current_onset=} to {expected_duration=}")
+                    m_buffer.append(self.create_forward(expected_duration - current_onset))
+                    current_onset += expected_duration - current_onset
                 
-                # SUBEVENT
-                else:
-                    subevent: Subevent = subevent_or_mods
+                assert current_onset == expected_duration
 
-                    assert subevent.in_measure_onset >= current_onset, f"{subevent.in_measure_onset}, {current_onset}"
-                    # there exists a space between last and current subevent
-                    if current_onset < subevent.in_measure_onset:
-                        logger.warning(f"Filling in gap, {current_onset=}, {subevent.in_measure_onset=}")
-                        m.append(self.create_forward(subevent.in_measure_onset - current_onset))
-                        current_onset = subevent.in_measure_onset
-                    
-                    assert subevent.in_measure_onset == current_onset
-                    
-                    # write subevent to output
-                    for d in self.xml_Subevent(subevent):
-                        m.append(d)
-                    
-                    # advance time by subevent duration
-                    current_onset += subevent.duration
-                
-            # end of measure, make sure, that written time matches expected end onset
-            if current_onset < expected_duration:
-                logger.warning(f"Filling in gap at the end of measure, from {current_onset=} to {expected_duration=}")
-                m.append(self.create_forward(expected_duration - current_onset))
-                current_onset += expected_duration - current_onset
-            
-            assert current_onset == expected_duration
-
-            # return to the start of measure for next voice (if voice is not max voice)
-            if voice_id != last_voice_id:
-                m.append(self.create_backup(expected_duration))
-
+                # return to the start of measure for next voice (if voice is not max voice)
+                if voice_id != last_voice_id:
+                    m_buffer.append(self.create_backup(expected_duration))
+        
+        except Exception as e:
+            msg = (
+                f"Unable to write {PartMeasure.__name__} {measure.id}"
+                f" of {ScorePart.__name__} {measure.score_part.id}"
+            )
+            if SKIP_BROKEN_MEASURE:
+                logger.critical(f"Measure written as empty")
+                logger.warning(msg, exc_info=True)
+                m = _add_empty_measure(m, measure)
+                return m
+            else:
+                raise ValueError(msg) from e
+        
+        m.extend(m_buffer)
         return m
     
     def _get_most_common_time_signature(self, score: Score) -> TimeSigStruct:

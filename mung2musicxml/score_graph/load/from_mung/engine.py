@@ -16,6 +16,8 @@ from ....preprocessing.instruments import (
     get_instrument_groups_from_systems
 )
 from ...graph import *
+from ...graph.utils import IDClass
+
 from .utils import (
     get_voice,
     get_onset_beats,
@@ -37,6 +39,7 @@ from .construct_lyric import construct_lyric
 
 
 from ....logger import logger
+from ....utils import find_subgraphs_bfs
 from .collector import SubeventCollector, CollectorRecord
 
 
@@ -110,8 +113,6 @@ class MuNG_LoadEngine(LoadEngine):
         Creates LyricLevel scene objects for single instrument
         and returns mapping from lyric MuNG nodes to LyricLevel.
         """
-        from .utils import find_subgraphs_bfs
-
         lyrics_per_system: list[set[Node]] = []
 
         # collect lyrics per system per instrument
@@ -120,7 +121,6 @@ class MuNG_LoadEngine(LoadEngine):
 
             for staff in instrument_system:
                 durables = graph.parents(staff, class_filter=I.NOTEHEADS_AND_RESTS)
-                print(durables)
                 for durable in durables:
                     lyrics.update(graph.children(durable, class_filter=C.Lyrics.LYRICS_TEXT))
             
@@ -128,13 +128,13 @@ class MuNG_LoadEngine(LoadEngine):
 
         output: dict[Node, LyricLevel] = {}
         for system_lyrics in lyrics_per_system:
-            def _has_edge(lyric1: Node, lyric2: Node) -> bool:
+            def _has_edge(lyric1: Node, lyric2: Node, graph: NotationGraph) -> bool:
                 return (
                     graph.is_precedence_parent_of(lyric1, lyric2)
                     or graph.is_precedence_parent_of(lyric2, lyric1)
                 )
             # sort 
-            groups = find_subgraphs_bfs(list(system_lyrics), _has_edge)
+            groups = find_subgraphs_bfs(list(system_lyrics), lambda f, s: _has_edge(f, s, graph))
             groups.sort(key=lambda g: g[0].vertical_center)
 
             for index, group in enumerate(groups, start=1):
@@ -156,7 +156,7 @@ class MuNG_LoadEngine(LoadEngine):
         else:
             source_str = ", ".join(str(x) for x in source_mung_node_or_nodes)
         
-        logger.info(f"Added {type(obj).__name__} based on {source_str}")
+        logger.debug(f"Added {type(obj).__name__} based on {source_str}")
     
     def load_from_file(self, file_name: Path | str) -> Score:
         return self.load(NotationGraph.from_file(file_name))
@@ -243,14 +243,13 @@ class MuNG_LoadEngine(LoadEngine):
         for instrument in instrument_staffs:
             lyrics_to_level.update(self._construct_lyric_level_mapping(instrument, graph))
 
-        SOURCE = Path("/home/mayer/public_html/mung-studio-simple-php-backend/documents")
-        graph.save_to_file(SOURCE / "-0- PREPROCESSING_OUTPUT/mung.xml")
+        
         for instrument in instrument_staffs:
             # instrument is a list of lists of staffs
             # instrument -> staffs in a system -> staffs
             staff_to_durables: defaultdict[Staff, list[Durable]] = defaultdict(list)
             staff_to_others: defaultdict[Staff, list[Clef]] = defaultdict(list)
-            logger.info(f"processing instrument: {instrument}")
+            logger.info(f"Processing instrument: {instrument}")
             
             graph_measures: list[PartMeasure] = []
 
@@ -438,6 +437,29 @@ class MuNG_LoadEngine(LoadEngine):
         
         for g in gs:
             PartGroup(list(g.parts), bracket_type=g.bracket_type)
+            
+        from contextlib import contextmanager
+
+        class CriticalClasses:
+            _non_critical: set[type] = {
+                Tie,
+                Slur,
+                Wedge,
+            }
+
+            def is_critical(self, type_: type) -> bool:
+                return type_ not in self._non_critical
+
+        @contextmanager
+        def _construction_guard(mung_obj, type_: type, critical: bool = True):
+            try:
+                yield
+            except Exception as e:
+                if not critical:
+                    logger.warning(f"Failed to create {type_} from {mung_obj}", exc_info=True)
+                else:
+                    raise ValueError(f"Failed to create {type_} from {mung_obj}") from e
+            
 
         for mung_beam, subs in c.subevents_by(DurableBeam).items():
             beam = construct_durable_beam(mung_beam, list(subs))
@@ -451,23 +473,28 @@ class MuNG_LoadEngine(LoadEngine):
                 self._log_object_creation(articulation, mung_articulation)
 
         for mung_tuplet, subs in c.subevents_by(Tuplet).items():
-            tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
-            self._log_object_creation(tuplet, mung_tuplet)
+            with _construction_guard(mung_tuplet, Tuplet, False):
+                tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
+                self._log_object_creation(tuplet, mung_tuplet)
         
         for mung_slur, subs in c.subevents_by(Slur).items():
             slur = construct_slur(mung_slur, list(subs), graph)
             self._log_object_creation(slur, mung_slur)
 
         for mung_tie, durs in durables_by_tie.items():
-            obj = try_construct_tie(mung_tie, list(durs), graph)
+            with _construction_guard(mung_tie, Tie, CriticalClasses().is_critical(Tie)):
+                obj = try_construct_tie(mung_tie, list(durs), graph)
 
-            if obj is not None:
-                self._log_object_creation(obj, mung_tie)
+                if obj is not None:
+                    self._log_object_creation(obj, mung_tie)
 
         for mung_hairpin, subs in c.subevents_by(Wedge).items():
-            wedge = construct_wedge(mung_hairpin, list(subs), graph)
-            self._log_object_creation(wedge, mung_hairpin)
-        
+            try:
+                wedge = construct_wedge(mung_hairpin, list(subs), graph)
+                self._log_object_creation(wedge, mung_hairpin)
+            except Exception as e:
+                raise ValueError(f"Failed to create {Wedge.__name__} from {mung_hairpin}") from e
+                
         for mung_dynamics, subs in c.subevents_by(Dynamics).items():
             dynamics = construct_dynamics(mung_dynamics, subs)
             self._log_object_creation(dynamics, mung_dynamics)
@@ -479,10 +506,15 @@ class MuNG_LoadEngine(LoadEngine):
 
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
         for mung_lyric, subs in c.subevents_by(Lyric).items():
-            lyric = construct_lyric(mung_lyric, list(subs), graph)
-            if lyric is not None:
-                l_to_l[lyrics_to_level[mung_lyric]].append(lyric)
-                self._log_object_creation(lyric, mung_lyric)
+            try:
+                lyric = construct_lyric(mung_lyric, list(subs), graph)
+                if lyric is not None:
+                    l_to_l[lyrics_to_level[mung_lyric]].append(lyric)
+                    self._log_object_creation(lyric, mung_lyric)
+            except AssertionError as ae:
+                raise ValueError(f"Unable to construct {Lyric.__name__} from: {mung_lyric}") from ae
+
+
 
         for l_level, lyrics in l_to_l.items():
             l_level.lyrics = lyrics
@@ -524,6 +556,8 @@ class MuNG_LoadEngine(LoadEngine):
             TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
             logger.info(f"Created tremolo beam with marks {c}")
         # print(connected_by_tremolo_beam)
-
+        
+        IDClass.reset()
+        
         return score
     

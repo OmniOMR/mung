@@ -40,7 +40,11 @@ class MultistemResolver:
         self._graph: NotationGraph = None # type: ignore
         self._strategy = strategy if strategy is not None else MultistemResolverStrategy()
         if self._strategy._GHOST_SHIFT > 0:
-            logger.warning(f"{type(self).__name__} running in DEBUG MODE, all created noteheads will be shifted")
+            logger.warning(
+                f"{type(self).__name__} running in GHOST SHIFT MODE, "
+                f"all created noteheads will be shifted down by "
+                f"{self._strategy._GHOST_SHIFT} pixel{'s' if self._strategy._GHOST_SHIFT > 1 else ''}"
+            )
         self._onset_engine = OnsetsInferenceEngine(self._strategy.ONSET_STRATEGY)
 
     def __call__(self, graph: NotationGraph) -> NotationGraph:

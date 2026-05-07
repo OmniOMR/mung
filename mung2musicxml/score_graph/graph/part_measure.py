@@ -84,7 +84,7 @@ class PartMeasure(SceneObject):
         Returns True, if the measure is only
         a `RepeatBar`.
         """
-        return len(self.subevents) == 1 and self.has_full_repeat
+        return len(self.all_durables) > 0 and all(isinstance(d, RepeatBar) for d in self.all_durables)
     
     def get_previous(self) -> Optional["PartMeasure"]:
         # only second+ measure has previous measure

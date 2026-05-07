@@ -22,7 +22,12 @@ class Tie(GenericStartStop[Durable]):
         
         assert self.start is not None
         if self.stop is not None:
-            assert self.start.in_measure_fractional_end_onset == self.stop.in_measure_fractional_onset
+            if self.start.global_fractional_end_onset != self.stop.global_fractional_onset:
+                raise ValueError(
+                    "Start durable has to end on the same onset at which the stop durable starts, "
+                    f"start durable end onset: {self.start.global_fractional_end_onset}, stop durable start onset: {self.stop.global_fractional_onset}, "
+                    f"start: {self.start}, stop: {self.stop}"
+                )
         if isinstance(self.start, Note) and isinstance(self.stop, Note):
             assert self.start.pitch == self.stop.pitch
         
