@@ -775,7 +775,7 @@ class PitchInferenceEngine(object):
                                  ''.format(notehead))
 
             #  Determine: is notehead above or below staff?
-            is_above_staff = (notehead.top < current_staff.top)
+            is_above_staff = (notehead.vertical_center < current_staff.vertical_center)
 
             #  Determine: is notehead on/next to (closest) leger line?
             #    This needs to be done *after* we know whether the notehead
