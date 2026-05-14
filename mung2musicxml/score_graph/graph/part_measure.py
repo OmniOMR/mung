@@ -10,7 +10,7 @@ from .repeat import RepeatBar
 from .in_part_measure_modifier import InMeasureModifier
 from ...utils import flatten
 if TYPE_CHECKING:
-    from .system_measure import SystemMeasure
+    from .score_measure import ScoreMeasure
     from .score_part import ScorePart
 
 
@@ -49,9 +49,9 @@ class PartMeasure(SceneObject):
         return self.system_measure.fractional_onset
 
     @property
-    def system_measure(self) -> "SystemMeasure":
-        from .system_measure import SystemMeasure
-        return SystemMeasure.of(self, lambda sm: sm.part_measures)
+    def system_measure(self) -> "ScoreMeasure":
+        from .score_measure import ScoreMeasure
+        return ScoreMeasure.of(self, lambda sm: sm.part_measures)
     
     @property
     def is_new_system(self) -> bool:

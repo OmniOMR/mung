@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SystemMeasure(SceneObject):
+class ScoreMeasure(SceneObject):
     """
     Contains all `PartMeasure`s across `Score`
     that have the same `id`.
@@ -24,7 +24,7 @@ class SystemMeasure(SceneObject):
         assert all(m.id == self.id for m in self.part_measures)
     
     @cached_property
-    def previous(self) -> "SystemMeasure":
+    def previous(self) -> "ScoreMeasure":
         assert self.id > 1
         return self.score.get_system_measure_by_id(self.id - 1)
 

@@ -8,7 +8,7 @@ import numpy as np
 from mung.interpret import TimeSigStruct
 from .scene_object import SceneObject
 from .score_part import ScorePart
-from .system_measure import SystemMeasure
+from .score_measure import ScoreMeasure
 from ...logger import logger
 
 
@@ -43,11 +43,11 @@ class Score(SceneObject):
     Container with all score parts.
     """
     score_parts: list[ScorePart]
-    system_measures: list[SystemMeasure]
+    system_measures: list[ScoreMeasure]
 
     max_measure_index: int = field(init=False)
     divisions: int = field(init=False)
-    _mapping: dict[int, SystemMeasure] = field(
+    _mapping: dict[int, ScoreMeasure] = field(
         init=False, repr=False, default_factory=dict
     )
 
@@ -95,6 +95,6 @@ class Score(SceneObject):
             canonical,
         )
 
-    def get_system_measure_by_id(self, value: int) -> SystemMeasure:
+    def get_system_measure_by_id(self, value: int) -> ScoreMeasure:
         assert 0 < value <= self.max_measure_index
         return self._mapping[value]

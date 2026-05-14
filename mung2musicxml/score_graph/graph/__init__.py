@@ -18,7 +18,7 @@ from .dot import Dot
 from .accidental import Accidental
 from .staff import Staff
 from .clef import Clef
-from .system_measure import SystemMeasure
+from .score_measure import ScoreMeasure
 from .voice import Voice
 from .grace_note import GraceNote
 from .beam import GraceNoteBeam

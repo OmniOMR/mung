@@ -216,7 +216,7 @@ class MuNG_LoadEngine(LoadEngine):
         mung_staffs_to_staffs = self._construct_staff_mapping(instrument_staffs)
 
         parts: list[ScorePart] = []
-        system_measures: list[SystemMeasure] = []
+        system_measures: list[ScoreMeasure] = []
         
         measures_by_id: defaultdict[int, list[PartMeasure]] = defaultdict(list)
         durables_by_voice: defaultdict[int, list[Durable]] = defaultdict(list)
@@ -377,7 +377,7 @@ class MuNG_LoadEngine(LoadEngine):
                 parts_by_group[grouping].add(score_part)
                 
         for id_, measures in measures_by_id.items():
-            system_measures.append(SystemMeasure(
+            system_measures.append(ScoreMeasure(
                 id=id_,
                 part_measures=measures,
                 is_new_system=id_ in new_system_indexes
