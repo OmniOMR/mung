@@ -48,7 +48,7 @@ class ScoreMeasure(SceneObject):
     @property
     def score(self) -> "Score":
         from .score import Score
-        return Score.of(self, lambda s: s.system_measures)        
+        return Score.of(self, lambda s: s.score_measures)        
 
     def get_most_common_onset(self) -> Fraction:
         return min(

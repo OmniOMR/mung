@@ -383,7 +383,7 @@ class MuNG_LoadEngine(LoadEngine):
                 is_new_system=id_ in new_system_indexes
             ))
         
-        score = Score(score_parts=parts, system_measures=system_measures)
+        score = Score(score_parts=parts, score_measures=system_measures)
         
         for id_ in durables_by_voice.keys():
             assert id_ <= MAX_VOICES, f"Unsupported number of voices. {id_}"

@@ -43,7 +43,7 @@ class Score(SceneObject):
     Container with all score parts.
     """
     score_parts: list[ScorePart]
-    system_measures: list[ScoreMeasure]
+    score_measures: list[ScoreMeasure]
 
     max_measure_index: int = field(init=False)
     divisions: int = field(init=False)
@@ -59,7 +59,7 @@ class Score(SceneObject):
             )
         )
 
-        for sm in self.system_measures:
+        for sm in self.score_measures:
             self._mapping[sm.id] = sm
         
         denominators = set()
@@ -90,7 +90,7 @@ class Score(SceneObject):
         return most_common_time_signature(
             (
                 sm._get_duration_impl() / QUARTER_NOTE_DURATION
-                for sm in self.system_measures
+                for sm in self.score_measures
             ),
             canonical,
         )
