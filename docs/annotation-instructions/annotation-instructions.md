@@ -619,8 +619,8 @@ TODO: ties between bar repeats: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studi
   <img src="./img/restWhole-syntax.png" height="200"/>
 </p>
 
-- Represents a pause for 4 beats.
-- Even if it does not hang from a line precisely, if it takes up 4 beats, annotate it as a whole rest.
+- Represents a pause for 4 beats OR a rest for an entire measure. (In 3/4 measures, whole rests are used as 3-beat rests)
+- Even if it does not hang from a line precisely, if it is a whole rest, annotate it as a whole rest. (Especially in measure-rests the writing is sloppy, since it's obvious it's the only rest in the measure and thus it must be whole rest)
 - The symbol <kbd>🔴 syntax</kbd> links to the `staff`.
 - When there are multiple voices, it can be placed outside of the staff on a leger line. Annotate the leger line as a separate `legerLine` object and add <kbd>🔴 syntax</kbd> links from the rest to all leger lines affecting its position, including the one it hangs from. 
 - Can be part of a rest cluster, see [`restText`](#resttext) for more info.
