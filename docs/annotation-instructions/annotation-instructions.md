@@ -4146,22 +4146,95 @@ indicating the continuation of the trill.
 
 ## Octaves
 
-> **🚧 Under construction.**
-
 *(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/octaves.html))*
 
-TODO: the `horizontalSpanner` for ottava marking belongs here (but there's another one for figured bass sharing the class name)
+- Octave signs (spanners) mark a section of music notation to be played one (or more) octaves higher or lower than notated.
+- The transposition direction (up/down) is infered from the placement of the spanner relative to the staff (above/below). Spanners **above** the staff indicate transposition **up** and vice versa. The symbol `8` or `8va` is secondary and may or may not indicate the transposition direction as well.
+- See more info at [Ultimate Music Theory](https://ultimatemusictheory.com/octave_sign/).
 
-TODO: the first example document below also contains pedal markings
 
-<!--
+### `ottava`
+
+*(see the corresponding [SMuFL Group](https://w3c.github.io/smufl/latest/tables/octaves.html), note that this class groups multiple `ottava*` SMuFL classes together into one)*
+
+<p>
+  <img src="./img/ottava-0.png" height="200"/>
+  <img src="./img/ottava-syntax.png" height="200"/>
+</p>
+
+- The number or text indicating an octave transposition up/down for the notated music. Placed at the beginning of a spanner.
+- Annotate with **precise** mask.
+- Transcribe the text contained.
+- Add <kbd>🔴 syntax</kbd> link from the `ottavaSpanner` to the `ottava` symbol.
+- The text is not enough to determine the transposition direction, only the transposition amount (one/two/three octaves). The spanner placement above/below staff is used to determine transposition direction instead.
+- Transposition direction *may* be indicated by the alignment of `va` up or down relative to the `8` character, however, it is not used consistently enough in handwritten music to be useful. When transcribing as text, simply type in `8va` irrespective of the vertical alignment of the `va` text.
+- Transposition direction *may also* be indicated by `ba`, meaning "bassa", meaning transposition down, however, that leaves `va` in a state where you're unsure whether the author explicitly meant "up" or just didn't care. So again, this cannot be used to infer transposition direction alone.
+- This class (`ottava`) groups mulitple SMuFL classes, such as `ottavaAlta`, `ottavaBassa`, `ottavaBassaBa` for ease of annotation and also because their distinction is not as important for the purposes of OMR. The text transcription is mandatory precisely to allow distinguishing of these classes.
+
+<p>
+  <img src="./img/ottava-1.png" height="200"/>
+  <img src="./img/ottava-2.png" height="200"/>
+  <img src="./img/ottava-3.png" height="200"/>
+</p>
+
+Example text values:
+
+```
+8
+8va
+8ba
+15
+15ma
+15ba
+22
+22ma
+22ba
+```
+
 <details>
   <summary>🔗 Example documents</summary>
 
-  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
   - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_61b8fc9e-39f2-4783-876f-9d15fa63ddc2
 </details>
--->
+
+---
+
+
+### `ottavaSpanner`
+
+*(`ottavaSpanner` is not part of SMuFL, because it cannot be rendered by a notation font)*
+
+<p>
+  <img src="./img/ottavaSpanner-0.png" height="200"/>
+  <img src="./img/ottavaSpanner-syntax.png" height="200"/>
+</p>
+
+- Use **convex hull** mask.
+- Add <kbd>🔴 syntax</kbd> links from starting and ending onset (notehead/rest) on the related staff. May be only one link if it applies to only one note/chord.
+- Do NOT link across staves. Each staff has its own separate instance of the spanner.
+- The `ottava` **8va** symbol may be missing, which is ok (usually when the transposition continues from the previous page or is obvious from context).
+
+<p>
+  <img src="./img/ottavaSpanner-1.png" height="200"/>
+  <img src="./img/ottavaSpanner-2.png" height="200"/>
+  <img src="./img/ottavaSpanner-3.png" height="200"/>
+</p>
+
+<details>
+  <summary>🔗 Example documents</summary>
+
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/028ac720-8af7-4ecc-9884-edeaf6dce2ae_60af2f09-f02b-42e3-8824-d00ae79ae10b
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_319410a3-e83e-42c4-9c73-1f616d09edf6
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/81c9f683-28d1-4e73-8e25-e37333408f5a_d3de8b4f-5d39-4445-9a37-23ee474a4ff5
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_3f8e002f-e26c-499c-b3f7-8114fae278f0
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/1d507bc2-87e7-4b61-8bea-6126616c4851_2c51b8ce-49e1-4343-82b3-97a210f61897
+  - https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/#/simple-backend/bf061840-2322-11eb-979b-005056827e52_61b8fc9e-39f2-4783-876f-9d15fa63ddc2
+</details>
 
 ---
 
