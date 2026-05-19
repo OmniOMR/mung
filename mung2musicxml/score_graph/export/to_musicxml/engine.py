@@ -15,8 +15,6 @@ from ..export_engine import ExportEngine
 from .settings import MusicXMLExportSettings
 
 
-SKIP_BROKEN_MEASURE: bool = False
-
 class MusicXML_ExportEngine(ExportEngine):
     """
     Graph to MusicXML 4.0 exporter.
@@ -1076,7 +1074,7 @@ class MusicXML_ExportEngine(ExportEngine):
                 f"Unable to write {PartMeasure.__name__} {measure.id}"
                 f" of {ScorePart.__name__} {measure.score_part.id}"
             )
-            if SKIP_BROKEN_MEASURE:
+            if self.settings.error_handling.skip_broken_measure:
                 logger.critical(f"Measure written as empty")
                 logger.warning(msg, exc_info=True)
                 m = _add_empty_measure(m, measure)

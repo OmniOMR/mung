@@ -55,6 +55,11 @@ class ClefSettings:
 
 
 @dataclass
+class ErrorHandlingSettings:
+    skip_broken_measure: bool = False
+
+
+@dataclass
 class MusicXMLExportSettings:
     musicxml_version: str = "4.0"
     software_name: str = f"MuNGv{LIBRARY_VERSION}"
@@ -63,3 +68,4 @@ class MusicXMLExportSettings:
     credit: CreditSettings = field(default_factory=CreditSettings)
     clefs: ClefSettings = field(default_factory=ClefSettings)
     time_sig: TimeSignatureSettings = field(default_factory=TimeSignatureSettings)
+    error_handling: ErrorHandlingSettings = field(default_factory=ErrorHandlingSettings)
