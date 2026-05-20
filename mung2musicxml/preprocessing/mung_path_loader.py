@@ -42,16 +42,18 @@ def _yield_batch(batch_file: Path, get_name: Callable[[Path], str]) -> Generator
     
     with open(batch_file, "r", encoding="utf8") as file:
         for index, line in enumerate(file):
+            line = line.rstrip()
+            if len(line) == 0:
+                continue
 
             if line.startswith("#"):
                 logger.info(f"[{index + 1}/{num_lines}] Skipped '{line}'")
                 continue
 
-            line = line.rstrip()
             if is_uuid_pair(line):
                 input_file = wrap_local_file(line)
             else:
-                input_file = Path(line.rstrip())
+                input_file = batch_file.parent / line.rstrip()
             
             logger.info(f"[{index + 1}/{num_lines}] Processing file '{input_file}'")
             yield input_file
