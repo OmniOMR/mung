@@ -92,8 +92,6 @@ class VoiceEngine:
             self._graph.children(n, class_filter=C.NoteheadAttachments.BEAM)
             for n in self._graph.filter_vertices([C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
         ]
-        for g in UnionFind.merge_groups(groups):
-            print([x.id for x in g])
         return UnionFind.merge_groups(groups)
 
     def _compute_beams_to_staff(self) -> None:
@@ -183,7 +181,13 @@ class VoiceEngine:
             """
             Finds the closest preceding Voice Node for a given Voice Node.
             """
-            output = [o for o in others if o.obj.get_end_onset() <= child.obj.get_start_onset()]
+            output = [
+                o for o in others
+                if (
+                    o.obj.get_end_onset() <= child.obj.get_start_onset()
+                    and o != child
+                )
+            ]
             if len(output) == 0:
                 return None
             return max(output, key=lambda vn: (vn.obj.get_end_onset(), vn.obj.get_priority()))
@@ -196,7 +200,7 @@ class VoiceEngine:
                     logger.debug(f"Unable to find any precedence ancestor in voice for {node}")
                 else:
                     parent = potential_parent
-                    logger.warning(f"Filling in gap, connecting {parent} -> {node}")
+                    logger.warning(f"Filling in gap for voice inference, connecting {parent} -> {node}")
                     wg.add_edge(parent, node)
         
         return wg

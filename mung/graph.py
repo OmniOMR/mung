@@ -901,7 +901,7 @@ def group_staffs_into_systems(nodes: list[Node],
 
     empty_staffs = [s for s in graph.filter_vertices(C.Staves.STAFF) if is_empty_staff(s, graph)]
     if len(empty_staffs) > 0:
-        logger.info(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
+        logger.debug(f"Empty staffs: {', '.join([str(node.id) for node in empty_staffs])}")
 
     # For simplicity, add non-empty staffs as potential systems.
     staff_groups += [s for s in graph.filter_vertices(C.Staves.STAFF) if s not in empty_staffs]
@@ -1389,7 +1389,7 @@ def group_by_system_measure(nodes_or_graph: list[Node] | NotationGraph) -> list[
     def get_all_in_measure_symbols_from_system(staffs: list[Node], graph: NotationGraph) -> list[Node]:
         output: list[Node] = []
         for staff in staffs:
-            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE):
+            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE_SYMBOLS):
                 if symbol in output:
                     logger.warning(f"Symbol {symbol.class_name} {symbol.id} assigned to multiple staffs in the same system")
                 else:
@@ -1455,7 +1455,7 @@ def group_by_system_measure_and_system(nodes_or_graph: list[Node] | NotationGrap
     def get_all_in_measure_symbols_from_system(staffs: list[Node], graph: NotationGraph) -> list[Node]:
         output: list[Node] = []
         for staff in staffs:
-            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE):
+            for symbol in graph.parents(staff, class_filter=I.IN_MEASURE_SYMBOLS):
                 if symbol in output:
                     logger.warning(f"Symbol {symbol.class_name} {symbol.id} assigned to multiple staffs in the same system")
                 else:

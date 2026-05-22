@@ -20,6 +20,7 @@ class Noteheads(AllExtendedStrEnum):
 
     NOTEHEAD_HALF_SMALL = "noteheadHalfSmall"
     NOTEHEAD_BLACK_SMALL = "noteheadBlackSmall"
+    NOTEHEAD_WHOLE_SMALL = "noteheadWholeSmall"
 
 
 class Flags(AllExtendedStrEnum):
@@ -150,7 +151,7 @@ class StaffGroupingBracketsAndBraces(StrEnum):
     SYSTEM_DIVIDER = "systemDivider"
 
 
-class Articulation(StrEnum):
+class Articulation(AllExtendedStrEnum):
     ARTIC_ACCENT_ABOVE = "articAccentAbove"
     ARTIC_ACCENT_BELOW = "articAccentBelow"
 

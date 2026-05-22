@@ -68,10 +68,18 @@ class _GraceGroupWrapper:
         If the graph is not valid, the notes are simply sorted
         from left to right based on their image coordinates.
         """
+        if len(self._notes) == 1:
+            return
         if self._valid:
-            self._notes = self._sort_with_queue(self._notes)
-        else:
-            self._notes = self._sort_left_to_right(self._notes)
+            try:
+                self._notes = self._sort_with_queue(self._notes)
+                return
+            except Exception as _:
+                logger.warning(f"Sorting {self._notes} by precedence edges raised error,"
+                               " using left-to-right-sort")
+                logger.exception("")
+
+        self._notes = self._sort_left_to_right(self._notes)
 
     def compute(self, graph: NotationGraph) -> tuple[dict[int, Fraction], dict[int, Fraction], dict[int, Fraction]]:
         self._sort()
@@ -109,6 +117,13 @@ class _GraceGroupWrapper:
         # - one source,
         # - one sink,
         # - all other have to have one inlink a one outlink
+        if len(self._notes) == 1:
+            note = self._notes[0]
+            return (
+                len(note.precedence_inlinks) == 0
+                and len(note.precedence_outlinks) == 0
+            )
+        
         source, sink = 0, 0
         for note in self._notes:
             if len(note.precedence_inlinks) == 0 and len(note.precedence_outlinks) == 1:

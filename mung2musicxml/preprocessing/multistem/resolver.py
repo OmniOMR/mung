@@ -39,8 +39,12 @@ class MultistemResolver:
     def __init__(self, strategy: Optional[MultistemResolverStrategy] = None):
         self._graph: NotationGraph = None # type: ignore
         self._strategy = strategy if strategy is not None else MultistemResolverStrategy()
-        if self._strategy._DEBUG_GHOST_SHIFT:
-            logger.warning(f"{type(self).__name__} running in DEBUG MODE, all created noteheads will be shifted")
+        if self._strategy._GHOST_SHIFT > 0:
+            logger.warning(
+                f"{type(self).__name__} running in GHOST SHIFT MODE, "
+                f"all created noteheads will be shifted down by "
+                f"{self._strategy._GHOST_SHIFT} pixel{'s' if self._strategy._GHOST_SHIFT > 1 else ''}"
+            )
         self._onset_engine = OnsetsInferenceEngine(self._strategy.ONSET_STRATEGY)
 
     def __call__(self, graph: NotationGraph) -> NotationGraph:
@@ -73,7 +77,7 @@ class MultistemResolver:
         nodes_to_resolve = self._find_double_stemmed_in_graph_and_sort()
         for node in nodes_to_resolve:
             self._separate_double_stemmed_to_two(node)
-            logger.info(f"Resolved double stemmed {node.class_name} {node.id}")
+            logger.debug(f"Resolved double stemmed {node.class_name} {node.id}")
 
         self._check_on_end()
         t = self._graph
@@ -84,11 +88,12 @@ class MultistemResolver:
         """
         Finds all noteheads that have multiple stems.
         """
-        return [
+        to_resolve = [
             node for node in
             self._graph.filter_vertices(I.NONGRACE_NOTEHEAD_CLASS_NAMES)
             if len(self._graph.children(node, C.NoteheadAttachments.STEM)) > 1
         ]
+        return to_resolve
 
     def _find_double_stemmed_in_graph_and_sort(self) -> list[Node]:
         """
@@ -96,7 +101,9 @@ class MultistemResolver:
         that have exactly two stems.
         """
         multi_stem = self._find_multistem_in_graph()
-
+        if len(multi_stem) > 0:
+            logger.warning(f"Will resolve {len(multi_stem)} multistem noteheads: {multi_stem}")
+        
         # filter
         double_stemmed: list[Node] = []
         for node in multi_stem:
@@ -117,8 +124,8 @@ class MultistemResolver:
         ghost_node = Node(
             self._graph.next_node_id,
             node.class_name,
-            node.top + node.height // 2 if self._strategy._DEBUG_GHOST_SHIFT else node.top,
-            node.left + node.width // 2 if self._strategy._DEBUG_GHOST_SHIFT else node.left,
+            node.top + self._strategy._GHOST_SHIFT,
+            node.left,
             node.width,
             node.height,
             mask=node.mask.copy() if node.mask is not None else None,
@@ -139,7 +146,7 @@ class MultistemResolver:
         to_share = self._graph.children(original, class_filter=self._strategy.SHARED_OBJECTS)
         for node in to_share:
             self._graph.add_edge(ghost, node)
-        logger.info(f"Shared {len(to_share)} symbols "
+        logger.debug(f"Shared {len(to_share)} symbols "
                     f"between original node {original.id} and ghost node {ghost.id}")
     
     @staticmethod
@@ -170,7 +177,7 @@ class MultistemResolver:
                 self._graph.add_edge(ghost, node)
                 logger.debug(f"Added {node.id} to ghost {ghost.id}")
         
-        logger.info(f"Split {len(to_split)} symbols "
+        logger.debug(f"Split {len(to_split)} symbols "
                     f"between original node {original.id} and ghost node {ghost.id}")
     
     def _resolve_incoming_precedence_edges(self, original: Node, ghost: Node) -> None:

@@ -33,6 +33,11 @@ class InferenceEngineConstants(C):
         C.KeySignature.KEY_SIGNATURE,
     } | set(C.Clefs.ALL())
 
+    INSTRUMENT_GROUP_BRACKETS = {
+        C.StaffGroupingBracketsAndBraces.BRACE,
+        C.StaffGroupingBracketsAndBraces.BRACKET,
+    }
+
     SYSTEM_LEVEL_CLASS_NAMES = [
         C.StaffGroupingBracketsAndBraces.STAFF_GROUPING,
         C.Barlines.MEASURE_SEPARATOR,
@@ -48,6 +53,7 @@ class InferenceEngineConstants(C):
     GRACE_NOTEHEAD_CLASS_NAMES = [
         C.Noteheads.NOTEHEAD_HALF_SMALL,
         C.Noteheads.NOTEHEAD_BLACK_SMALL,
+        C.Noteheads.NOTEHEAD_WHOLE_SMALL
     ]
 
     NONGRACE_NOTEHEAD_CLASS_NAMES = [
@@ -55,6 +61,11 @@ class InferenceEngineConstants(C):
         C.Noteheads.NOTEHEAD_HALF,
         C.Noteheads.NOTEHEAD_WHOLE,
     ]
+
+    NOTEHEADS_AND_RESTS = (
+        NONGRACE_NOTEHEAD_CLASS_NAMES
+        + C.Rests.ALL()
+    )
 
     CLEF_CLASS_NAMES = C.Clefs.ALL()
 
@@ -75,6 +86,15 @@ class InferenceEngineConstants(C):
     HAIRPINS = [
         C.Dynamics.DYNAMIC_CRESCENDO_HAIRPIN,
         C.Dynamics.DYNAMIC_DIMINUENDO_HAIRPIN,
+    ]
+
+    TREMOLO_SINGLES = C.Tremolo.all_numeral_members()
+
+    IN_MEASURE_MODIFIERS = [
+        C.Clefs.C_CLEF_CHANGE, C.Clefs.G_CLEF_CHANGE, C.Clefs.F_CLEF_CHANGE,
+        C.Clefs.C_CLEF, C.Clefs.F_CLEF, C.Clefs.G_CLEF,
+        C.KeySignature.KEY_SIGNATURE,
+        C.TimeSignatures.TIME_SIGNATURE
     ]
 
     MIDI_CODE_RESIDUES_FOR_PITCH_STEPS = {
@@ -181,7 +201,7 @@ class InferenceEngineConstants(C):
 
     NUMERALS = C.Numerals.ALL()
 
-    IN_MEASURE = (
+    IN_MEASURE_SYMBOLS = (
         TIME_SIGNATURES
         + [C.KeySignature.KEY_SIGNATURE]
         + CLEF_CLASS_NAMES

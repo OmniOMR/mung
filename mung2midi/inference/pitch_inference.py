@@ -13,6 +13,7 @@ from .clefs_impl import get_clef_data_from_node
 @dataclass(frozen=True)
 class PitchInferenceStrategy:
     permissive: bool = True
+    chain_clefs_and_keys_from_previous_system: bool = True
 
 
 class PitchInferenceEngineState(object):
@@ -138,7 +139,7 @@ class PitchInferenceEngineState(object):
             # the resulting pitch shift is -2 - (-2) = 0.
             # When the staffline's curl is on the first staff
             # (French violin) the shift is actually -4 - (-2) = -2. 
-            logger.info(f"Clef {clef.id} is snapped to a staffline, computed delta: {delta}")
+            logger.debug(f"Clef {clef.id} is snapped to a staffline, computed delta: {delta}")
             clef_data = get_clef_data_from_node(clef)
             self.current_clef_delta_shift = clef_data.default_staffline_delta - delta
             # Just log that the shift is unexpected.
@@ -252,7 +253,7 @@ class PitchInferenceEngineState(object):
         if delta in self.inline_accidentals:
             match self.inline_accidentals[delta]:
                 case C.Accidentals.ACCIDENTAL_NATURAL:
-                    logger.info('Natural at delta = {0}'.format(delta))
+                    logger.debug('Natural at delta = {0}'.format(delta))
                     pitch_mod = 0
                 case C.Accidentals.ACCIDENTAL_SHARP:
                     pitch_mod = 1
@@ -294,7 +295,7 @@ class PitchInferenceEngineState(object):
         pitch = step_pitch + accidental_pitch
 
         if self.current_clef_delta_shift != 0:
-            logger.info('PitchInferenceState: Applied clef-based delta {0},'
+            logger.debug('PitchInferenceState: Applied clef-based delta {0},'
                          ' resulting delta was {1}, pitch {2}'
                          ''.format(self.current_clef_delta_shift,
                                    delta, pitch))
@@ -418,8 +419,69 @@ class PitchInferenceEngine(object):
         # self.durations_beats = None
         # self.durations_beats_per_staff = None
 
+        self._previous_staff: dict[Node, Node] = None
+
     def reset(self):
         self.__init__()
+
+    def _collect_previous_staff(self, nodes: list[Node]) -> None:
+        from mung2musicxml.preprocessing.instruments import graph_to_instruments
+        instruments = graph_to_instruments(NotationGraph(nodes))
+        self._previous_staff: dict[Node, Node] = dict()
+
+        for instrument in instruments:
+            previous: None | list[Node] = None
+            for system in instrument:
+                if previous is not None:
+                    for i, staff in enumerate(system):
+                        if i >= len(previous):
+                            prev_staff = previous[-1]
+                        else:
+                            prev_staff = previous[i]
+                        
+                        self._previous_staff[staff] = prev_staff
+
+                previous = system
+    
+    def _get_previous_staff_for_staff(self, staff: Node) -> Optional[Node]:
+        return self._previous_staff.get(staff)
+    
+    def _chain_preceding_nodes_affecting_pitch(self, staff: Node) -> list[Node]:
+        """
+        Returns a list of clefs and key signatures
+        that may effect pitches on the given staff
+        and are from previous systems.
+
+        Used to determine correct pitches for scores that
+        have explicitly written clefs on the first system,
+        but none in the next ones. We suppose that this
+        is author's abbreviation and that the next system
+        (continuation of the instrument) should use the same
+        clefs as its preceding system.
+
+        Staffs that have their own clef and key signature
+        explicitly written are not affected by this,
+        as all the changed computed from the preceding
+        system will be overwritten by these its own nodes.
+        """
+        assert self.staff_to_clef_map is not None
+        assert self.staff_to_key_map is not None
+
+        prev_staff = self._get_previous_staff_for_staff(staff)
+        nodes_affecting_pitch: list[Node] = []
+        while prev_staff is not None:
+            # print(f"trying {prev_staff}")
+            nodes_affecting_pitch.extend(
+                sorted(
+                    self.staff_to_clef_map[prev_staff.id]
+                    + self.staff_to_key_map[prev_staff.id],
+                    key=lambda x: x.left
+                )
+            )
+
+            prev_staff = self._get_previous_staff_for_staff(prev_staff)
+        
+        return nodes_affecting_pitch
 
     def infer_pitches(self, nodes: list[Node], with_names=False, with_pitch_objects=False):
         """The main workhorse for pitch inference.
@@ -476,6 +538,7 @@ class PitchInferenceEngine(object):
 
         # Initialize pitch temp data.
         self._collect_symbols_for_pitch_inference(nodes)
+        self._collect_previous_staff(nodes)
 
         # Staff processing: this is where the inference actually
         # happens.
@@ -519,16 +582,27 @@ class PitchInferenceEngine(object):
         self.pitch_state.reset()
         self.pitch_state.init_base_pitch()
 
-        queue = sorted(
+        # collect symbols from previous systems that might
+        # have effect on resulting pitch
+        if self.strategy.chain_clefs_and_keys_from_previous_system:
+            queue = self._chain_preceding_nodes_affecting_pitch(staff)
+            logger.debug(f"Chaining {len(queue)} symbols affecting pitch from previous systems "
+                         f"for {staff}")
+        else:
+            queue = []
+        
+        # add symbols on staff
+        queue: list[Node] = queue + sorted(
             self.staff_to_clef_map[staff.id]
             + self.staff_to_key_map[staff.id]
             + self.staff_to_msep_map[staff.id]
             + self.staff_to_noteheads_map[staff.id],
-            key=lambda x: x.left)
-
+            key=lambda x: x.left
+        )
+        
         for q in queue:
             q: Node
-            logger.info(f"Processing staff object {q.class_name} {q.id}")
+            logger.debug(f"Processing staff object {q.class_name} {q.id}")
 
             if q.class_name in I.CLEF_CLASS_NAMES:
                 self.process_clef(q)
@@ -683,21 +757,25 @@ class PitchInferenceEngine(object):
         staffline_objects = self.__children(notehead,
                                             I.STAFFLINE_CLASS_NAMES)
 
+        lls = self.__children(notehead, [C.NoteheadAttachments.LEGER_LINE])
+
+        if len(staffline_objects) != 0 and len(lls) != 0:
+            logger.warning(f"{notehead} is connected both to staff line/space and leger line")
+        
         # Leger lines
         # ------------
-        if len(staffline_objects) == 0:
+        if len(lls) > 0:
 
             # Processing leger lines:
             #  - count leger lines
-            lls = self.__children(notehead, [C.NoteheadAttachments.LEGER_LINE])
             n_lls = len(lls)
             if n_lls == 0:
                 raise ValueError('Notehead with no staffline or staffspace,'
                                  ' but also no leger lines: {0}'
-                                 ''.format(notehead.id))
+                                 ''.format(notehead))
 
             #  Determine: is notehead above or below staff?
-            is_above_staff = (notehead.top < current_staff.top)
+            is_above_staff = (notehead.vertical_center < current_staff.vertical_center)
 
             #  Determine: is notehead on/next to (closest) leger line?
             #    This needs to be done *after* we know whether the notehead
@@ -827,13 +905,13 @@ class PitchInferenceEngine(object):
         # Check for staffline children
         stafflines = self.__children(clef, class_names=I.STAFFLINE_CLASS_NAMES)
         if len(stafflines) == 0:
-            logger.info('Clef {0} not connected to any staffline, assuming default'
+            logger.warning('Clef {0} not connected to any staffline, assuming default'
                          ' position'.format(clef.id))
             self.pitch_state.init_base_pitch(clef=clef)
         else:
             # Compute clef staffline delta from middle staffline.
             delta = self.staffline_delta(clef)
-            logger.info('Clef {0}: computed staffline delta {1}'
+            logger.debug('Clef {0}: computed staffline delta {1}'
                          ''.format(clef.id, delta))
             self.pitch_state.init_base_pitch(clef=clef, delta=delta)
 
@@ -854,19 +932,19 @@ class PitchInferenceEngine(object):
 
         # Collect staves.
         self.staves = graph.filter_vertices(C.Staves.STAFF)
-        logger.info('We have {0} staves.'.format(len(self.staves)))
+        logger.debug(f"Found {len(self.staves)} staffs.")
 
         # Collect clefs and key signatures per staff.
         self.clefs = graph.filter_vertices(I.CLEF_CLASS_NAMES)
         if ignore_nonstaff:
             self.clefs = [c for c in self.clefs if graph.has_children(c, [C.Staves.STAFF])]
-        logger.info(f"We have {len(self.clefs)} clefs.")
+        logger.debug(f"Found {len(self.clefs)} clefs.")
 
         self.key_signatures = graph.filter_vertices(C.KeySignature.KEY_SIGNATURE)
         if ignore_nonstaff:
             self.key_signatures = [c for c in self.key_signatures
                                    if graph.has_children(c, [C.Staves.STAFF])]
-        logger.info(f"We have {len(self.key_signatures)} key signatures.")
+        logger.debug(f"Found {len(self.key_signatures)} key signatures.")
 
         self.clef_to_staff_map = {}
         # There may be more than one clef per staff.
@@ -902,7 +980,7 @@ class PitchInferenceEngine(object):
         if ignore_nonstaff:
             self.measure_separators = [c for c in self.measure_separators
                                        if graph.has_children(c, [C.Staves.STAFF])]
-        logger.info(f"We have {len(self.measure_separators)} measure separators.")
+        logger.debug(f"Found {len(self.measure_separators)} measure separators.")
 
         self.staff_to_msep_map = collections.defaultdict(list)
         for m in self.measure_separators:
@@ -918,7 +996,7 @@ class PitchInferenceEngine(object):
         if ignore_nonstaff:
             self.noteheads = [c for c in self.noteheads
                               if graph.has_children(c, [C.Staves.STAFF])]
-        logger.info(f"We have {len(self.noteheads)} noteheads.")
+        logger.debug(f"Found {len(self.noteheads)} noteheads.")
 
         self.staff_to_noteheads_map = collections.defaultdict(list)
         for n in self.noteheads:

@@ -5,7 +5,7 @@ import operator
 import warnings
 from fractions import Fraction
 from typing import Optional, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from mung.constants import (
     InferenceEngineConstants as I,
@@ -19,6 +19,13 @@ from mung.node import bounding_box_dice_coefficient, Node
 from mung.subevents_from_nodes import subevents_from_list_of_symbols
 from .precedence_graph_node import PrecedenceGraphNode
 from ..logger import logger
+from mung.interpret import (
+    TimeSignatureInterpreter,
+    BasicTupletModifierInterpreter,
+    TimeSigStruct,
+    TupletModifierInterpreter,
+    BasicTimeSignatureInterpreter
+)
 
 
 @dataclass(frozen=True)
@@ -27,11 +34,13 @@ class OnsetsInferenceStrategy(object):
     precedence_only_for_objects_connected_to_staff: bool = True
     count_flags_and_beams_for_notehead_half: bool = True
     permissive: bool = True
+    time_sig_interpreter: TimeSignatureInterpreter = field(default_factory=BasicTimeSignatureInterpreter)
+    default_time_sig: TimeSigStruct = field(default=TimeSigStruct(4, 4))
+    tuplet_mod_interpreter: TupletModifierInterpreter = field(default_factory=BasicTupletModifierInterpreter)
+    default_tuple_mod: Fraction = Fraction(2, 3)
 
 
 class OnsetsInferenceEngine:
-    _DEFAULT_FRACTIONAL_VERTICAL_IOU_THRESHOLD = 0.8
-
     def __init__(
             self,
             strategy: Optional[OnsetsInferenceStrategy] = None,
@@ -199,71 +208,11 @@ class OnsetsInferenceEngine:
         else:
             self.__graph: NotationGraph = NotationGraph(nodes_or_graph)
 
-    def _no_numeral_tuple_fallback(self, tuple_: Node) -> int:
-        # Finds noteheads, separates them into subevents, and counts them.
-        affected_noteheads = self.__graph.parents(tuple_, class_filter=I.CLASSES_BEARING_DURATIONS)
-        subevents = subevents_from_list_of_symbols(affected_noteheads, self.__graph)
-        logger.debug(f"Found subevents: {[[x.id for x in xs] for xs in subevents]}")
-        return len(subevents)
-
     def compute_tuple_modifier(self, tuple_: Node) -> Fraction:
-        # Find the number in the tuple.
-        numerals = self.__graph.children(tuple_, I.NUMERALS)
-
-        if len(numerals) == 0:
-            logger.warning(f"Tuple {tuple_.id} has no numerals!")
-        elif len(numerals) > 3:
-            logger.warning(f"Tuple {tuple_.id} has more than 3 numerals!")
-        
-        tuple_number = self.interpret_numerals(sorted(numerals, key=lambda x: x.left))
-
-        # Fallback, the list of numbers was empty or corrupted in some way,
-        # Count noteheads attached to that tuple
-        if tuple_number is None:
-            tuple_number = self._no_numeral_tuple_fallback(tuple_)
-            logger.warning(f"Using numeral fall back, counting events: {tuple_number}")
-
-        # Last note in tuple should get complementary duration
-        # to sum to a whole. Otherwise, playing brings slight trouble.
-        if tuple_number > 6:
-            logger.warning("Cannot really deal with higher tuples than 6.")
-
-        match tuple_number:
-            case 2:
-                # Duola makes notes *longer*
-                return Fraction(3, 2)
-            case 3:
-                return Fraction(2, 3)
-            case 4:
-                # This one also makes notes longer
-                return Fraction(4, 3)
-            case 5:
-                return Fraction(4, 5)
-            case 6:
-                # Most often done for two consecutive triolas,
-                # e.g. 16ths with a 6-tuple filling one beat
-                return Fraction(2, 3)
-            case 7:
-                # Here we get into trouble, because this one
-                # can be both 4 / 7 (7 16th in a beat)
-                # or 8 / 7 (7 32nds in a beat).
-                # In the same vein, we cannot resolve higher
-                # tuples unless we establish precedence/simultaneity.
-                # For MUSCIMA++ specifically, we can cheat: there is only one
-                # septuple, which consists of 7 x 32rd in 1 beat, so they
-                # get 8 / 7.
-                logger.warning("MUSCIMA++ cheat: we know there is only 7 x 32rd in 1 beat in page 14.")
-                return Fraction(8, 7)
-            case 9:
-                return Fraction(9, 8)
-            case 10:
-                logger.warning("MUSCIMA++ cheat: we know there is only 10 x 32rd in 1 beat in page 04.")
-                return Fraction(4, 5)
-            case 8:
-                return Fraction(7, 8)
-            case _:
-                return Fraction(2, 3)
-                raise NotImplementedError(f"Tuple {tuple_.id}: Cannot deal with tuple number {tuple_number}")
+        mod = self.strategy.tuplet_mod_interpreter.interpret_tuplet_modifier(tuple_, self.__graph)
+        if mod is None:
+            return self.strategy.default_tuple_mod
+        return mod
     
     @staticmethod
     def _cache_time_modifier_tuple(tuple_: Node, modifier: Fraction) -> None:
@@ -337,6 +286,10 @@ class OnsetsInferenceEngine:
         
         duration_modifier *= dot_duration_modifier
 
+        # Tremolo beams half the duration of a note
+        if self.__graph.has_children(notehead, class_filter=C.Tremolo.TREMOLO_BEAM):
+            duration_modifier *= Fraction(1, 2)
+
         return duration_modifier
 
     def rest_beats(self, rest: Node, ignore_modifiers=False) -> Fraction:
@@ -391,34 +344,34 @@ class OnsetsInferenceEngine:
         staffs = self.__graph.children(node, class_filter=[C.Staves.STAFF])
 
         if len(staffs) == 0:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
-                            ' it is not attached to any staff! Returning default: 4'
-                            ''.format(node.id))
+            # logger.warning('Interpreting object {0} as measure-lasting, but'
+            #                 ' it is not attached to any staff! Returning default: 4'
+            #                 ''.format(node.id))
             return Fraction(4)
 
         if len(staffs) > 1:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
-                            ' it is connected to more than 1 staff: {1}'
-                            ' Returning default: 4'
-                            ''.format(node.id, [s.id for s in staffs]))
+            # logger.warning('Interpreting object {0} as measure-lasting, but'
+            #                 ' it is connected to more than 1 staff: {1}'
+            #                 ' Returning default: 4'
+            #                 ''.format(node.id, [s.id for s in staffs]))
             return Fraction(4)
 
-        logger.info('Found staffs: {0}'.format([s.id for s in staffs]))
+        logger.debug('Found staffs: {0}'.format([s.id for s in staffs]))
 
         staff = staffs[0]
         time_signatures = self.__graph.ancestors(staff, class_filter=I.TIME_SIGNATURES)
 
-        logger.info('Time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.debug('Time signatures: {0}'.format([t.id for t in time_signatures]))
 
         applicable_time_signatures = sorted([t for t in time_signatures
                                              if t.left < node.left],
                                             key=operator.attrgetter('left'))
-        logger.info('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
+        logger.debug('Applicable time signatures: {0}'.format([t.id for t in time_signatures]))
 
         if len(applicable_time_signatures) == 0:
-            logger.warning('Interpreting object {0} as measure-lasting, but'
+            logger.warning('Interpreting {0} as measure-lasting, but'
                             ' there is no applicable time signature. Returnig'
-                            ' default: 4'.format(node.id))
+                            ' default: 4'.format(node))
             return Fraction(4)
 
         valid_time_signature = applicable_time_signatures[-1]
@@ -1206,6 +1159,11 @@ class OnsetsInferenceEngine:
             time_signature: Node,
             fractional_vertical_iou_threshold: Optional[float] = None,
     ) -> Fraction:
+        
+        res = self.strategy.time_sig_interpreter.interpret_time_signature(time_signature, self.__graph)
+        if res is None:
+            return self.strategy.default_time_sig * 4
+        return res * 4
         """Converts the time signature into the beat count
         (in quarter notes) it assigns to its following measures.
 

@@ -21,8 +21,9 @@ def find_staff_for_container(container: Node, graph: NotationGraph) -> tuple[Fra
     If there are multiple leftmost durables, returns the topmost found staff.
     """
     # retrieve all durables connected to beam
-    nodes = graph.parents(container, class_filter=[C.Noteheads.NOTEHEAD_BLACK, C.Noteheads.NOTEHEAD_HALF] + I.REST_CLASS_NAMES)
+    nodes = graph.parents(container, class_filter=I.NONGRACE_NOTEHEAD_CLASS_NAMES + I.REST_CLASS_NAMES)
     # find all the leftmost notes (smallest onset)
+    
     minimal = all_min(nodes, key=lambda n: n.data[O.ONSET_BEATS])
     if len(minimal) == 0:
         raise ValueError(f"Unable to find leftmost durable for {container}")

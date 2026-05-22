@@ -502,9 +502,5 @@ class NoteheadSnapEngine:
         # to a staff position.
         if not self._graph.has_children(grace, class_filter=C.NoteheadAttachments.LEGER_LINE):
             self._snap_grace_note_without_leger_lines_to_staff(grace, parent_staff.id)
-            print(f"Snapping {grace} to staff position")
+            logger.debug(f"Snapping {grace} to staff position")
         return 1
-
-
-
-

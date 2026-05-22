@@ -29,7 +29,6 @@ class _StaffWrapperForStaffspaceGenerator:
             stafflines: list[Node]
             ):
         if len(stafflines) != WESTERN_NOTATION_STAFFLINE_COUNT:
-            print(len(stafflines))
             raise StafflineCountNotMultipleError()
         if not all(x.class_name == C.Staves.STAFF_LINE for x in stafflines):
             raise ValueError(f"Mismatched class names in {stafflines}")

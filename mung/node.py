@@ -661,6 +661,10 @@ class Node(object):
         self.__width = abs_r - abs_l
 
         self.set_mask(new_mask)
+    
+    @property
+    def text_transcription(self) -> Optional[str]:
+        return self.data.get("text_transcription")
 
     @property
     def is_precedence_sink(self):

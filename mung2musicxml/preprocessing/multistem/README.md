@@ -43,7 +43,9 @@ Again, in this case, the algorithm would leave the longer notehead without any p
 
 There are multiple symbols that need to be reassigned to the correct notehead as they do not apply to both noteheads. By default, these are:
 
-- flags and beams.
+- flags,
+- beams,
+- single tremolos and tremolo beams.
 
 Other symbols are shared between these two, by default:
 

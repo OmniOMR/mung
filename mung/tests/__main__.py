@@ -15,11 +15,11 @@ from unittest import main
 import sys
 from pathlib import Path
 
-
 if __name__ == "__main__":
     assert __package__ is not None
-    start_dir = __package__.split(".")[0]
+    # Get the tests directory instead of the package root
+    tests_dir = Path(__file__).parent
     main(
         module=None,
-        argv=["", "discover", "-s", start_dir, "-p", "test_*.py"] + sys.argv[1:]
+        argv=["", "discover", "-s", str(tests_dir), "-p", "test_*.py"] + sys.argv[1:]
     )

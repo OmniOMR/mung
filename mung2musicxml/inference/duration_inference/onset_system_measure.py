@@ -98,17 +98,18 @@ class _OnsetSystemMeasureWrapper:
             return
         
         # Get durables whose duration is time sig dependant
-        # - they last full measure and should always be a sink and a source
-        # -> we can extract them from topological sort with no harm done
-        # - they start at the minimal onset and end at the maximal end onset
+        # (whole note, whole rest, repeat, ...)
+        # There are multiple cases that can occur_
+        # - no TSDs -> process the measure normally
+        # - at most one TSD per staff ->
+        #       compute their duration based on other non-TSD durables in the measure
+        #       (if there are none, default to DEFAULT_MEASURE_DURATION)
+        # - other -> set TSDs duration to DEFAULT_MEASURE_DURATION and process them with other durables
         time_sig_dep = [x for x in self._nodes if x.class_name in I.MEASURE_LASTING_CLASS_NAMES]
-        if len(time_sig_dep) > 0:
-            logger.warning(f"Found measure lasting symbols: {[str(x) for x in time_sig_dep]}")
-
-        nodes = [x for x in self._nodes if x not in set(time_sig_dep)]
+        not_tsd = [x for x in self._nodes if x not in time_sig_dep]
         
         # Sort nodes for easier inference
-        topo_sort = topological_sort(nodes, lambda p, c: c.id in p.precedence_outlinks)
+        topo_sort = topological_sort(self._nodes, lambda p, c: c.id in p.precedence_outlinks)
         logger.debug(f"Inferring onset for: {[x.id for x in topo_sort]}")
 
         # Get sources, set their onset to "start", and remove them 
@@ -127,24 +128,37 @@ class _OnsetSystemMeasureWrapper:
 
         # For each node, look at its parents and choose the maximal onset
         for node in not_sources:
-            logger.debug(f"Processing {node.class_name} {node.id}")
-            onset = self._infer_onset_for_node(parents_in_measure(node, nodes), permissive=permissive)
+            logger.debug(f"Processing {node}")
+            onset = self._infer_onset_for_node(parents_in_measure(node, self._nodes), permissive=permissive)
             self._set_onset(node, onset)
         
+        # set TSD to measure duration
+        # if no other durables in that system is dependant on it
         if len(time_sig_dep) > 0:
-            sm_start_onset = start_onset
-            if len(nodes) == 0:
-                sm_duration = I.DEFAULT_MEASURE_DURATION
-            else:
-                sm_end_onset = max(node.data[O.ONSET_BEATS] + node.data[O.DURATION_BEATS] for node in nodes)
-                sm_duration = sm_end_onset - sm_start_onset
+            # precompute potential TSD duration etc.
+            tsd_start_onset = start_onset
+            tsd_end_onset = max(
+                (node.data[O.ONSET_BEATS] + node.data[O.DURATION_BEATS]
+                for node in not_tsd),
+                default=I.DEFAULT_MEASURE_DURATION
+            )
+            tsd_duration = tsd_end_onset - tsd_start_onset
             
-            for node in time_sig_dep:
-                logger.warning(f"Processed {node} as time signature dependant: onset={sm_start_onset}, duration={sm_duration}")
-                node.data[O.ONSET_BEATS] = sm_start_onset
-                node.data[O.DURATION_BEATS] = sm_duration
-                node.data[O.DURATION_BEATS_WO_M] = sm_duration        
-    
+            for tsd in time_sig_dep:
+                # has some children/parents in measure -> they depend on TSD
+                children = set.intersection(set(self._graph.precedence_children(tsd)), self._nodes)
+                parents = set.intersection(set(self._graph.precedence_parents(tsd)), self._nodes)
+
+                if len(children) == 0 and len(parents) == 0:
+                    c_o = tsd.data.get(O.DURATION_BEATS)
+                    if c_o is not None and c_o != I.DEFAULT_MEASURE_DURATION:
+                        continue
+
+                    logger.warning(f"Processed {tsd} as 'time signature dependant': onset={tsd_start_onset}, duration={tsd_duration}")
+                    tsd.data[O.ONSET_BEATS] = tsd_start_onset
+                    tsd.data[O.DURATION_BEATS] = tsd_duration
+                    tsd.data[O.DURATION_BEATS_WO_M] = tsd_duration
+            
     def is_synchronized(self) -> bool:
         sinks = self.sinks()
         ends = set(self._node_end_onset(sink) for sink in sinks)
