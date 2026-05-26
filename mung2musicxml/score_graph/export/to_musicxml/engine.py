@@ -453,8 +453,24 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/
         """
+        def _rest_is_measure_lasting(rest: Rest) -> bool:
+            """
+            Only rest with that one in its measure.
+            """
+            if rest.type_.can_be_measure_lasting():
+                # on the same staff in the same measure
+                i = set.intersection(set(rest.staff.durables), rest.part_measure.all_durables)
+                # same voice, care only about other rests
+                i = [d for d in i if (isinstance(d, Rest) and d.voice == rest.voice)]
+                return len(i) == 1
+            return False
+        
         r = ET.Element("note")
-        ET.SubElement(r, "rest")
+
+        if _rest_is_measure_lasting(rest):
+            ET.SubElement(r, "rest", {"measure": "yes"})
+        else:
+            ET.SubElement(r, "rest")
         
         ET.SubElement(r, "duration").text = str(rest.duration)
         

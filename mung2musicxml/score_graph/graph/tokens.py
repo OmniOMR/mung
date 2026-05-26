@@ -245,6 +245,13 @@ class NoteTypeValue(StrEnum):
         MAXIMA
     }
 
+    __measure_lasting = {
+        WHOLE,
+        BREVE,
+        LONG,
+        MAXIMA
+    }
+
     @classmethod
     def default(cls) -> "NoteTypeValue":
         return cls.QUARTER
@@ -254,6 +261,12 @@ class NoteTypeValue(StrEnum):
         Returns true a note of this type has a stem.
         """
         return self not in self.__without_stem
+
+    def can_be_measure_lasting(self) -> bool:
+        """
+        Returns true if a rest of this type can be measure lasting.
+        """
+        return self in self.__measure_lasting
 
     @classmethod
     def from_fraction(cls, value: Fraction) -> "NoteTypeValue":
