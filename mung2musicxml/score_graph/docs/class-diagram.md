@@ -16,6 +16,7 @@ classDiagram
     class Beam
     class Accidental
     class Slur
+    class Voice
 
     Score "1" --> "1..*" ScorePart
     Score "1" --> "1..*" ScoreMeasure
@@ -28,6 +29,7 @@ classDiagram
     Accidental "0..1" --> "1" Note
     Beam "0..*" --> "1..*" Chord
     Slur "0..*" --> "1..*" Chord
+    Voice "1*" --> "1..*" Note
 
     style Score fill:green,color:white
     style ScoreMeasure fill:green,color:white
@@ -39,4 +41,5 @@ classDiagram
     style Beam fill:blue,color:white
     style Accidental fill:blue,color:white
     style Slur fill:blue,color:white
+    style Voice fill:green,color:white
 ```

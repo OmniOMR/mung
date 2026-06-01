@@ -389,7 +389,7 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
 </p>
 
 - ✅ `dynamicCrescendoHairpin`
-- ✅`dynamicDiminuendoHairpin`
+- ✅ `dynamicDiminuendoHairpin`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/wedge-element.png" height="100">
