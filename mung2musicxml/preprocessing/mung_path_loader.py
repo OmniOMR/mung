@@ -10,8 +10,17 @@ DEFAULT_MUNG_FILE_NAME: str = "mung.xml"
 
 
 def count_lines_in_file(file: Path) -> int:
-    with open(file, "r") as f:
-        num_lines = sum(1 for _ in f)
+    num_lines = 0
+    last_line = None
+
+    with open(file, "r", encoding="utf-8") as f:
+        for line in f:
+            num_lines += 1
+            last_line = line
+
+    if last_line is not None and last_line.rstrip("\r\n") == "":
+        num_lines -= 1
+
     return num_lines
 
 

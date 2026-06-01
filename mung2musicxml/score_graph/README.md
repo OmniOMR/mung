@@ -22,7 +22,7 @@ More on the philosophy and design of its inner workings can be found in [Smashci
   <img src="./docs/images/architecture-overview.png">
 </p>
 
-Example of a possible score **(a)** consisting of two instruments: a single-staff instrument shown in red, and a grand staff represented by the green and blue staves. The note highlighted in red belongs both to a chord and to the blue staff. Connections of a notehead highlighted in red to other ScoreGraph classes are illustrated in graph **(b)**. ScoreGraph objects directly constructed from MuNG objects are highlighted in blue and the abstract classes introduced in our ScoreGraph implementation are highlighted in green.
+Example of a possible score **(a)** consisting of two instruments: a single-staff instrument shown in red, and a grand staff represented by the green and blue staves. The note highlighted in red belongs both to a chord and to the blue staff. Connections of a notehead highlighted in red to other ScoreGraph classes are illustrated in graph **(b)**. ScoreGraph objects directly constructed from MuNG objects are highlighted in blue and the abstract classes introduced in our ScoreGraph implementation are highlighted in green. Voice is a sequence of musical events that proceeds linearly in time, each ScorePart defines its own Voice objects.
 
 A `Chord` is defined as the union of all notes sharing the same stem. A `ScorePart` is a unique object representing a single instrument and contains all of its staffs and measures (`PartMeasures`). A `ScoreMeasure` groups all `PartMeasures` across instruments that occur simultaneously in time. The `Score` object forms the root of the ScoreGraph hierarchy.
 
