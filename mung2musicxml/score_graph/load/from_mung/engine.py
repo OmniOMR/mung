@@ -1,9 +1,11 @@
 from fractions import Fraction
 from pathlib import Path
-from typing import Self, Any
+from typing import Self, Any, Optional, Type
 from collections import defaultdict, Counter
 from itertools import chain
 from dataclasses import dataclass
+from contextlib import contextmanager
+
 
 from mung import NotationGraph, Node
 from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
@@ -41,15 +43,13 @@ from .construct_lyric import construct_lyric
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
 from .collector import SubeventCollector, CollectorRecord
-
-
-MEASURE_INDEX_START = 1
-MAX_VOICES = 8
+from .settings import MuNGLoaderSettings
 
 
 class MuNG_LoadEngine(LoadEngine):
-    def __init__(self) -> None:
+    def __init__(self, settings: Optional[MuNGLoaderSettings] = None) -> None:
         self._btsi = BasicTimeSignatureInterpreter()
+        self._settings = settings if settings is not None else MuNGLoaderSettings()
     
     def _get_symbols_staff(self, symbol: Node, mapping: dict[Node, Staff], graph: NotationGraph):
         """
@@ -158,6 +158,27 @@ class MuNG_LoadEngine(LoadEngine):
         
         logger.debug(f"Added {type(obj).__name__} based on {source_str}")
     
+    def _is_critical_class(self, type_: Type[SceneObject]) -> bool:
+        """
+        Returns true, if the given type is considered critical
+        by the engine's settings.
+        """
+        return type_ in self._settings.critical_classes
+
+    @contextmanager
+    def _construction_guard(self, mung_obj: Node, type_: type, critical: bool = False):
+        critical = critical or self._is_critical_class(type_)
+        result = None
+        try:
+            yield result
+            if result is not None:
+                self._log_object_creation(result, mung_obj)
+        except Exception as e:
+            if not critical:
+                logger.warning(f"Failed to create {type_} from {mung_obj}", exc_info=True)
+            else:
+                raise ValueError(f"Failed to create {type_} from {mung_obj}") from e
+    
     def load_from_file(self, file_name: Path | str) -> Score:
         return self.load(NotationGraph.from_file(file_name))
  
@@ -195,10 +216,10 @@ class MuNG_LoadEngine(LoadEngine):
         # for system:
         #   for instrument in system: (instrument is defined by one or two staffs)
         #       retrieve all nodes linked to these staff
-        next_measure_id = MEASURE_INDEX_START
+        next_measure_id = self._settings.measure_index_start
         for instrument_groups, sys in zip(instros, systems):
             offset = next_measure_id
-            if offset != MEASURE_INDEX_START:
+            if offset != self._settings.measure_index_start:
                 new_system_indexes.append(offset)
             
             for group in instrument_groups:
@@ -386,10 +407,10 @@ class MuNG_LoadEngine(LoadEngine):
         score = Score(score_parts=parts, score_measures=system_measures)
         
         for id_ in durables_by_voice.keys():
-            assert id_ <= MAX_VOICES, f"Unsupported number of voices. {id_}"
+            assert id_ <= self._settings.voice_limit, f"Unsupported number of voices. {id_}"
         
         voices: list[Voice] = []
-        for id_ in range(1, MAX_VOICES + 1):
+        for id_ in range(1, self._settings.voice_limit + 1):
             voices.append(Voice(id_, durables_by_voice[id_]))
         
 
@@ -437,72 +458,43 @@ class MuNG_LoadEngine(LoadEngine):
         
         for g in gs:
             PartGroup(list(g.parts), bracket_type=g.bracket_type)
-            
-        from contextlib import contextmanager
-
-        class CriticalClasses:
-            _non_critical: set[type] = {
-                Tie,
-                Slur,
-                Wedge,
-            }
-
-            def is_critical(self, type_: type) -> bool:
-                return type_ not in self._non_critical
-
-        @contextmanager
-        def _construction_guard(mung_obj, type_: type, critical: bool = True):
-            try:
-                yield
-            except Exception as e:
-                if not critical:
-                    logger.warning(f"Failed to create {type_} from {mung_obj}", exc_info=True)
-                else:
-                    raise ValueError(f"Failed to create {type_} from {mung_obj}") from e
-            
+        
 
         for mung_beam, subs in c.subevents_by(DurableBeam).items():
-            beam = construct_durable_beam(mung_beam, list(subs))
-            self._log_object_creation(beam, mung_beam)
+            with self._construction_guard(mung_beam, Durable):
+                beam = construct_durable_beam(mung_beam, list(subs))
 
         for mung_articulation, subs in c.subevents_by(Articulation).items():
             if len(subs) > 1:
                 logger.warning(f"{mung_articulation} is connected to more than one subevent")
             for sub in subs:
-                articulation = construct_articulation(mung_articulation, sub)
-                self._log_object_creation(articulation, mung_articulation)
+                with self._construction_guard(mung_articulation, Articulation):
+                    articulation = construct_articulation(mung_articulation, sub)
 
         for mung_tuplet, subs in c.subevents_by(Tuplet).items():
-            with _construction_guard(mung_tuplet, Tuplet, False):
+            with self._construction_guard(mung_tuplet, Tuplet):
                 tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
-                self._log_object_creation(tuplet, mung_tuplet)
         
         for mung_slur, subs in c.subevents_by(Slur).items():
-            slur = construct_slur(mung_slur, list(subs), graph)
-            self._log_object_creation(slur, mung_slur)
+            with self._construction_guard(mung_slur, Slur):
+                slur = construct_slur(mung_slur, list(subs), graph)
 
         for mung_tie, durs in durables_by_tie.items():
-            with _construction_guard(mung_tie, Tie, CriticalClasses().is_critical(Tie)):
+            with self._construction_guard(mung_tie, Tie):
                 obj = try_construct_tie(mung_tie, list(durs), graph)
 
-                if obj is not None:
-                    self._log_object_creation(obj, mung_tie)
-
         for mung_hairpin, subs in c.subevents_by(Wedge).items():
-            try:
+            with self._construction_guard(mung_hairpin, Wedge):
                 wedge = construct_wedge(mung_hairpin, list(subs), graph)
-                self._log_object_creation(wedge, mung_hairpin)
-            except Exception as e:
-                raise ValueError(f"Failed to create {Wedge.__name__} from {mung_hairpin}") from e
-                
+        
         for mung_dynamics, subs in c.subevents_by(Dynamics).items():
-            dynamics = construct_dynamics(mung_dynamics, subs)
-            self._log_object_creation(dynamics, mung_dynamics)
+            with self._construction_guard(mung_dynamics, Dynamics):
+                dynamics = construct_dynamics(mung_dynamics, subs)
         
         for mung_fermata, subs in c.subevents_by(Fermata).items():
             for sub in subs:
-                fermata = construct_fermata(mung_fermata, sub)
-                self._log_object_creation(fermata, mung_fermata)
+                with self._construction_guard(mung_fermata, Fermata):
+                    fermata = construct_fermata(mung_fermata, sub)
 
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
         for mung_lyric, subs in c.subevents_by(Lyric).items():
@@ -513,8 +505,7 @@ class MuNG_LoadEngine(LoadEngine):
                     self._log_object_creation(lyric, mung_lyric)
             except AssertionError as ae:
                 raise ValueError(f"Unable to construct {Lyric.__name__} from: {mung_lyric}") from ae
-
-
+            
 
         for l_level, lyrics in l_to_l.items():
             l_level.lyrics = lyrics
