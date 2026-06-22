@@ -2,9 +2,9 @@
 
 > **Last revision: March 7nd 2026**
 
-> **Based on Annotation instructions from: [Feb 6th 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md#edgecases)**
+> **Based on Annotation instructions from: [Feb 6th 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md)**
 
-This document goes over classes from MuNG that are are implemented in ScoreGraph, the list is based on [Annotation Instructions](https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md#edgecases). For potential limitations of **implemented** classes see [Exporter Limitations](./musicxml-exporter-limitations.md) and [MusicXML Limitations](./musicxml-limitations.md).
+This document goes over classes from MuNG that are are implemented in ScoreGraph, the list is based on [Annotation Instructions](https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md). For potential limitations of **implemented** classes see [Exporter Limitations](./musicxml-exporter-limitations.md) and [MusicXML Limitations](./musicxml-limitations.md).
 
 There are four levels of implementation:
 
@@ -219,18 +219,44 @@ ScoreGraph makes no difference between clefs at the starf of a system (`{g,f,c}C
   <img src="./images/verse-number.png" height="100">
 </p>
 
-- ❌ `lyricsUnisono`
+- ✅ `lyricsUnisono` - for more info see [MusicXML Limitations](./musicxml-limitations.md#lyrics-unisono).
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/lyricsUnisono-1.png" height="100">
+</p>
+
 
 ## Tempo
 
-- ❌ `tempoText`
-- ❌ `tempoRitardando`
-- ❌ `tempoAccelerando`
-- ❌ `tempoATempo`
+- ✅ `tempoText`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoText-3.png" height="100">
+</p>
+
+- ✅ `tempoRitardando`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoRitardando-2.png" height="100">
+</p>
+
+- ❌ `tempoRitardandoSpanner`
+- ✅ `tempoAccelerando`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoAccelerando-1.png" height="100">
+</p>
+
+- ❌ `tempoAccelerandoSpanner`
+- ✅ `tempoATempo`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoATempo-1.png" height="100">
+</p>
 
 ## Text
 
-- ❌ `interpretationText`
+- ✅ `interpretationText`
 - ❌ `metadataText`
 - ❌ `measureNumber`
 
@@ -376,13 +402,13 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/n-element.png" height="100">
 </p>
 
-- ❌ `dynamicDiminuendo`
+- ✅ `dynamicDiminuendo`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/dynamicDiminuendo-0.png" height="100">
 </p>
 
-- ❌ `dynamicCrescendo`
+- ✅ `dynamicCrescendo`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/dynamicCrescendo-0.png" height="100">

@@ -409,3 +409,20 @@ class SyllabicTypeToken(StrEnum):
     END = "end"
     MIDDLE = "middle"
     SINGLE = "single"
+
+
+class FontStyleToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-style/
+    """
+    NORMAL = "normal"
+    ITALIC = "italic"
+
+
+class FontWeightToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-weight/
+    """
+    NORMAL = "normal"
+    BOLD = "bold"
+    

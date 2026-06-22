@@ -2,12 +2,13 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from time import localtime, strftime
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Optional, Literal, Iterable
 from collections import defaultdict
 
 from mung2musicxml.score_graph.graph import Score
 from mung.interpret import TimeSigStruct
 from ...graph import *
+from ...graph.interface import ScoreText
 from ....logger import logger
 from ..id_pool import IDPool
 from .utils import _aggregate_mods
@@ -360,6 +361,60 @@ class MusicXML_ExportEngine(ExportEngine):
         ET.SubElement(time_mod, "normal-notes").text = str(time_modification.normal)
         return time_mod
     
+    def _xml_direction_base(self, placement: AboveBelowToken, staff_id: int) -> tuple[ET.Element, ET.Element]:
+        dir = ET.Element("direction", {"placement": placement})
+        ET.SubElement(dir, "staff").text = str(staff_id)
+        dir_type = ET.SubElement(dir, "direction-type")
+        return dir, dir_type
+    
+    def _xml_font_settings(self, obj: SceneObject) -> dict[str, str]:
+        """
+        Finds font definition for a given object
+        inside setting and returns it formatted
+        as a dictionary with MusicXML keys and values.
+
+        Returns an empty dictionary if not font definition
+        is found.
+        """
+        fs = self.settings.text_settings.get(type(obj))
+        if fs is None:
+            return {}
+        else:
+            output: dict[str, str]= {}
+            for key, value in vars(fs).items():
+                key: str
+                if key.startswith("font") and value is not None:
+                    key = key.replace("_", "-")
+                    output[key] = str(value)
+            return output
+
+    def xml_Dynamics(self, subevent: Subevent) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/dynamics/
+        """
+        output = []
+        for dynamic in subevent.dynamics:
+            dir, dir_type = self._xml_direction_base(dynamic.placement, dynamic.staff.id)
+            dyn = ET.SubElement(dir_type, "dynamics")
+            dyn_impl = ET.SubElement(dyn, str(dynamic.type_))
+            if dynamic.type_ == DynamicsTypeToken.OTHER_DYNAMICS:
+                assert dyn_impl is not None
+                dyn_impl.text = dynamic.text
+            output.append(dir)
+        return output
+    
+    def xml_ScoreText(self, subevent: Subevent, texts: Iterable[ScoreText]) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/words/
+        """
+        output = []
+        for text in texts:
+            if text.is_start(subevent):
+                dir, dir_type = self._xml_direction_base(text.placement, text.staff.id)
+                ET.SubElement(dir_type, "words", self._xml_font_settings(text)).text = text.text
+                output.append(dir)
+        return output
+    
     def xml_Subevent(self, subevent: Subevent) -> list[ET.Element]:
         """
         Subevent does not have a direct MusicXML equivalent.
@@ -372,15 +427,11 @@ class MusicXML_ExportEngine(ExportEngine):
         output = []
         
         output.extend(self.xml_Wedge(subevent, "start"))
+        output.extend(self.xml_Dynamics(subevent))
+        output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
+        output.extend(self.xml_ScoreText(subevent, subevent.tempos))
+        output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
 
-        for dynamic in subevent.dynamics:
-            dir = ET.Element("direction")
-            dir_type = ET.SubElement(dir, "direction-type")
-            dyn = ET.SubElement(dir_type, "dynamics")
-            # ET.SubElement(dir, "staff").text = "1"
-            ET.SubElement(dyn, str(dynamic.type_))
-            output.append(dir)
-        
         if isinstance(subevent, Chord):
             for note in subevent.notes:
                 for grace in note.grace_notes:

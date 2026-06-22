@@ -118,9 +118,10 @@ class TimeSignatures(AllStrEnumNumeralMapped):
 class Lyrics(StrEnum):
     LYRICS_TEXT = "lyricsText"
     VERSE_NUMBER = "verseNumber"
+    LYRICS_UNISONO = "lyricsUnisono"
 
 
-class Tempo(StrEnum):
+class Tempo(AllExtendedStrEnum):
     TEMPO_TEXT = "tempoText"
     TEMPO_RITARDANDO = "tempoRitardando"
     TEMPO_ACCELERANDO = "tempoAccelerando"
@@ -263,6 +264,7 @@ class ClassNameConstants:
     Articulation = Articulation
     Dynamics = Dynamics
     Repeat = Repeat
+    Tempo = Tempo
     Tuplets = Tuplets
     Tremolo = Tremolo
     Ornaments = Ornaments

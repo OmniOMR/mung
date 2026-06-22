@@ -16,7 +16,7 @@ class Wedge(GenericStartStopContinue[Subevent]):
     """
     type_: WedgeType
     placement: AboveBelowToken
-    # staff_id: int
+    
     @property
     def staff(self) -> "Staff":
         from .staff import Staff

@@ -1,6 +1,6 @@
 from fractions import Fraction
 from mung import Node, NotationGraph
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Iterable, Optional
 from mung.constants import (
     ClassNameConstants as C,
     OnsetDataConstants as O
@@ -108,3 +108,37 @@ def find_line_index_for_clef(clef: Node, graph: NotationGraph) -> int:
     # lowest staff line is first
     s_lines.sort(key=lambda l: l.top, reverse=True)
     return s_lines.index(line) + 1
+
+
+def get_start_stop_subevents(
+        subs: list[Subevent]
+) -> tuple[Subevent, Optional[Subevent]]:
+    """
+    Returns start with the lowest global
+    fractional onset and minimal voice.
+    The highest gfo is returned as stop subevent,
+    if it differs from the lowest one.
+
+    :return: (start, stop or None)
+    """
+    assert len(subs) > 0
+    
+    subs.sort(key=lambda s: s.global_fractional_onset)
+    # solve multiple links from subevents with the same onset
+    # (choose one with the lowest voice)
+    if subs[0].global_fractional_onset == subs[-1].global_fractional_onset:
+        return min(subs, key=lambda s: s.voice.id), None
+
+    min_onset = subs[0].global_fractional_onset # sorted, so first is min
+    max_onset = subs[-1].global_fractional_onset # sorted, so last is max
+    
+    first = min(
+        (s for s in subs if s.global_fractional_onset == min_onset),
+        key=lambda s: s.voice.id
+    )
+    last = min(
+        (s for s in subs if s.global_fractional_onset == max_onset),
+        key=lambda s: s.voice.id
+    )
+    
+    return first, last

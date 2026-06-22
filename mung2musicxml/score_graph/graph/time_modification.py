@@ -18,7 +18,7 @@ class TimeModification(SceneObject):
 
     @classmethod
     def from_fraction(cls, modifier: Fraction):
-        return cls(modifier.denominator, modifier.numerator)
+        return cls(actual=modifier.denominator, normal=modifier.numerator)
 
     def to_fraction(self) -> Fraction:
         return Fraction(self.normal, self.actual)

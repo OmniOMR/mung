@@ -20,3 +20,18 @@ In the example below, the second tie uses `let-ring`:
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/tied-element.png" height="200">
 </p>
+
+
+### Lyrics Unisono
+
+Lyric unisono is not part of SMuFL, character does not exist for it so we are not able to display it properly. 
+
+We use `//` instead inside a standard MusicXML lyric object.
+
+<p>
+  <img src="images/lyrics-unisono-document.png" height="100">
+</p>
+
+<p>
+  <img src="images/lyrics-unisono-solution.png" height="100">
+</p>

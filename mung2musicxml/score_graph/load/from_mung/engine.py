@@ -38,7 +38,9 @@ from .construct_tremolo import construct_tremolo_single
 from .construct_durable import construct_durable
 from .construct_fermata import construct_fermata
 from .construct_lyric import construct_lyric
-
+from .construct_tempo import construct_tempo
+from .construct_dynamics_text import construct_dynamics_text
+from .construct_interpretation_text import construct_interpretation_text
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -122,7 +124,7 @@ class MuNG_LoadEngine(LoadEngine):
             for staff in instrument_system:
                 durables = graph.parents(staff, class_filter=I.NOTEHEADS_AND_RESTS)
                 for durable in durables:
-                    lyrics.update(graph.children(durable, class_filter=C.Lyrics.LYRICS_TEXT))
+                    lyrics.update(graph.children(durable, class_filter=[C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO]))
             
             lyrics_per_system.append(lyrics)
 
@@ -256,7 +258,10 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(Articulation, C.Articulation.ALL()), #type: ignore
                 CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT),
                 CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW]),
-                CollectorRecord(Lyric, C.Lyrics.LYRICS_TEXT),
+                CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO]),
+                CollectorRecord(Tempo, C.Tempo.ALL()), # type: ignore
+                CollectorRecord(DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO]),
+                CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT),
             ]
         )
 
@@ -489,16 +494,30 @@ class MuNG_LoadEngine(LoadEngine):
         
         for mung_dynamics, subs in c.subevents_by(Dynamics).items():
             with self._construction_guard(mung_dynamics, Dynamics):
-                dynamics = construct_dynamics(mung_dynamics, subs)
+                dynamics = construct_dynamics(mung_dynamics, subs, graph)
         
         for mung_fermata, subs in c.subevents_by(Fermata).items():
             for sub in subs:
                 with self._construction_guard(mung_fermata, Fermata):
                     fermata = construct_fermata(mung_fermata, sub)
 
+        for mung_tempo, subs in c.subevents_by(Tempo).items():
+            with self._construction_guard(mung_tempo, Tempo):
+                tempo = construct_tempo(mung_tempo, subs, graph)
+
+        for mung_dynamics_text, subs in c.subevents_by(DynamicsText).items():
+            with self._construction_guard(mung_dynamics_text, DynamicsText):
+                dt = construct_dynamics_text(mung_dynamics_text, subs, graph)
+        
+        for mung_interpretation_text, subs in c.subevents_by(InterpretationText).items():
+            with self._construction_guard(mung_interpretation_text, InterpretationText):
+                it = construct_interpretation_text(mung_interpretation_text, subs, graph)
+
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
         for mung_lyric, subs in c.subevents_by(Lyric).items():
             try:
+                if mung_lyric.class_name == C.Lyrics.LYRICS_UNISONO:
+                    mung_lyric.data["text_transcription"] = self._settings.lyrics_unisono_character
                 lyric = construct_lyric(mung_lyric, list(subs), graph)
                 if lyric is not None:
                     l_to_l[lyrics_to_level[mung_lyric]].append(lyric)

@@ -10,3 +10,4 @@ class MuNGLoaderSettings:
     )
     measure_index_start: int = 1
     voice_limit: int = 8
+    lyrics_unisono_character: str = "//"

@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from .part_measure import PartMeasure
     from .wedge import Wedge
     from .dynamics import Dynamics
+    from .tempo import Tempo
+    from .dynamics_text import DynamicsText
+    from .interpretation_text import InterpretationText
 
 
 @dataclass
@@ -96,3 +99,18 @@ class Subevent(DurationObject):
     def dynamics(self) -> list["Dynamics"]:
         from .dynamics import Dynamics
         return Dynamics.many_of(self, lambda d: d.parent)
+
+    @property
+    def tempos(self) -> list["Tempo"]:
+        from .tempo import Tempo
+        return Tempo.many_of(self, lambda d: d.all)
+    
+    @property
+    def dynamics_texts(self) -> list["DynamicsText"]:
+        from .dynamics_text import DynamicsText
+        return DynamicsText.many_of(self, lambda d: d.all)
+
+    @property
+    def interpretation_texts(self) -> list["InterpretationText"]:
+        from .interpretation_text import InterpretationText
+        return InterpretationText.many_of(self, lambda d: d.all)

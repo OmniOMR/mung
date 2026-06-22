@@ -36,3 +36,7 @@ from .fermata import Fermata
 from .lyric import Lyric
 from .lyric_level import LyricLevel
 from .verse_number import VerseNumber
+from .tempo import Tempo
+from .words_attributes import WordsAttributes
+from .dynamics_text import DynamicsText
+from .interpretation_text import InterpretationText
