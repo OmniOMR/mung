@@ -40,3 +40,5 @@ from .tempo import Tempo
 from .words_attributes import WordsAttributes
 from .dynamics_text import DynamicsText
 from .interpretation_text import InterpretationText
+from .barline import Barline
+from .repeat_barline import RepeatBarline

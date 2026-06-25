@@ -425,4 +425,58 @@ class FontWeightToken(StrEnum):
     """
     NORMAL = "normal"
     BOLD = "bold"
+
+
+class BarStyleToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/bar-style/
+    """
+    DASHED = "dashed"
+    DOTTED = "dotted"
+    HEAVY = "heavy"
+    HEAVY_HEAVY= "heavy-heavy"
+    HEAVY_LIGHT= "heavy-light"
+    LIGHT_HEAVY= "light-heavy"
+    LIGHT_LIGHT= "light-light"
+    NONE = "none"
+    REGULAR = "regular"
+    SHORT = "short"
+    TICK = "tick"
+
+    @classmethod
+    def default(cls) -> "BarStyleToken":
+        return cls.REGULAR
+    
+
+class BackwardForwardToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/backward-forward/
+    """
+    BACKWARD = "backward"
+    FORWARD = "forward"
+
+
+class WingedToken(StrEnum):
+    NONE = "none"
+    STRAIGHT = "straight"
+    CURVED = "curved"
+    DOUBLE_STRAIGHT = "double-straight"
+    DOUBLE_CURVED = "double-curved"
+
+
+class LeftRightMiddleToken(StrEnum):
+    RIGHT = "right"
+    LEFT = "left"
+    MIDDLE = "middle"
+
+    __order = {
+        LEFT: 0,
+        MIDDLE: 1,
+        RIGHT: 2,
+    }
+
+    def __lt__(self, other):
+        if not isinstance(other, LeftRightMiddleToken):
+            return NotImplemented
+        return self.__order[self] < self.__order[other]
     

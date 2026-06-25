@@ -106,3 +106,58 @@ MSS displays only the last clef defined in attributes. Displaying score in the e
 </p>
 
 The symbol disappears from the file, if MSS4 is used for MusicXML normalization. But we would not call this *breaking*.
+
+### Implied brace for grandstaff (:eyes:, potentially :boom:)
+
+MSS4 displays brace at the start of a grandstaff even when it explicitly given MusicXML with `group-symbol` set to `none`.
+
+```xml
+<part-group number="1" type="start">
+  <group-symbol>none</group-symbol>
+</part-group>
+```
+
+Breaks the visuals, if MSS4 is used for MusicXML normalization.
+
+<p>
+<img src="images/brace-when-non-specified.png" height="200">
+</p>
+
+### Unable to display other than `light-heavy` repeats  (:eyes:, potentially :boom:)
+
+MSS4 displays only repeats with bar styles set to `light-heavy` (or equivalently `heavy-light`). Other styles are displayed only as simple barlines. By default, we convert these styles into the two compatible with MSS4.
+
+```xml
+  <barline location="right">
+    <bar-style>heavy-heavy</bar-style>
+    <repeat direction="backward" winged="straight"/>
+  </barline>
+</measure>
+<measure number="50">
+  <barline location="left">
+    <bar-style>heavy-heavy</bar-style>
+    <repeat direction="forward" winged="straight"/>
+  </barline>
+```
+
+<p>
+<img src="images/broken-repeat.png" height="200">
+</p>
+
+Is breaking, if MSS4 is used for MusicXML normalization.
+
+### Repeat in the middle of a measure (:boom:)
+
+Repeats in the middle of a measure get snapped by MSS4 to the left and right sides of said measure. A score like this breaks on import:
+
+<p>
+<img src="https://musescore.org/sites/musescore.org/files/styles/width_1480/public/prokofiev_1.png?itok=p5FMNSWJ" height="200">
+</p>
+
+Repeats in the middle of a measure are not supported by our convertor.
+
+### Bar style at the start of a score gets lost (:eyes:, potentially :boom:)
+
+MSS4 displays a non-regular bar at the start of a score as it is specified in a loaded MusicXML. But, when saving, this information gets lost, the output MusicXML does not contain the bar object anymore.
+
+Breaks the visuals, if MSS4 is used for MusicXML normalization.

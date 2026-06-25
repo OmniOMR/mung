@@ -5,6 +5,9 @@ from functools import cached_property
 
 from .scene_object import SceneObject
 from .part_measure import PartMeasure
+from .barline import Barline
+from .repeat_barline import RepeatBarline
+
 if TYPE_CHECKING:
     from .score import Score
 
@@ -18,10 +21,19 @@ class ScoreMeasure(SceneObject):
     id: int
     part_measures: list[PartMeasure]
     is_new_system: bool
+    bars: list[Barline]
     
     def __post_init__(self) -> None:
         assert len(self.part_measures) > 0
         assert all(m.id == self.id for m in self.part_measures)
+        self._sort_bars()
+    
+    def _sort_bars(self) -> None:
+        self.bars.sort(
+            key=lambda b: (
+                b.location, b.fractional_onset_, isinstance(b, RepeatBarline)
+            )
+        )
     
     @cached_property
     def previous(self) -> "ScoreMeasure":

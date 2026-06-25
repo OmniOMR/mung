@@ -128,6 +128,8 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/score-partwise/
         """
+        self._log_middle_barline_warning(score)
+        
         s = ET.Element("score-partwise", {"version": self.settings.musicxml_version})
         s.append(self.xml_Identification())
 
@@ -139,6 +141,13 @@ class MusicXML_ExportEngine(ExportEngine):
             s.append(self.xml_ScorePart(part))
         
         return s
+    
+    def _log_middle_barline_warning(self, score: Score) -> None:
+        for sm in score.score_measures:
+            for bar in sm.bars:
+                if bar.location == LeftRightMiddleToken.MIDDLE:
+                    logger.warning(f"{LeftRightMiddleToken.MIDDLE} not supported for {type(bar).__name__}")
+        
 
     def _str_xml(self, root: ET.Element, indent: int | str = 2) -> str:
         """
@@ -943,13 +952,62 @@ class MusicXML_ExportEngine(ExportEngine):
         
         return frs
     
-    
     def _is_first_voice(self, voice_id: int) -> bool:
         """
         Returns true, if the given voice id is a first voice
         in its respective staff.
         """
         return voice_id in self.settings.first_voices
+    
+    def _normalize_repeat_style_mss4(self, repeat: RepeatBarline) -> BarStyleToken:
+        if repeat.bf == BackwardForwardToken.FORWARD:
+            return BarStyleToken.HEAVY_LIGHT
+        return BarStyleToken.LIGHT_HEAVY
+      
+    def _add_bars(self, m_element: ET.Element, measure: PartMeasure, location: LeftRightMiddleToken) -> None:
+        def _gen_bar_style(
+                m_element: ET.Element,
+                bar: Barline
+            ) -> ET.Element:
+            style = bar.style
+            if isinstance(bar, RepeatBarline) and self.settings.use_mss4_compatible_repeat_barline_style:
+                style = self._normalize_repeat_style_mss4(bar)
+            
+            barline = ET.SubElement(m_element, "barline", {"location": bar.location})
+            ET.SubElement(barline, "bar-style").text = style
+            return barline
+
+        def _add_bar(
+                m_element: ET.Element,
+                bar: Barline
+            ) -> None:
+            if isinstance(bar, RepeatBarline):
+                barline = _gen_bar_style(m_element, bar)
+                repeat = ET.SubElement(
+                    barline,
+                    "repeat",
+                    {
+                        "direction": bar.bf,
+                        "winged": bar.winged,
+                    }
+                )
+                return
+        
+            if bar.style != BarStyleToken.default():
+                barline = ET.SubElement(m_element, "barline", {"location": bar.location})
+                ET.SubElement(barline, "bar-style").text = bar.style
+                return
+        
+        sm = measure.system_measure
+        for bar in sm.bars:
+            if bar.location == location:
+                _add_bar(m_element, bar)
+        
+    def _add_right_bars(self, m_element: ET.Element, measure: PartMeasure) -> None:
+        self._add_bars(m_element, measure, LeftRightMiddleToken.RIGHT)
+
+    def _add_left_bars(self, m_element: ET.Element, measure: PartMeasure) -> None:
+        self._add_bars(m_element, measure, LeftRightMiddleToken.LEFT)        
     
     def _get_subevent_and_modifiers(self, measure: PartMeasure, subevents: list[Subevent], voice_id: int) -> list[InMeasureModifier | Subevent]:
         """
@@ -999,6 +1057,15 @@ class MusicXML_ExportEngine(ExportEngine):
             
         return attributes
     
+    def _add_empty_measure(self, m_element: ET.Element, measure: PartMeasure) -> ET.Element:
+        ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
+        if ed == 0:
+            ts = self._get_most_common_time_signature(measure.score_part.score)
+            ed = (ts * measure.score_part.divisions).numerator
+        
+        m_element.append(self.create_forward(ed))
+        return m_element
+    
     def xml_Measure(self, measure: PartMeasure) -> ET.Element:
         m = ET.Element("measure", {"number": str(measure.id)})
 
@@ -1030,24 +1097,15 @@ class MusicXML_ExportEngine(ExportEngine):
         if full_repeat_attr is not None:
             attributes.extend(full_repeat_attr)
 
-        # if full_repeat_attr is not None:
-        #     attributes.extend(full_repeat_attr)
-
         if len(attributes) > 0:
             m.append(attributes)
         
-        def _add_empty_measure(m_element: ET.Element, measure: PartMeasure) -> ET.Element:
-            ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
-            if ed == 0:
-                ts = self._get_most_common_time_signature(measure.score_part.score)
-                ed = (ts * measure.score_part.divisions).numerator
-            
-            m_element.append(self.create_forward(ed))
-            return m_element
-        
+        self._add_left_bars(m, measure)
+
         # empty measure
         if len(measure.subevents) == 0:
-            m = _add_empty_measure(m, measure)
+            m = self._add_empty_measure(m, measure)
+            self._add_right_bars(m, measure)
             return m
         
         subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
@@ -1144,12 +1202,14 @@ class MusicXML_ExportEngine(ExportEngine):
             if self.settings.error_handling.skip_broken_measure:
                 logger.critical(f"Measure written as empty")
                 logger.warning(msg, exc_info=True)
-                m = _add_empty_measure(m, measure)
+                m = self._add_empty_measure(m, measure)
                 return m
             else:
                 raise ValueError(msg) from e
         
         m.extend(m_buffer)
+        self._add_right_bars(m, measure)
+
         return m
     
     def _get_most_common_time_signature(self, score: Score) -> TimeSigStruct:
@@ -1179,6 +1239,16 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-list/
         """
+        # orders groups from smallest to largest
+        # (group id affects ordering in MSS4 render)
+        score_groups: set[PartGroup] = set()
+        for part in score.score_parts:
+            score_groups.update(part.part_groups)
+        
+        for group in sorted(score_groups, key=lambda g: len(g.parts)):
+            self._part_group_register.ask_id_start(group)
+
+        # create instrument group structure
         pl = ET.Element("part-list")
         for part in score.score_parts:
             pl.extend(self.xml_part_list_element(part))
@@ -1186,8 +1256,9 @@ class MusicXML_ExportEngine(ExportEngine):
     
     def xml_PartGroup(self, part_group: PartGroup, number: int, start_stop: StartStopContinueToken) -> ET.Element:
         pg = ET.Element("part-group", {"number": str(number), "type": start_stop})
-        ET.SubElement(pg, "group-symbol").text = part_group.bracket_type
-        ET.SubElement(pg, "group-barline").text = part_group.barline_type
+        if start_stop == StartStopContinueToken.START:
+            ET.SubElement(pg, "group-symbol").text = part_group.bracket_type
+            ET.SubElement(pg, "group-barline").text = part_group.barline_type
         return pg
 
     def xml_part_list_element(self, score_part: ScorePart) -> list[ET.Element]:

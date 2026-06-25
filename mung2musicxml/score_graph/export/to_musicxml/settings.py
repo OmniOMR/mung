@@ -88,3 +88,4 @@ class MusicXMLExportSettings:
             ),
         }
     )
+    use_mss4_compatible_repeat_barline_style: bool = True

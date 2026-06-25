@@ -29,9 +29,17 @@ Lyric unisono is not part of SMuFL, character does not exist for it so we are no
 We use `//` instead inside a standard MusicXML lyric object.
 
 <p>
-  <img src="images/lyrics-unisono-document.png" height="100">
+  <img src="images/lyrics-unisono-document.png" height="200">
 </p>
 
 <p>
-  <img src="images/lyrics-unisono-solution.png" height="100">
+  <img src="images/lyrics-unisono-solution.png" height="200">
+</p>
+
+### Barline Final
+
+MusicXML contains no such object. We resolve it into barline with style `heavy-heavy`.
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/barlineFinal-0.png" height="200">
 </p>

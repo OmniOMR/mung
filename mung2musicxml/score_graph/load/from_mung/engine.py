@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Self, Any, Optional, Type
 from collections import defaultdict, Counter
 from itertools import chain
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from contextlib import contextmanager
 
 
@@ -11,7 +11,7 @@ from mung import NotationGraph, Node
 from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 from mung.subevents_from_nodes import subevents_from_list_of_symbols
 from mung.interpret import BasicTimeSignatureInterpreter
-from mung.graph import group_by_system_measure_and_system
+from mung.graph import group_by_system_measure_and_system, group_staffs_into_systems
 from ..load_engine import LoadEngine
 from ....preprocessing.instruments import (
     graph_to_instruments,
@@ -41,6 +41,8 @@ from .construct_lyric import construct_lyric
 from .construct_tempo import construct_tempo
 from .construct_dynamics_text import construct_dynamics_text
 from .construct_interpretation_text import construct_interpretation_text
+from .construct_barline_mapping import compute_bar_styles
+from .construct_barlines import construct_bars_from_bar_mapping
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -148,7 +150,7 @@ class MuNG_LoadEngine(LoadEngine):
                         lyric.data["lyric_number"] = index
         
         return output
-
+    
     def _log_object_creation(self, obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
         """
         Logs object into console creations via the mung2musicxml logger.
@@ -396,18 +398,37 @@ class MuNG_LoadEngine(LoadEngine):
             parts.append(score_part)
 
             # collect all braces and brackets
-            for grouping in set(chain.from_iterable(
+            for mung_grouping in set(chain.from_iterable(
                     graph.parents(staff, class_filter=C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
                     for staff in chain.from_iterable(instrument)
                 )):
-                parts_by_group[grouping].add(score_part)
-                
+                parts_by_group[mung_grouping].add(score_part)
+        
+
+        barline_types = compute_bar_styles(graph, self._settings.measure_index_start)
+        system_index = 0
+        measure_index = self._settings.measure_index_start
         for id_, measures in measures_by_id.items():
+            if id_ in new_system_indexes:
+                system_index += 1
+                measure_index = self._settings.measure_index_start
+
+            right_barline_onset = max(measures, key=lambda m: m.fractional_duration).fractional_duration
+            
+            bars = construct_bars_from_bar_mapping(
+                barline_types,
+                system_index,
+                measure_index,
+                right_barline_onset
+            )
+
             system_measures.append(ScoreMeasure(
                 id=id_,
                 part_measures=measures,
-                is_new_system=id_ in new_system_indexes
+                is_new_system=id_ in new_system_indexes,
+                bars=bars
             ))
+            measure_index += 1
         
         score = Score(score_parts=parts, score_measures=system_measures)
         
@@ -421,8 +442,7 @@ class MuNG_LoadEngine(LoadEngine):
 
         @dataclass(frozen=True)
         class _GroupingStruct:
-            # mung_grouping: Node
-            parts: tuple[ScorePart, ...]
+            parts: frozenset[ScorePart]
             bracket_type: GroupSymbolToken
 
             def __eq__(self, other: object) -> bool:
@@ -446,23 +466,25 @@ class MuNG_LoadEngine(LoadEngine):
             brackets = graph.children(grouping, class_filter=I.INSTRUMENT_GROUP_BRACKETS)
             if len(brackets) > 1:
                 logger.warning(f"{grouping} has multiple brackets assigned, outputting all.")
-
             if len(brackets) == 0:
                 gs.add(_GroupingStruct(
-                    # grouping,
-                    tuple(score_parts),
-                    GroupSymbolToken.NONE
+                    frozenset(score_parts),
+                    GroupSymbolToken.NONE,
                 ))
             else:
                 for bracket in brackets:
                     gs.add(_GroupingStruct(
-                        # grouping,
-                        tuple(score_parts),
-                        GroupSymbolToken(bracket.class_name)
+                        frozenset(score_parts),
+                        GroupSymbolToken(bracket.class_name),
                     ))
         
         for g in gs:
-            PartGroup(list(g.parts), bracket_type=g.bracket_type)
+            if g.bracket_type == GroupSymbolToken.NONE:
+                continue
+            PartGroup(
+                list(g.parts),
+                bracket_type=g.bracket_type,
+            )
         
 
         for mung_beam, subs in c.subevents_by(DurableBeam).items():
@@ -565,7 +587,6 @@ class MuNG_LoadEngine(LoadEngine):
         for tb, c in tremolo_counts.items():
             TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
             logger.info(f"Created tremolo beam with marks {c}")
-        # print(connected_by_tremolo_beam)
         
         IDClass.reset()
         
