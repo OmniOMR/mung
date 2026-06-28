@@ -61,6 +61,10 @@ class ScorePart(SceneObject, IDClass):
     @property
     def id(self) -> str:
         return f"P{self._id}"
+
+    @property
+    def is_first(self) -> bool:
+        return self._id == 1
     
     def get_part_measure_by_id(self, value: int) -> Optional[PartMeasure]:
         assert 0 < value <= self.score.max_measure_index

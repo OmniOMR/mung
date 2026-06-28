@@ -1,0 +1,93 @@
+# Mapping of possible volta text to number
+# At runtime, the strings are compared in **lower case**
+
+# Arabic numerals
+"1" : 1
+"2" : 2
+"3" : 3
+"4" : 4
+"1st" : 1
+"2nd" : 2
+"3rd" : 3
+"4th" : 4
+"1x" : 1
+"2x" : 2
+"3x" : 3
+"4x" : 4
+
+# Roman numerals
+"I" : 1
+"II" : 2
+"III" : 3
+"IV" : 4
+
+# Italian
+"Prima" : 1
+"Seconda" : 2
+"Terza" : 3
+"Quarta" : 4
+"1ma" : 1
+"2da" : 2
+"3za" : 3
+"4ma" : 4
+"1a" : 1
+"2a" : 2
+"3a" : 3
+"4a" : 4
+"1o" : 1
+"2o" : 2
+"3o" : 3
+"4o" : 4
+
+# German
+"Einmal" : 1
+"Zweimal" : 2
+"Dreimal" : 3
+"Viermal" : 4
+"Imal" : 1
+"IImal" : 2
+"IIImal" : 3
+"IVmal" : 4
+"1mal" : 1
+"2mal" : 2
+"3mal" : 3
+"4mal" : 4
+
+# French
+"Première" : 1
+"Deuxième" : 2
+"Troisième" : 3
+"Quatrième" : 4
+"1re" : 1
+"2e" : 2
+"3e" : 3
+"4e" : 4
+"1ère" : 1
+"2ème" : 2
+"3ème" : 3
+"4ème" : 4
+
+# Spanish
+"Primera" : 1
+"Segunda" : 2
+"Tercera" : 3
+"Cuarta" : 4
+"1ra" : 1
+"2da" : 2
+"3ra" : 3
+"4ta" : 4
+"4ta" : 4
+"1era" : 1
+"2da" : 2
+"3era" : 3
+"4era" : 4
+
+# English
+"First" : 1
+"Second" : 2
+"Third" : 3
+"Fourth" : 4
+"1st" : 1
+"2nd" : 2
+"3rd" : 3
+"4th" : 4

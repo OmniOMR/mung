@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 from .subevent import Subevent
 from .tokens import SyllabicTypeToken
-from .interface import GenericStartStop
+from .interface import GenericStartStopOnset
 
 if TYPE_CHECKING:
     from .verse_number import VerseNumber
@@ -15,7 +15,7 @@ MELISMA_CHARACTER = "_"
 
 
 @dataclass(kw_only=True)
-class Lyric(GenericStartStop[Subevent]):
+class Lyric(GenericStartStopOnset[Subevent]):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/extend-element-lyric/
     """

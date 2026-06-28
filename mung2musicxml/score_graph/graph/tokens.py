@@ -464,19 +464,16 @@ class WingedToken(StrEnum):
     DOUBLE_CURVED = "double-curved"
 
 
-class LeftRightMiddleToken(StrEnum):
+class LeftRightMiddleToken(AutoOrderedStrEnum):
     RIGHT = "right"
     LEFT = "left"
     MIDDLE = "middle"
 
-    __order = {
-        LEFT: 0,
-        MIDDLE: 1,
-        RIGHT: 2,
-    }
 
-    def __lt__(self, other):
-        if not isinstance(other, LeftRightMiddleToken):
-            return NotImplemented
-        return self.__order[self] < self.__order[other]
-    
+class StartStopDiscontinueToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-discontinue/
+    """
+    START = "start"
+    STOP = "stop"
+    DISCONTINUE = "discontinue"

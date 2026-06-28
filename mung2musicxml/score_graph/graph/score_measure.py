@@ -10,6 +10,7 @@ from .repeat_barline import RepeatBarline
 
 if TYPE_CHECKING:
     from .score import Score
+    from .volta import Volta
 
 
 @dataclass
@@ -60,7 +61,12 @@ class ScoreMeasure(SceneObject):
     @property
     def score(self) -> "Score":
         from .score import Score
-        return Score.of(self, lambda s: s.score_measures)        
+        return Score.of(self, lambda s: s.score_measures)
+    
+    @property
+    def voltas(self) -> list["Volta"]:
+        from .volta import Volta
+        return Volta.many_of(self, lambda s: s.all)
 
     def get_most_common_onset(self) -> Fraction:
         return min(
@@ -88,4 +94,10 @@ class ScoreMeasure(SceneObject):
         duration = part_measure.score_part.divisions * self.fractional_duration
         assert duration.denominator == 1
         return duration.numerator
+    
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
     

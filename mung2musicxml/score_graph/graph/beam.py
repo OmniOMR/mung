@@ -7,7 +7,7 @@ from .scene_object import SceneObject
 from .subevent import Subevent
 from .grace_note import GraceNote
 from .tokens import BeamValueToken
-from .interface import GenericStartStopContinue
+from .interface import GenericStartStopContinueOnset
 from .interface import InMeasureObject
 from ...logger import logger
 
@@ -15,7 +15,7 @@ T = TypeVar("T", bound=InMeasureObject)
 
 
 @dataclass
-class GenericBeam(GenericStartStopContinue[T], ABC):
+class GenericBeam(GenericStartStopContinueOnset[T], ABC):
     """
     Beam between one and more Subevents.
 

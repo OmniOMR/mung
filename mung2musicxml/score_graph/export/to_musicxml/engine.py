@@ -964,25 +964,23 @@ class MusicXML_ExportEngine(ExportEngine):
             return BarStyleToken.HEAVY_LIGHT
         return BarStyleToken.LIGHT_HEAVY
       
-    def _add_bars(self, m_element: ET.Element, measure: PartMeasure, location: LeftRightMiddleToken) -> None:
+    def xml_Barlines(self, measure: PartMeasure, location: LeftRightMiddleToken) -> list[ET.Element]:
         def _gen_bar_style(
-                m_element: ET.Element,
                 bar: Barline
             ) -> ET.Element:
             style = bar.style
             if isinstance(bar, RepeatBarline) and self.settings.use_mss4_compatible_repeat_barline_style:
                 style = self._normalize_repeat_style_mss4(bar)
             
-            barline = ET.SubElement(m_element, "barline", {"location": bar.location})
+            barline = ET.Element("barline", {"location": bar.location})
             ET.SubElement(barline, "bar-style").text = style
             return barline
 
         def _add_bar(
-                m_element: ET.Element,
                 bar: Barline
-            ) -> None:
+            ) -> ET.Element | None:
             if isinstance(bar, RepeatBarline):
-                barline = _gen_bar_style(m_element, bar)
+                barline = _gen_bar_style(bar)
                 repeat = ET.SubElement(
                     barline,
                     "repeat",
@@ -991,23 +989,58 @@ class MusicXML_ExportEngine(ExportEngine):
                         "winged": bar.winged,
                     }
                 )
-                return
+                return repeat
         
             if bar.style != BarStyleToken.default():
-                barline = ET.SubElement(m_element, "barline", {"location": bar.location})
+                barline = ET.Element("barline", {"location": bar.location})
                 ET.SubElement(barline, "bar-style").text = bar.style
-                return
+                return barline
         
+        output: list[ET.Element] = []
         sm = measure.system_measure
         for bar in sm.bars:
             if bar.location == location:
-                _add_bar(m_element, bar)
+                b = _add_bar(bar)
+                if b is not None:
+                    output.append(b)
         
-    def _add_right_bars(self, m_element: ET.Element, measure: PartMeasure) -> None:
-        self._add_bars(m_element, measure, LeftRightMiddleToken.RIGHT)
+        if measure.score_part.is_first:
+                output.extend(self.xml_Voltas(sm, location))
+        
+        return output
+    
+    def xml_Voltas(self, score_measure: ScoreMeasure, location: LeftRightMiddleToken) -> list[ET.Element]:
+        output: list[ET.Element] = []
+        
+        for volta in score_measure.voltas:
+            start_stop: StartStopDiscontinueToken | None = None
+            if volta.is_start(score_measure) and location == LeftRightMiddleToken.LEFT:
+                start_stop = StartStopDiscontinueToken.START
+            elif volta.is_stop(score_measure) and location == LeftRightMiddleToken.RIGHT:
+                start_stop = StartStopDiscontinueToken.STOP
+            
+            if start_stop is not None:
+                if len(volta.numbers) == 0:
+                    number = "1"
+                else:
+                    number = ",".join(str(n) for n in volta.numbers)
+                
+                barline = ET.Element("barline", {"location": location})
+                ET.SubElement(
+                    barline,
+                    "ending",
+                    {"number": number, "type": start_stop}
+                ).text = volta.text
+                
+                output.append(barline)
+        
+        return output                
+        
+    def xml_right_Barlines(self, measure: PartMeasure) -> list[ET.Element]:
+        return self.xml_Barlines(measure, LeftRightMiddleToken.RIGHT)
 
-    def _add_left_bars(self, m_element: ET.Element, measure: PartMeasure) -> None:
-        self._add_bars(m_element, measure, LeftRightMiddleToken.LEFT)        
+    def xml_left_Barlines(self, measure: PartMeasure) -> list[ET.Element]:
+        return self.xml_Barlines(measure, LeftRightMiddleToken.LEFT)        
     
     def _get_subevent_and_modifiers(self, measure: PartMeasure, subevents: list[Subevent], voice_id: int) -> list[InMeasureModifier | Subevent]:
         """
@@ -1100,12 +1133,12 @@ class MusicXML_ExportEngine(ExportEngine):
         if len(attributes) > 0:
             m.append(attributes)
         
-        self._add_left_bars(m, measure)
+        m.extend(self.xml_left_Barlines(measure))
 
         # empty measure
         if len(measure.subevents) == 0:
             m = self._add_empty_measure(m, measure)
-            self._add_right_bars(m, measure)
+            m.extend(self.xml_right_Barlines(measure))
             return m
         
         subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
@@ -1208,7 +1241,7 @@ class MusicXML_ExportEngine(ExportEngine):
                 raise ValueError(msg) from e
         
         m.extend(m_buffer)
-        self._add_right_bars(m, measure)
+        m.extend(self.xml_right_Barlines(measure))
 
         return m
     
@@ -1245,7 +1278,7 @@ class MusicXML_ExportEngine(ExportEngine):
         for part in score.score_parts:
             score_groups.update(part.part_groups)
         
-        for group in sorted(score_groups, key=lambda g: len(g.parts)):
+        for group in sorted(score_groups, key=lambda g: -len(g.parts)):
             self._part_group_register.ask_id_start(group)
 
         # create instrument group structure

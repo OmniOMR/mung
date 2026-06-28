@@ -195,8 +195,11 @@ class Repeat(StrEnum):
     REPEAT_LEFT = "repeatLeft"
     REPEAT_RIGHT = "repeatRight"
     REPEAT_DOT = "repeatDot"
-    # TODO: voltas
+
     REPEAT_1_BAR = "repeat1Bar"
+    
+    VOLTA = "volta"
+    VOLTA_TEXT = "voltaText"
 
 
 class Tuplets(AllStrEnumNumeralMapped):

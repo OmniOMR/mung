@@ -43,6 +43,7 @@ from .construct_dynamics_text import construct_dynamics_text
 from .construct_interpretation_text import construct_interpretation_text
 from .construct_barline_mapping import compute_bar_styles
 from .construct_barlines import construct_bars_from_bar_mapping
+from .construct_volta import construct_volta
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -249,6 +250,8 @@ class MuNG_LoadEngine(LoadEngine):
 
         # for braces and brackets
         parts_by_group: defaultdict[Node, set[ScorePart]] = defaultdict(set)
+        # for volta
+        volta_by_system_measure_id: defaultdict[Node, set[int]] = defaultdict(set)
 
         c = SubeventCollector(
             [
@@ -311,6 +314,10 @@ class MuNG_LoadEngine(LoadEngine):
                             for tremolo_single in graph.children(dur, class_filter=I.TREMOLO_SINGLES):
                                 if tremolo_single not in found_tremolo_singles:
                                     found_tremolo_singles.append(tremolo_single)
+                            
+                            # register volta
+                            for volta in graph.parents(dur, class_filter=C.Repeat.VOLTA):
+                                volta_by_system_measure_id[volta].add(measure.id_)
 
                         # all durables inside a subevent should be either notes, rests or other
                         if isinstance(chordlike[0], Note):
@@ -431,6 +438,15 @@ class MuNG_LoadEngine(LoadEngine):
             measure_index += 1
         
         score = Score(score_parts=parts, score_measures=system_measures)
+        
+        # REGISTER VOLTA
+        for mung_volta, sm_ids in volta_by_system_measure_id.items():
+            assert len(sm_ids) > 0
+            volta = construct_volta(
+                mung_volta,
+                [score.get_system_measure_by_id(id_) for id_ in sm_ids],
+                graph
+            )
         
         for id_ in durables_by_voice.keys():
             assert id_ <= self._settings.voice_limit, f"Unsupported number of voices. {id_}"

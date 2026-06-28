@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .tuplet import GenericStartStopContinue
+from .tuplet import GenericStartStopContinueOnset
 from .tokens import AboveBelowToken, WedgeType
 from .subevent import Subevent
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class Wedge(GenericStartStopContinue[Subevent]):
+class Wedge(GenericStartStopContinueOnset[Subevent]):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/wedge/
     """

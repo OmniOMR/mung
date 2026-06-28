@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .generic_start_stop import GenericStartStop
+from .generic_start_stop import GenericStartStopOnset
 from ..subevent import Subevent
 from ..tokens import AboveBelowToken
 from typing import TYPE_CHECKING
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class ScoreText(GenericStartStop[Subevent]):
+class ScoreText(GenericStartStopOnset[Subevent]):
     """
     Represents text that can span over multiple durables.
     """

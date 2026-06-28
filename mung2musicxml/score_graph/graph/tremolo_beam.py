@@ -3,11 +3,11 @@ from typing import ClassVar
 
 from .subevent import Subevent
 from .time_modification import TimeModification
-from .interface import GenericStartStop
+from .interface import GenericStartStopOnset
 
 
 @dataclass(kw_only=True)
-class TremoloBeam(GenericStartStop[Subevent]):
+class TremoloBeam(GenericStartStopOnset[Subevent]):
     """
     Equivalent to MusicXML Tremolo Double.
 
