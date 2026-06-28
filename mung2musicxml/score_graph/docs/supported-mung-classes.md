@@ -442,13 +442,13 @@ Repeats are supported, but, some the possible bar styles are not supported by MS
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/repeatDot-0.png" height="100">
 </p>
 
-- ❌ `volta`
+- ✅ `volta`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/volta-0.png" height="100">
 </p>
 
-- ❌ `voltaText`
+- ✅ `voltaText`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/voltaText-0.png" height="100">
