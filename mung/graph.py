@@ -1317,7 +1317,7 @@ def infer_stem_orientation(stem: Node, graph: NotationGraph) -> int:
     `+1` means that the stem is oriented upwards,
     `-1` downwards.
     """
-    noteheads = graph.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
+    noteheads = graph.parents(stem, class_filter=I.CLASSES_BEARING_DURATIONS)
     distance = sum(n.vertical_center - stem.vertical_center for n in noteheads)
     if distance < 0:
         return -1
@@ -1333,7 +1333,7 @@ def infer_vertical_object_placement_relative_to_notes(obj: Node, graph: Notation
     `-1` below.
     """
     if nodes is None:
-        nodes = graph.parents(obj, class_filter=I.NOTEHEAD_CLASS_NAMES)
+        nodes = graph.parents(obj, class_filter=I.CLASSES_BEARING_DURATIONS)
     distance = sum(n.vertical_center - obj.vertical_center for n in nodes)
     if distance < 0:
         return -1
