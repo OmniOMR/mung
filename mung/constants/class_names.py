@@ -200,6 +200,10 @@ class Repeat(StrEnum):
     
     VOLTA = "volta"
     VOLTA_TEXT = "voltaText"
+    
+    SEGNO = "segno"
+    CODA = "coda"
+    SEGNO_SERPENT = "segnoSerpent"
 
 
 class Tuplets(AllStrEnumNumeralMapped):

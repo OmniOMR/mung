@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from .tempo import Tempo
     from .dynamics_text import DynamicsText
     from .interpretation_text import InterpretationText
+    from .segno import Segno
+    from .coda import Coda
 
 
 @dataclass
@@ -99,7 +101,18 @@ class Subevent(DurationObject):
     def dynamics(self) -> list["Dynamics"]:
         from .dynamics import Dynamics
         return Dynamics.many_of(self, lambda d: d.parent)
-
+    
+    
+    @property
+    def segnos(self) -> list["Segno"]:
+        from .segno import Segno
+        return Segno.many_of(self, lambda d: d.parent)
+    
+    @property
+    def codas(self) -> list["Coda"]:
+        from .coda import Coda
+        return Coda.many_of(self, lambda d: d.parent)
+    
     @property
     def tempos(self) -> list["Tempo"]:
         from .tempo import Tempo

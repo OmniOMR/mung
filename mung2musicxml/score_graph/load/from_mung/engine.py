@@ -44,6 +44,8 @@ from .construct_interpretation_text import construct_interpretation_text
 from .construct_barline_mapping import compute_bar_styles
 from .construct_barlines import construct_bars_from_bar_mapping
 from .construct_volta import construct_volta
+from .construct_coda import construct_coda
+from .construct_segno import construct_segno
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -267,6 +269,8 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(Tempo, C.Tempo.ALL()), # type: ignore
                 CollectorRecord(DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO]),
                 CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT),
+                CollectorRecord(Coda, C.Repeat.CODA),
+                CollectorRecord(Segno, C.Repeat.SEGNO),
             ]
         )
 
@@ -550,7 +554,18 @@ class MuNG_LoadEngine(LoadEngine):
         for mung_interpretation_text, subs in c.subevents_by(InterpretationText).items():
             with self._construction_guard(mung_interpretation_text, InterpretationText):
                 it = construct_interpretation_text(mung_interpretation_text, subs, graph)
-
+            
+        for mung_segno, subs in c.subevents_by(Segno).items():
+            for sub in subs:
+                with self._construction_guard(mung_segno, Segno):
+                    sg = construct_segno(mung_segno, sub, graph)
+        
+        for mung_coda, subs in c.subevents_by(Coda).items():
+            for sub in subs:
+                with self._construction_guard(mung_coda, Coda):
+                    cd = construct_coda(mung_coda, sub, graph)
+        
+        
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
         for mung_lyric, subs in c.subevents_by(Lyric).items():
             try:

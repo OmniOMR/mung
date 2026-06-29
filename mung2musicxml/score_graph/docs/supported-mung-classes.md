@@ -454,13 +454,13 @@ Repeats are supported, but, some the possible bar styles are not supported by MS
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/voltaText-0.png" height="100">
 </p>
 
-- ❌ `segno`
+- ✅ `segno`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/segno-element.png" height="100">
 </p>
 
-- ❌ `coda`
+- ✅ `coda`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/coda-element.png" height="100">

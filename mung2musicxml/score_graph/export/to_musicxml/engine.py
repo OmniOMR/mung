@@ -412,6 +412,23 @@ class MusicXML_ExportEngine(ExportEngine):
             output.append(dir)
         return output
     
+    def xml_Segno_Coda(self, subevent: Subevent) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/segno/
+        
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/coda/
+        """
+        
+        output = []
+        staff_id = min(s.id for s in subevent.staffs)
+        
+        for sc in subevent.segnos + subevent.codas:
+            dir, dir_type = self._xml_direction_base(sc.placement, staff_id)
+            ET.SubElement(dir_type, type(sc).__name__.lower())
+            output.append(dir)
+        
+        return output
+    
     def xml_ScoreText(self, subevent: Subevent, texts: Iterable[ScoreText]) -> list[ET.Element]:
         """
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/words/
@@ -437,6 +454,7 @@ class MusicXML_ExportEngine(ExportEngine):
         
         output.extend(self.xml_Wedge(subevent, "start"))
         output.extend(self.xml_Dynamics(subevent))
+        output.extend(self.xml_Segno_Coda(subevent))
         output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
         output.extend(self.xml_ScoreText(subevent, subevent.tempos))
         output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))

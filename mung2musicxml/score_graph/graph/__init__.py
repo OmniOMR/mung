@@ -43,3 +43,5 @@ from .interpretation_text import InterpretationText
 from .barline import Barline
 from .repeat_barline import RepeatBarline
 from .volta import Volta
+from .segno import Segno
+from .coda import Coda
