@@ -47,6 +47,7 @@ from .construct_barlines import construct_bars_from_bar_mapping
 from .construct_volta import construct_volta
 from .construct_coda import construct_coda
 from .construct_segno import construct_segno
+from .construct_rest_text import construct_rest_text
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -238,6 +239,8 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT, construct_interpretation_text),
                 CollectorRecord(Segno, C.Repeat.SEGNO, construct_segno),
                 CollectorRecord(Coda, C.Repeat.CODA, construct_coda),
+                CollectorRecord(RestText, C.Text.REST_TEXT, construct_rest_text),
+                
                 CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
                 CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
             ]

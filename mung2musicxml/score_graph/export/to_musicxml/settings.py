@@ -9,6 +9,7 @@ from ...graph import (
     DynamicsText,
     FontStyleToken,
     FontWeightToken,
+    RestText,
 )
 from mung import __version__ as LIBRARY_VERSION
 from mung.interpret import TimeSigStruct
@@ -86,6 +87,7 @@ class MusicXMLExportSettings:
             DynamicsText: WordsAttributes(
                 font_family="Edwin", font_style=FontStyleToken.ITALIC, font_size=10
             ),
+            RestText: WordsAttributes(font_weight=FontWeightToken.BOLD, font_size=12),
         }
     )
     use_mss4_compatible_repeat_barline_style: bool = True

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from .interpretation_text import InterpretationText
     from .segno import Segno
     from .coda import Coda
+    from .rest_text import RestText
 
 
 @dataclass
@@ -127,3 +128,8 @@ class Subevent(DurationObject):
     def interpretation_texts(self) -> list["InterpretationText"]:
         from .interpretation_text import InterpretationText
         return InterpretationText.many_of(self, lambda d: d.all)
+
+    @property
+    def rest_texts(self) -> list["RestText"]:
+        from .rest_text import RestText
+        return RestText.many_of(self, lambda d: d.all)

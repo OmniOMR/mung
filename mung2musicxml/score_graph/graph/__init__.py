@@ -45,3 +45,4 @@ from .repeat_barline import RepeatBarline
 from .volta import Volta
 from .segno import Segno
 from .coda import Coda
+from .rest_text import RestText

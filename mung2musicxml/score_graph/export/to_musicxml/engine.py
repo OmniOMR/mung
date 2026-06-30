@@ -458,6 +458,7 @@ class MusicXML_ExportEngine(ExportEngine):
         output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
         output.extend(self.xml_ScoreText(subevent, subevent.tempos))
         output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
+        output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
 
         if isinstance(subevent, Chord):
             for note in subevent.notes:
