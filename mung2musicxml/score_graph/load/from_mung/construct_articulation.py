@@ -2,7 +2,10 @@ from mung import Node
 from mung.constants import ClassNameConstants as C
 
 from ...graph import *
+from .collector import single_subevent
 
+
+@single_subevent
 def construct_articulation(mung_articulation: Node, subevent: Subevent) -> Articulation:
     type_, placement = _mung_class_name_to_articulation_type_and_placement(mung_articulation)
     return Articulation(subevent, type_, placement)

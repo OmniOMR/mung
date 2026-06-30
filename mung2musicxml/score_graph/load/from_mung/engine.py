@@ -23,6 +23,7 @@ from ...graph.utils import IDClass
 from .utils import (
     get_voice,
     get_onset_beats,
+    _log_object_creation
 )
 from .construct_key_signature import construct_key_signature
 from .construct_time_signature import construct_time_signature
@@ -154,38 +155,6 @@ class MuNG_LoadEngine(LoadEngine):
         
         return output
     
-    def _log_object_creation(self, obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
-        """
-        Logs object into console creations via the mung2musicxml logger.
-        """
-        if isinstance(source_mung_node_or_nodes, Node):
-            source_str = str(source_mung_node_or_nodes)
-        else:
-            source_str = ", ".join(str(x) for x in source_mung_node_or_nodes)
-        
-        logger.debug(f"Added {type(obj).__name__} based on {source_str}")
-    
-    def _is_critical_class(self, type_: Type[SceneObject]) -> bool:
-        """
-        Returns true, if the given type is considered critical
-        by the engine's settings.
-        """
-        return type_ in self._settings.critical_classes
-
-    @contextmanager
-    def _construction_guard(self, mung_obj: Node, type_: type, critical: bool = False):
-        critical = critical or self._is_critical_class(type_)
-        result = None
-        try:
-            yield result
-            if result is not None:
-                self._log_object_creation(result, mung_obj)
-        except Exception as e:
-            if not critical:
-                logger.warning(f"Failed to create {type_} from {mung_obj}", exc_info=True)
-            else:
-                raise ValueError(f"Failed to create {type_} from {mung_obj}") from e
-    
     def load_from_file(self, file_name: Path | str) -> Score:
         return self.load(NotationGraph.from_file(file_name))
  
@@ -257,20 +226,20 @@ class MuNG_LoadEngine(LoadEngine):
 
         c = SubeventCollector(
             [
-                CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM),
-                CollectorRecord(Tuplet, C.Tuplets.TUPLET),
-                CollectorRecord(Slur, C.Spanners.SLUR),
-                CollectorRecord(Wedge, I.HAIRPINS), # type: ignore
-                CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM),
-                CollectorRecord(Articulation, C.Articulation.ALL()), #type: ignore
-                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT),
-                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW]),
-                CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO]),
-                CollectorRecord(Tempo, C.Tempo.ALL()), # type: ignore
-                CollectorRecord(DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO]),
-                CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT),
-                CollectorRecord(Coda, C.Repeat.CODA),
-                CollectorRecord(Segno, C.Repeat.SEGNO),
+                CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM, construct_durable_beam),
+                CollectorRecord(Articulation, C.Articulation.ALL(), construct_articulation), # type: ignore
+                CollectorRecord(Tuplet, C.Tuplets.TUPLET, construct_tuplet),
+                CollectorRecord(Slur, C.Spanners.SLUR, construct_slur),
+                CollectorRecord(Wedge, I.HAIRPINS, construct_wedge), # type: ignore
+                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT, construct_dynamics),
+                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW], construct_fermata),
+                CollectorRecord(Tempo, C.Tempo.ALL(), construct_tempo), # type: ignore
+                CollectorRecord(DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO], construct_dynamics_text),
+                CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT, construct_interpretation_text),
+                CollectorRecord(Segno, C.Repeat.SEGNO, construct_segno),
+                CollectorRecord(Coda, C.Repeat.CODA, construct_coda),
+                CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
+                CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
             ]
         )
 
@@ -358,7 +327,7 @@ class MuNG_LoadEngine(LoadEngine):
                         staff_to_others[
                             self._get_symbols_staff(mung_clef, mung_staffs_to_staffs, graph)
                         ].append(clef)
-                        self._log_object_creation(clef, mung_clef)
+                        _log_object_creation(clef, mung_clef)
                 
                 # KEY SIGNATURES
                 key_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -372,7 +341,7 @@ class MuNG_LoadEngine(LoadEngine):
 
                     key = construct_key_signature(ks, onset, graph)
                     modifiers.append(key)
-                    self._log_object_creation(key, ks)
+                    _log_object_creation(key, ks)
                 
                 # TIME SIGNATURES
                 time_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -388,7 +357,7 @@ class MuNG_LoadEngine(LoadEngine):
                         logger.warning(f"Could not interpret {ts}")
                         continue
                     modifiers.append(time_sig)
-                    self._log_object_creation(time_sig, ts)
+                    _log_object_creation(time_sig, ts)
                 
                 m = PartMeasure(
                     id=measure.id_,
@@ -506,65 +475,7 @@ class MuNG_LoadEngine(LoadEngine):
                 bracket_type=g.bracket_type,
             )
         
-
-        for mung_beam, subs in c.subevents_by(DurableBeam).items():
-            with self._construction_guard(mung_beam, Durable):
-                beam = construct_durable_beam(mung_beam, list(subs))
-
-        for mung_articulation, subs in c.subevents_by(Articulation).items():
-            if len(subs) > 1:
-                logger.warning(f"{mung_articulation} is connected to more than one subevent")
-            for sub in subs:
-                with self._construction_guard(mung_articulation, Articulation):
-                    articulation = construct_articulation(mung_articulation, sub)
-
-        for mung_tuplet, subs in c.subevents_by(Tuplet).items():
-            with self._construction_guard(mung_tuplet, Tuplet):
-                tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
-        
-        for mung_slur, subs in c.subevents_by(Slur).items():
-            with self._construction_guard(mung_slur, Slur):
-                slur = construct_slur(mung_slur, list(subs), graph)
-
-        for mung_tie, durs in durables_by_tie.items():
-            with self._construction_guard(mung_tie, Tie):
-                obj = try_construct_tie(mung_tie, list(durs), graph)
-
-        for mung_hairpin, subs in c.subevents_by(Wedge).items():
-            with self._construction_guard(mung_hairpin, Wedge):
-                wedge = construct_wedge(mung_hairpin, list(subs), graph)
-        
-        for mung_dynamics, subs in c.subevents_by(Dynamics).items():
-            with self._construction_guard(mung_dynamics, Dynamics):
-                dynamics = construct_dynamics(mung_dynamics, subs, graph)
-        
-        for mung_fermata, subs in c.subevents_by(Fermata).items():
-            for sub in subs:
-                with self._construction_guard(mung_fermata, Fermata):
-                    fermata = construct_fermata(mung_fermata, sub)
-
-        for mung_tempo, subs in c.subevents_by(Tempo).items():
-            with self._construction_guard(mung_tempo, Tempo):
-                tempo = construct_tempo(mung_tempo, subs, graph)
-
-        for mung_dynamics_text, subs in c.subevents_by(DynamicsText).items():
-            with self._construction_guard(mung_dynamics_text, DynamicsText):
-                dt = construct_dynamics_text(mung_dynamics_text, subs, graph)
-        
-        for mung_interpretation_text, subs in c.subevents_by(InterpretationText).items():
-            with self._construction_guard(mung_interpretation_text, InterpretationText):
-                it = construct_interpretation_text(mung_interpretation_text, subs, graph)
-            
-        for mung_segno, subs in c.subevents_by(Segno).items():
-            for sub in subs:
-                with self._construction_guard(mung_segno, Segno):
-                    sg = construct_segno(mung_segno, sub, graph)
-        
-        for mung_coda, subs in c.subevents_by(Coda).items():
-            for sub in subs:
-                with self._construction_guard(mung_coda, Coda):
-                    cd = construct_coda(mung_coda, sub, graph)
-        
+        c.run_constructors(graph, self._settings.critical_classes)
         
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
         for mung_lyric, subs in c.subevents_by(Lyric).items():
@@ -574,7 +485,7 @@ class MuNG_LoadEngine(LoadEngine):
                 lyric = construct_lyric(mung_lyric, list(subs), graph)
                 if lyric is not None:
                     l_to_l[lyrics_to_level[mung_lyric]].append(lyric)
-                    self._log_object_creation(lyric, mung_lyric)
+                    _log_object_creation(lyric, mung_lyric)
             except AssertionError as ae:
                 raise ValueError(f"Unable to construct {Lyric.__name__} from: {mung_lyric}") from ae
             

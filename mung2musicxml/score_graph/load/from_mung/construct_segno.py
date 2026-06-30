@@ -2,8 +2,11 @@ from mung import Node, NotationGraph
 from mung.graph import infer_vertical_object_placement_relative_to_notes
 
 from ...graph import Subevent, Segno, AboveBelowToken
+from .collector import needs_graph, single_subevent
 
 
+@needs_graph
+@single_subevent
 def construct_segno(
     mung_segno: Node, subevent: Subevent, graph: NotationGraph
 ) -> Segno:

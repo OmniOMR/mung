@@ -7,6 +7,7 @@ from ..assets import VOLTA_MAPPING_PATH
 from ...graph import Volta, ScoreMeasure
 from ....logger import logger
 
+
 SPECIAL_CHARACTERS = {" ", ".", ",", "[", "]", "(", ")", "/", "\\"}
 
 

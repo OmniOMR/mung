@@ -4,6 +4,7 @@ from ...graph import (
     FermataOrientationToken,
     Subevent
 )
+from .collector import single_subevent
 
 
 def _match_name_to_orientation(name: str) -> FermataOrientationToken:
@@ -16,5 +17,6 @@ def _match_name_to_orientation(name: str) -> FermataOrientationToken:
         raise ValueError(f"Unable to match {Fermata.__name__} {name}")
 
 
+@single_subevent
 def construct_fermata(mung_fermata: Node, sub: Subevent) -> Fermata:
     return Fermata(sub, _match_name_to_orientation(mung_fermata.class_name))

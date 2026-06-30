@@ -3,6 +3,7 @@ from mung.graph import infer_vertical_object_placement_relative_to_notes
 
 from ...graph import *
 from ....logger import logger
+from .collector import needs_graph
 
 
 def try_match_dynamics(mung_dynamics: Node) -> DynamicsTypeToken:
@@ -16,7 +17,8 @@ def try_match_dynamics(mung_dynamics: Node) -> DynamicsTypeToken:
         return DynamicsTypeToken.OTHER_DYNAMICS
 
 
-def construct_dynamics(mung_dynamics: Node, subs: set[Subevent], graph: NotationGraph) -> Dynamics:
+@needs_graph
+def construct_dynamics(mung_dynamics: Node, subs: list[Subevent], graph: NotationGraph) -> Dynamics:
     if any(s.global_fractional_onset != next(iter(subs)).global_fractional_onset for s in subs):
         logger.warning(f"Subevents linked to {mung_dynamics} differ in onsets, choosing the first one")
     

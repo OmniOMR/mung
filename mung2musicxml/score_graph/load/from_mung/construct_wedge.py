@@ -2,8 +2,10 @@ from mung import Node, NotationGraph
 from mung.graph import infer_vertical_object_placement_relative_to_notes
 
 from ...graph import *
+from .collector import needs_graph
 
 
+@needs_graph
 def construct_wedge(
     mung_hairpin: Node,
     subevents: list[Subevent],

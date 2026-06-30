@@ -1,14 +1,13 @@
 from mung import Node, NotationGraph
 from mung.graph import infer_vertical_object_placement_relative_to_notes
-from mung.constants import (
-    ClassNameConstants as C,
-    InferenceEngineConstants as I
-)
+from mung.constants import ClassNameConstants as C
 
 from ...graph import *
 from .utils import get_tuple_time_modification
+from .collector import needs_graph
 
 
+@needs_graph
 def construct_tuplet(mung_tuplet: Node, subevents: list[Subevent], graph: NotationGraph) -> Tuplet:
     assert len(subevents) > 0, f"No subevents for {mung_tuplet}"
     subevents.sort(key=lambda s: s.global_fractional_onset)

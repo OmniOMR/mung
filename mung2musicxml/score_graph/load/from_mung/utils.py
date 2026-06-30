@@ -142,3 +142,16 @@ def get_start_stop_subevents(
     )
     
     return first, last
+
+
+def _log_object_creation(obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
+    """
+    Logs object into console creations via the mung2musicxml logger.
+    """
+    if isinstance(source_mung_node_or_nodes, Node):
+        source_str = str(source_mung_node_or_nodes)
+    else:
+        source_str = ", ".join(str(x) for x in source_mung_node_or_nodes)
+    
+    logger.debug(f"Added {type(obj).__name__} based on {source_str}")
+    

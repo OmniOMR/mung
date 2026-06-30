@@ -4,8 +4,10 @@ from mung.constants import ClassNameConstants as C
 
 from ...graph import Lyric, VerseNumber, Subevent
 from ....logger import logger
+from .collector import needs_graph
 
 
+@needs_graph
 def construct_lyric(
         mung_lyric: Node,
         subs: list[Subevent],
