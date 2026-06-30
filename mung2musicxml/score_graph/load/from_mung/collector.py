@@ -1,15 +1,15 @@
 from enum import StrEnum
 from contextlib import contextmanager
-from typing import Type, Optional, Callable, TypeAlias
+from typing import Type, Optional, Callable, TypeAlias, TypeVar
 from collections import defaultdict
 from dataclasses import dataclass, field
+
 
 from mung import Node, NotationGraph
 from ...graph.scene_object import SceneObject
 from ...graph import Subevent
 from ....logger import logger
 from .utils import _log_object_creation
-
 
 SOConstructor: TypeAlias = (
     Callable[
@@ -39,22 +39,28 @@ def _construction_guard(mung_obj: Node, type_: type, critical: bool = False):
             ) from e
 
 
-def needs_graph(fn):
-    fn._needs_graph = True  # type: ignore
+F = TypeVar("F", bound=Callable)
+
+_constructor_requires_graph: set[Callable] = set()
+_constructs_from_single_subevent: set[Callable] = set()
+
+
+def needs_graph(fn: F) -> F:
+    _constructor_requires_graph.add(fn)
     return fn
 
 
-def _constructor_needs_graph(fn: SOConstructor):
-    return getattr(fn, "_needs_graph", False)
+def _constructor_needs_graph(fn: Callable) -> bool:
+    return fn in _constructor_requires_graph
 
 
-def single_subevent(fn):
-    fn._single_sub = True  # type: ignore
+def single_subevent(fn: F) -> F:
+    _constructs_from_single_subevent.add(fn)
     return fn
 
 
 def _constructor_is_single_sub(fn: SOConstructor):
-    return getattr(fn, "_single_sub", False)
+    return fn in _constructs_from_single_subevent
 
 
 @dataclass
