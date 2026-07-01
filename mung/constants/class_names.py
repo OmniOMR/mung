@@ -253,6 +253,12 @@ class Other(StrEnum):
     UNCLASSIFIED = "unclassified"
 
 
+class Arpeggiato(StrEnum):
+    ARPEGGIATO = "arpeggiato"
+    ARPEGGIATO_UP = "arpeggiatoUp"
+    ARPEGGIATO_DOWN = "arpeggiatoDown"
+
+
 class ClassNameConstants:
     Staves = Staves
     Noteheads = Noteheads
@@ -278,6 +284,7 @@ class ClassNameConstants:
     FiguredBass = FiguredBass
     Other = Other
     Numerals = Numerals
+    Arpeggiato = Arpeggiato
 
     ALL = [
         value
