@@ -28,9 +28,9 @@ def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGr
     # invalid tie specification, outputting as slur
     if len(unique_onsets) > 2 or len(unique_pitches) > 1:
         if len(unique_onsets) > 2:
-            logger.warning(f"Too many onsets for tie, {unique_onsets}, has to be at most 2, processing as {Slur.__name__}")
+            logger.warning(f"Too many onsets for tie {mung_tie}, {unique_onsets}, has to be at most 2, processing as {Slur.__name__}")
         if len(unique_pitches) > 1:
-            logger.warning(f"Too many pitches for tie, {unique_onsets}, has to be at most 1, processing as {Slur.__name__}")
+            logger.warning(f"Too many pitches for tie {mung_tie}, {[p.to_tuple_repr() for p in unique_pitches]}, has to be at most 1, processing as {Slur.__name__}")
         
         return _slur_from_tie_input(mung_tie, durables, graph)
     
