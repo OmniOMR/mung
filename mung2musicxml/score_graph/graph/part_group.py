@@ -15,7 +15,7 @@ class PartGroup(SceneObject):
     barline_type: GroupBarlineToken = field(default=GroupBarlineToken.YES)
 
     def __post_init__(self) -> None:
-        self.parts.sort(key=lambda p: p.id)
+        self.parts.sort(key=lambda p: p._id)
 
     def is_start(self, part: ScorePart) -> bool:
         return self.parts[0].id == part.id

@@ -59,8 +59,8 @@ class ScorePart(SceneObject, IDClass):
         return self.score.divisions
 
     @property
-    def id(self) -> str:
-        return f"P{self._id}"
+    def id(self) -> int:
+        return self._id
 
     @property
     def is_first(self) -> bool:

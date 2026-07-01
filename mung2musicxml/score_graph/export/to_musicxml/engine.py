@@ -10,7 +10,7 @@ from mung.interpret import TimeSigStruct
 from ...graph import *
 from ...graph.interface import ScoreText
 from ....logger import logger
-from ..id_pool import IDPool
+from ..id_pool import IDPoolRegister
 from .utils import _aggregate_mods
 from ..export_engine import ExportEngine
 from .settings import MusicXMLExportSettings
@@ -27,13 +27,11 @@ class MusicXML_ExportEngine(ExportEngine):
         else:
             self.settings = settings
         
-        self._wedge_register = IDPool()
-        self._slur_register = IDPool()
-        self._part_group_register = IDPool()
+        self._register = IDPoolRegister()
     
     def export(self, score: Score) -> ET.Element:
         output = self.xml_Score(score)
-        # self._reset()
+        self._reset()
         return output
     
     def export_to_file(self, score: Score, file_name: Path | str) -> None:
@@ -66,12 +64,8 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         Checks if ID pools are empty and resets them.
         """
-        assert self._wedge_register.is_empty()
-        assert self._slur_register.is_empty()
-        assert self._part_group_register.is_empty()
-        self._wedge_register.reset()
-        self._slur_register.reset()
-        self._part_group_register.reset()
+        assert self._register.is_empty(), self._register.report_unclosed()
+        self._register.reset()
 
     def create_forward(self, duration: int) -> ET.Element:
         """
@@ -171,7 +165,7 @@ class MusicXML_ExportEngine(ExportEngine):
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-partwise/
         """
         logger.info(f"Writing score part: {score_part.id}")
-        sc = ET.Element("part", {"id": score_part.id})
+        sc = ET.Element("part", {"id": f"P{score_part.id}"})
         for id_ in range(1, score_part.score.max_measure_index + 1):
             measure = score_part.get_part_measure_by_id(id_)
 
@@ -731,7 +725,7 @@ class MusicXML_ExportEngine(ExportEngine):
                 continue
             
             if start_stop == StartStopContinueToken.START:
-                id_ = self._slur_register.ask_id_start(slur)
+                id_ = self._register.ask_id_start(slur)
                 output.append(ET.Element(
                     "slur", {
                         "type": StartStopContinueToken.START,
@@ -740,7 +734,7 @@ class MusicXML_ExportEngine(ExportEngine):
                     }
                 ))
             elif start_stop == StartStopContinueToken.STOP:
-                id_ = self._slur_register.ask_id_stop(slur)
+                id_ = self._register.ask_id_stop(slur)
                 output.append(ET.Element(
                     "slur", {
                         "type": StartStopContinueToken.STOP,
@@ -777,12 +771,58 @@ class MusicXML_ExportEngine(ExportEngine):
         s = ET.Element("tremolo", {"type": TremoloType.SINGLE})
         s.text = str(single.marks)
         return s
+    
+    def xml_Turn(self, durable: Durable) -> ET.Element:
+        turn = durable.turn
+        assert turn is not None
+        if turn.is_inverted:
+            name = "inverted-turn"
+        else:
+            name = "turn"
+        
+        t = ET.Element(name, {"placement": turn.placement})
+        return t
+    
+    def xml_Trill(self, durable: Durable) -> list[ET.Element]:
+        output: list[ET.Element] = []
+        trill = durable.trill
+        assert trill is not None
+        output.append(ET.Element("trill-mark", {"placement": trill.placement}))
+        
+        # TODO: temporal solution
+        if trill.has_wiggle:
+            output.append(ET.Element("wavy-line", {"type": "start", "number": "1"}))
+            output.append(ET.Element("wavy-line", {"type": "stop", "number": "1"}))
+        
+        return output
+    
+    def xml_ShortTrill(self, durable: Durable) -> ET.Element:
+        s_trill = durable.short_trill
+        assert s_trill is not None
+        return ET.Element("inverted-mordent", {"placement": s_trill.placement})
 
     def xml_ornaments(self, durable: Durable) -> Optional[ET.Element]:
+        # TODO: MusicXML specifies that ornament element
+        # has only one ornament object (trill, turn etc.)
+        # inside of it -- vs MSS4 output all ornaments
+        # for a durable into same ornament element
         ornaments = ET.Element("ornaments")
         
         # write tremolo beams only to first note of a chord
         if not self._durable_is_chord_continuation(durable):
+            # TRILLS
+            if durable.trill is not None:
+                ornaments.extend(self.xml_Trill(durable))
+                       
+            # TURNS
+            if durable.turn is not None:
+                ornaments.append(self.xml_Turn(durable))
+            
+            # MORDENT aka SHORT TRILL
+            if durable.short_trill is not None:
+                ornaments.append(self.xml_ShortTrill(durable))
+            
+            # TREMOLOS
             if durable.tremolo_beam is not None:
                 ornaments.append(self.xml_TremoloBeam(durable))
             if durable.tremolo_single is not None:
@@ -871,11 +911,11 @@ class MusicXML_ExportEngine(ExportEngine):
 
         for wedge in wedges:
             if wedge.is_start(subevent) and pass_name == "start":
-                id_ = self._wedge_register.ask_id_start(wedge)
+                id_ = self._register.ask_id_start(wedge)
                 output.append(_create_wedge(id_, wedge))
 
             elif wedge.is_stop(subevent) and pass_name == "stop":
-                id_ = self._wedge_register.ask_id_stop(wedge)
+                id_ = self._register.ask_id_stop(wedge)
                 logger.debug(f"Closing wedge {id_}")
                 output.append(_close_wedge(id_, wedge))
 
@@ -889,9 +929,9 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         p = ET.Element("pitch")
         ET.SubElement(p, "step").text = pitch.step
-        ET.SubElement(p, "octave").text = str(pitch.octave.value)
         if pitch.alter != 0:
             ET.SubElement(p, "alter").text = str(pitch.alter.value)
+        ET.SubElement(p, "octave").text = str(pitch.octave.value)
         return p
     
     def xml_GraceNote(self, grace: GraceNote) -> ET.Element:
@@ -1298,7 +1338,8 @@ class MusicXML_ExportEngine(ExportEngine):
             score_groups.update(part.part_groups)
         
         for group in sorted(score_groups, key=lambda g: -len(g.parts)):
-            self._part_group_register.ask_id_start(group)
+            self._register.ask_id_start(group)
+            # print([p.id for p in group.parts])
 
         # create instrument group structure
         pl = ET.Element("part-list")
@@ -1322,16 +1363,18 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         group_starts: list[ET.Element] = []
         group_ends: list[ET.Element] = []
-
+        
+        
         for group in score_part.part_groups:
             if group.is_start(score_part):
-                number = self._part_group_register.ask_id_start(group)
+                number = self._register.ask_id_start(group)
+                
                 group_starts.append(self.xml_PartGroup(group, number, StartStopContinueToken.START))
             if group.is_stop(score_part):
-                number = self._part_group_register.ask_id_stop(group)
-                group_ends.append(self.xml_PartGroup(group, number, StartStopContinueToken.STOP))
+                number = self._register.ask_id_stop(group)
+                group_ends.append(self.xml_PartGroup(group, number, StartStopContinueToken.STOP))                
                 
-        sp = ET.Element("score-part", {"id": score_part.id})
+        sp = ET.Element("score-part", {"id": f"P{score_part.id}"})
         ET.SubElement(sp, "part-name").text = score_part.name
         
         return group_starts + [sp] + group_ends

@@ -1,11 +1,11 @@
+from dataclasses import dataclass
 from typing import Any
 
-
+@dataclass
 class _IDPoolRecord:
-    def __init__(self, id_: int) -> None:
-        self.id_ = id_
-        self._start_asked: bool = False
-        self._stop_asked: bool = False
+    id_: int
+    _start_asked: bool = False
+    _stop_asked: bool = False
     
     def set_start_asked(self) -> None:
         self._start_asked = True
@@ -89,4 +89,46 @@ class IDPool:
         """
         self._reserved.clear()
         self._stored.clear()
+
+
+class IDPoolRegister:
+    """
+    Holds multiple IDPools, automatically
+    creates them and closes them on request.
+    """
+    def __init__(self) -> None:
+        self._pools: dict[type, IDPool] = dict()
     
+    def _get_or_create_pool(self, obj: Any) -> IDPool:
+        type_ = type(obj)
+        pool = self._pools.get(type_)
+        if pool is None:
+            pool = IDPool()
+            self._pools[type_] = pool
+        return pool
+    
+    def ask_id_start(self, obj: Any) -> int:
+        return self._get_or_create_pool(obj).ask_id_start(obj)
+    
+    def ask_id_stop(self, obj: Any) -> int:
+        return self._get_or_create_pool(obj).ask_id_stop(obj)
+    
+    def ask_id_continue(self, obj: Any) -> int:
+        return self._get_or_create_pool(obj).ask_id_continue(obj)
+    
+    def is_empty(self) -> bool:
+        return all(p.is_empty() for p in self._pools.values())
+    
+    def reset(self) -> None:
+        for p in self._pools.values():
+            p.reset()
+        
+        self._pools.clear()
+
+    def report_unclosed(self) -> str:
+        output = []
+        for pool in self._pools.values():
+            for obj, record in pool._stored.items():
+                output.append(f"Unclosed '{type(obj).__name__}': {record}")
+        
+        return ", ".join(output)

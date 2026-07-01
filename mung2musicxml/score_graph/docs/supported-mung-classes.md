@@ -522,26 +522,26 @@ Repeats are supported, but, some the possible bar styles are not supported by MS
 
 ## Ornaments
 
-- ❌ `ornamentTrill`
-- ❌ `wiggleTrill`
+- ✅ `ornamentTrill`
+- 🚧 `wiggleTrill` - the trill in MuNG is linked to its ornament only, extension over other notes is not supported.
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/trill-mark-element.png" height="100">
 </p>
 
-- ❌ `ornamentTurn`
+- ✅ `ornamentTurn`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/turn-element.png" height="100">
 </p>
 
-- ❌ `ornamentTurnInverted`
+- ✅ `ornamentTurnInverted`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/inverted-turn-element.png" height="100">
 </p>
 
-- ❌ `ornamentShortTrill`
+- ✅ `ornamentShortTrill`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/inverted-mordent-element.png" height="100">

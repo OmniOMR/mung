@@ -171,7 +171,7 @@ class GenericStartStopContinueOnset(GenericStartStopOnset[M]):
                     <= d.global_fractional_onset
                     <= self.stop.global_fractional_onset
                 ):
-                    raise ValueError(f"Onset {d.global_fractional_onset} of {d} not in allowed range: {self.start.global_fractional_onset} <= x <= {self.stop.global_fractional_onset}]")
+                    raise ValueError(f"Onset of {d} not in allowed range: {self.start.global_fractional_onset} <= {d.global_fractional_onset}  <= {self.stop.global_fractional_onset}]")
     
     def _check_continue_onset_strong(self) -> None:
         """

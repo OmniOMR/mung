@@ -46,3 +46,4 @@ from .volta import Volta
 from .segno import Segno
 from .coda import Coda
 from .rest_text import RestText
+from .ornaments import Turn, Trill, ShortTrill

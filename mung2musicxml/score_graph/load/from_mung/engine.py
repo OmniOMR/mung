@@ -48,6 +48,8 @@ from .construct_volta import construct_volta
 from .construct_coda import construct_coda
 from .construct_segno import construct_segno
 from .construct_rest_text import construct_rest_text
+from .construct_ornaments import construct_turn, construct_trill, construct_short_trill
+
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
@@ -240,6 +242,9 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord(Segno, C.Repeat.SEGNO, construct_segno),
                 CollectorRecord(Coda, C.Repeat.CODA, construct_coda),
                 CollectorRecord(RestText, C.Text.REST_TEXT, construct_rest_text),
+                CollectorRecord(Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
+                CollectorRecord(Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
+                CollectorRecord(ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
                 
                 CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
                 CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
@@ -448,7 +453,7 @@ class MuNG_LoadEngine(LoadEngine):
             
             def __hash__(self) -> int:
                 # Hash based on part ids and bracket type
-                return hash((tuple(p.id for p in self.parts), self.bracket_type))
+                return hash((tuple(p._id for p in self.parts), self.bracket_type))
             
             def __str__(self) -> str:
                 return f"{type(self).__name__}({[x.id for x in self.parts]}, {self.bracket_type})"
