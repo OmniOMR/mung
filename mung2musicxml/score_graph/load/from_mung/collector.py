@@ -1,23 +1,22 @@
 from enum import StrEnum
 from contextlib import contextmanager
-from typing import Type, Optional, Callable, TypeAlias, TypeVar
+from typing import Type, Optional, Callable, TypeAlias, TypeVar, Generic
 from collections import defaultdict
 from dataclasses import dataclass, field
 
 
 from mung import Node, NotationGraph
 from ...graph.scene_object import SceneObject
-from ...graph import Subevent
 from ....logger import logger
 from .utils import _log_object_creation
 
-SOConstructor: TypeAlias = (
-    Callable[
-        [Node, list[Subevent], NotationGraph], list[SceneObject] | SceneObject | None
-    ]
-    | Callable[[Node, list[Subevent]], list[SceneObject] | SceneObject | None]
-    | Callable[[Node, Subevent, NotationGraph], list[SceneObject] | SceneObject | None]
-    | Callable[[Node, Subevent], list[SceneObject] | SceneObject | None]
+T = TypeVar("T")
+
+SGConstructor: TypeAlias = (
+    Callable[[Node, list[T], NotationGraph], list[SceneObject] | SceneObject | None]
+    | Callable[[Node, list[T]], list[SceneObject] | SceneObject | None]
+    | Callable[[Node, T, NotationGraph], list[SceneObject] | SceneObject | None]
+    | Callable[[Node, T], list[SceneObject] | SceneObject | None]
 )
 
 
@@ -28,6 +27,8 @@ def _construction_guard(mung_obj: Node, type_: type, critical: bool = False):
         yield result
         if result is not None:
             _log_object_creation(result, mung_obj)
+    except TypeError as e:
+        raise e
     except Exception as e:
         if not critical:
             logger.warning(
@@ -59,17 +60,17 @@ def single_subevent(fn: F) -> F:
     return fn
 
 
-def _constructor_is_single_sub(fn: SOConstructor):
+def _constructor_is_single_sub(fn: SGConstructor):
     return fn in _constructs_from_single_subevent
 
 
 @dataclass
-class CollectorRecord:
+class CollectorRecord(Generic[T]):
     type_: Type[SceneObject]
     class_names: set[str | StrEnum] | list[str | StrEnum] | str | StrEnum
-    constructor: SOConstructor | None
+    constructor: SGConstructor[T] | None
     found_nodes: list[Node] = field(default_factory=list)
-    subevents_by: defaultdict[Node, set[Subevent]] = field(
+    subevents_by: defaultdict[Node, set[T]] = field(
         default_factory=lambda: defaultdict(set)
     )
 
@@ -77,15 +78,15 @@ class CollectorRecord:
         self.found_nodes.clear()
 
 
-class SubeventCollector:
+class SGObjectCollector(Generic[T]):
     """
     Temporarily gives links large objects in a MuNG score
     (slurs, beams, ...) to Score Graph Subevents.
     """
 
-    def __init__(self, records: Optional[list[CollectorRecord]] = None) -> None:
-        self._records: list[CollectorRecord] = records if records is not None else []
-        self._index: dict[Type[SceneObject], CollectorRecord] = {
+    def __init__(self, records: Optional[list[CollectorRecord[T]]] = None) -> None:
+        self._records: list[CollectorRecord[T]] = records if records is not None else []
+        self._index: dict[Type[SceneObject], CollectorRecord[T]] = {
             r.type_: r for r in self._records
         }
 
@@ -98,7 +99,7 @@ class SubeventCollector:
             found = graph.children(node, class_filter=rec.class_names)
             rec.found_nodes.extend(found)
 
-    def add_subevent(self, subevent: Subevent) -> None:
+    def add_score_object(self, subevent: T) -> None:
         """
         Registers `subevent` to all found objects.
         """
@@ -107,7 +108,7 @@ class SubeventCollector:
                 rec.subevents_by[node].add(subevent)
             rec._reset_found()
 
-    def subevents_by(self, type_: Type[SceneObject]) -> dict[Node, set[Subevent]]:
+    def score_objects_by(self, type_: Type[SceneObject]) -> dict[Node, set[T]]:
         """
         Retrieve all objects linked to a subevent by the objects type.
         """

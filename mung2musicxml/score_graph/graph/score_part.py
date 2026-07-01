@@ -22,8 +22,8 @@ class ScorePart(SceneObject, IDClass):
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/score-part/
     """
     part_measures: list[PartMeasure]
-
-    staffs: list[Staff] = field(init=False)
+    staffs: list[Staff]
+    
     name: str = field(default="")
 
     _mapping: dict[int, PartMeasure] = field(init=False, repr=False, default_factory=dict)
@@ -35,12 +35,8 @@ class ScorePart(SceneObject, IDClass):
 
         self.part_measures.sort(key=lambda m: m.id)
 
-        # setup staffs and compute divisions
-        staffs = set()
-        for durable in chain.from_iterable(m.all_durables for m in self.part_measures):
-            staffs.add(durable.staff)
-        
-        self.staffs = sorted(staffs, key=lambda s: s.id)
+        # setup staffs and compute divisions        
+        self.staffs = sorted(self.staffs, key=lambda s: s.id)
 
         if len(self.name) == 0:
             self.name = f"{self.id}-{len(self.staffs)}"

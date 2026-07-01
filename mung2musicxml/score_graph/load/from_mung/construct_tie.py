@@ -4,10 +4,12 @@ from mung.graph import infer_vertical_object_placement_relative_to_notes
 
 from ....logger import logger
 from ...graph import *
+from .collector import needs_graph
 from .utils import get_durable_pitch
 from .construct_slur import construct_slur
 
 
+@needs_graph
 def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGraph) -> Optional[Slur | Tie]:
     """
     A slur might be misclassified as a tie, in which case,

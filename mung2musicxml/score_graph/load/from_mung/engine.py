@@ -53,7 +53,7 @@ from .construct_ornaments import construct_turn, construct_trill, construct_shor
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
-from .collector import SubeventCollector, CollectorRecord
+from .collector import SGObjectCollector, CollectorRecord
 from .settings import MuNGLoaderSettings
 
 
@@ -220,34 +220,39 @@ class MuNG_LoadEngine(LoadEngine):
         
         measures_by_id: defaultdict[int, list[PartMeasure]] = defaultdict(list)
         durables_by_voice: defaultdict[int, list[Durable]] = defaultdict(list)
-        durables_by_tie: defaultdict[Node, set[Durable]] = defaultdict(set)
 
         # for braces and brackets
         parts_by_group: defaultdict[Node, set[ScorePart]] = defaultdict(set)
         # for volta
         volta_by_system_measure_id: defaultdict[Node, set[int]] = defaultdict(set)
 
-        c = SubeventCollector(
+        durable_collector: SGObjectCollector[Durable] = SGObjectCollector(
             [
-                CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM, construct_durable_beam),
-                CollectorRecord(Articulation, C.Articulation.ALL(), construct_articulation), # type: ignore
-                CollectorRecord(Tuplet, C.Tuplets.TUPLET, construct_tuplet),
-                CollectorRecord(Slur, C.Spanners.SLUR, construct_slur),
-                CollectorRecord(Wedge, I.HAIRPINS, construct_wedge), # type: ignore
-                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT, construct_dynamics),
-                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW], construct_fermata),
-                CollectorRecord(Tempo, C.Tempo.ALL(), construct_tempo), # type: ignore
-                CollectorRecord(DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO], construct_dynamics_text),
-                CollectorRecord(InterpretationText, C.Text.INTERPRETATION_TEXT, construct_interpretation_text),
-                CollectorRecord(Segno, C.Repeat.SEGNO, construct_segno),
-                CollectorRecord(Coda, C.Repeat.CODA, construct_coda),
-                CollectorRecord(RestText, C.Text.REST_TEXT, construct_rest_text),
-                CollectorRecord(Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
-                CollectorRecord(Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
-                CollectorRecord(ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
-                
-                CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
-                CollectorRecord(Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
+                CollectorRecord[Durable](Tie, C.Spanners.TIE, try_construct_tie),
+            ]
+        )
+        
+        subevent_collector: SGObjectCollector[Subevent] = SGObjectCollector(
+            [
+                CollectorRecord[Subevent](DurableBeam, C.NoteheadAttachments.BEAM, construct_durable_beam),
+                CollectorRecord[Subevent](Articulation, C.Articulation.ALL(), construct_articulation), # type: ignore
+                CollectorRecord[Subevent](Tuplet, C.Tuplets.TUPLET, construct_tuplet),
+                CollectorRecord[Subevent](Slur, C.Spanners.SLUR, construct_slur),
+                CollectorRecord[Subevent](Wedge, I.HAIRPINS, construct_wedge), # type: ignore
+                CollectorRecord[Subevent](Dynamics, C.Dynamics.DYNAMICS_TEXT, construct_dynamics),
+                CollectorRecord[Subevent](Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW], construct_fermata),
+                CollectorRecord[Subevent](Tempo, C.Tempo.ALL(), construct_tempo), # type: ignore
+                CollectorRecord[Subevent](DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO], construct_dynamics_text),
+                CollectorRecord[Subevent](InterpretationText, C.Text.INTERPRETATION_TEXT, construct_interpretation_text),
+                CollectorRecord[Subevent](Segno, C.Repeat.SEGNO, construct_segno),
+                CollectorRecord[Subevent](Coda, C.Repeat.CODA, construct_coda),
+                CollectorRecord[Subevent](RestText, C.Text.REST_TEXT, construct_rest_text),
+                CollectorRecord[Subevent](Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
+                CollectorRecord[Subevent](Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
+                CollectorRecord[Subevent](ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
+
+                CollectorRecord[Subevent](TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
+                CollectorRecord[Subevent](Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
             ]
         )
 
@@ -263,7 +268,7 @@ class MuNG_LoadEngine(LoadEngine):
             staff_to_others: defaultdict[Staff, list[Clef]] = defaultdict(list)
             logger.info(f"Processing instrument: {instrument}")
             
-            graph_measures: list[PartMeasure] = []
+            part_measures: list[PartMeasure] = []
 
             for measure in (chain.from_iterable(instros_to_measures[frozenset(s)] for s in instrument)):
                 single_measure_subevents: list[Subevent] = []
@@ -285,12 +290,9 @@ class MuNG_LoadEngine(LoadEngine):
 
                             durables_by_voice[get_voice(dur)].append(durable)
 
-                            c.collect_nodes(dur, graph)
+                            subevent_collector.collect_nodes(dur, graph)
+                            durable_collector.collect_nodes(dur, graph)
 
-                            # register tie per durable
-                            for tie in graph.children(dur, class_filter=C.Spanners.TIE):
-                                durables_by_tie[tie].add(durable)
-                            
                             # register tremolo singles
                             for tremolo_single in graph.children(dur, class_filter=I.TREMOLO_SINGLES):
                                 if tremolo_single not in found_tremolo_singles:
@@ -311,7 +313,10 @@ class MuNG_LoadEngine(LoadEngine):
                             single_measure_subevents.append(chordlike[0])
                             subevent = chordlike[0]
                         
-                        c.add_subevent(subevent)
+                        subevent_collector.add_score_object(subevent)
+                        
+                        for d in subevent.all_durables:
+                            durable_collector.add_score_object(d)
                         
                         if len(found_tremolo_singles) > 0:
                             construct_tremolo_single(
@@ -374,15 +379,20 @@ class MuNG_LoadEngine(LoadEngine):
                 )
                 
                 measures_by_id[measure.id_].append(m)
-                graph_measures.append(m)
-                
+                part_measures.append(m)
+            
             for staff, values in staff_to_durables.items():
                 staff.durables = values
             
             for staff, values in staff_to_others.items():
                 staff.other_symbols = values # type: ignore
             
-            score_part = ScorePart(part_measures=graph_measures)
+            all_part_staff = set()
+            for pm in part_measures:
+                for d in pm.all_durables:
+                    all_part_staff.add(d.staff)
+            
+            score_part = ScorePart(part_measures=part_measures, staffs=list(all_part_staff))
             parts.append(score_part)
 
             # collect all braces and brackets
@@ -483,10 +493,11 @@ class MuNG_LoadEngine(LoadEngine):
                 bracket_type=g.bracket_type,
             )
         
-        c.run_constructors(graph, self._settings.critical_classes)
-        
+        subevent_collector.run_constructors(graph, self._settings.critical_classes)
+        durable_collector.run_constructors(graph, self._settings.critical_classes)
+
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
-        for mung_lyric, subs in c.subevents_by(Lyric).items():
+        for mung_lyric, subs in subevent_collector.score_objects_by(Lyric).items():
             try:
                 if mung_lyric.class_name == C.Lyrics.LYRICS_UNISONO:
                     mung_lyric.data["text_transcription"] = self._settings.lyrics_unisono_character
@@ -521,8 +532,8 @@ class MuNG_LoadEngine(LoadEngine):
 
 
         # TODO: make beam filtering better, union find does not work - removes overlaps but also duplicates
-        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in c.subevents_by(TremoloBeam).values()]
-        for mung_tremolo_beam, subs in c.subevents_by(TremoloBeam).items():
+        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in subevent_collector.score_objects_by(TremoloBeam).values()]
+        for mung_tremolo_beam, subs in subevent_collector.score_objects_by(TremoloBeam).items():
             if len(subs) != 2:
                 logger.warning(
                     f"Invalid number of subevents connected to {mung_tremolo_beam}, "
@@ -534,9 +545,9 @@ class MuNG_LoadEngine(LoadEngine):
         # filter out tremolos that connect more than two subevents
         tbs = [TremoloBeamStruct.from_list(g) for g in connected_by_tremolo_beam if len(g) == 2]
         tremolo_counts = Counter(tbs)
-        for tb, c in tremolo_counts.items():
-            TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
-            logger.info(f"Created tremolo beam with marks {c}")
+        for tb, counts in tremolo_counts.items():
+            TremoloBeam(start=tb.start, stop=tb.stop, marks=counts)
+            logger.info(f"Created tremolo beam with marks {subevent_collector}")
         
         IDClass.reset()
         
