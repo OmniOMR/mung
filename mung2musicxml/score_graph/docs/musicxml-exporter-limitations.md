@@ -67,3 +67,25 @@ This is an interpretation of the score above with highlighted voices (one of man
 </p>
 
 The library is not able to process these cases correctly until there are updates made to all the the other preprocessing engines.
+
+### Empty measures, ends of systems
+
+Empty measures are outputted as standard MusicXML measure with a `forward` element that fills the whole measure. Ends of staff may contain cautionary symbols (clefs, keys) outside of a proper measure or may not be closed with a proper barline.
+
+<p>
+<img src="images/key-signature-outside-of-measures.png" height="200">
+</p>
+
+<p>
+<img src="images/unclosed-measure-end-of-staff.png" height="200">
+</p>
+
+Algorithm, that separates the MuNG score into measures, considers both of these valid measures and creates and outputs them as such. Further down the conversion pipeline, we won't be able to match the right side of that measure to any measure separator so the barline will be hidden.
+
+<p>
+<img src="images/key-signature-outside-of-measure-render.png" height="200">
+</p>
+
+<p>
+<img src="images/unclosed-measure-end-of-staff-render.png" height="200">
+</p>

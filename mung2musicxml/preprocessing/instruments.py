@@ -43,6 +43,14 @@ def get_instrument_groups_from_systems(graph: NotationGraph) -> list[list[list[N
                 if staff not in flatten(current_instruments):
                     current_instruments.append([staff])
             
+            def _drop_duplicates(lists: list[list[Node]]) -> list[list[Node]]:
+                result = []
+                for lst in lists:
+                    if lst not in result:
+                        result.append(lst)
+                return result
+            
+            current_instruments = _drop_duplicates(current_instruments)
             # if passed, there are no overlapping instruments
             assert len(current_instruments) == len(UnionFind.merge_groups(current_instruments)), "Overlapping instruments"
 

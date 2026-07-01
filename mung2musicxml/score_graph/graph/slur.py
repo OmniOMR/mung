@@ -2,12 +2,12 @@ from dataclasses import dataclass, field
 
 from .tokens import AboveBelowToken
 
-from .interface import GenericStartStopContinue
+from .interface import GenericStartStopContinueOnset
 from .subevent import Subevent
 
 
 @dataclass
-class Slur(GenericStartStopContinue[Subevent]):
+class Slur(GenericStartStopContinueOnset[Subevent]):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/slur/
     """

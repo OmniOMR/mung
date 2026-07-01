@@ -2,9 +2,9 @@
 
 > **Last revision: March 7nd 2026**
 
-> **Based on Annotation instructions from: [Feb 6th 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md#edgecases)**
+> **Based on Annotation instructions from: [Feb 6th 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md)**
 
-This document goes over classes from MuNG that are are implemented in ScoreGraph, the list is based on [Annotation Instructions](https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md#edgecases). For potential limitations of **implemented** classes see [Exporter Limitations](./musicxml-exporter-limitations.md) and [MusicXML Limitations](./musicxml-limitations.md).
+This document goes over classes from MuNG that are are implemented in ScoreGraph, the list is based on [Annotation Instructions](https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md). For potential limitations of **implemented** classes see [Exporter Limitations](./musicxml-exporter-limitations.md) and [MusicXML Limitations](./musicxml-limitations.md).
 
 There are four levels of implementation:
 
@@ -219,18 +219,44 @@ ScoreGraph makes no difference between clefs at the starf of a system (`{g,f,c}C
   <img src="./images/verse-number.png" height="100">
 </p>
 
-- ❌ `lyricsUnisono`
+- ✅ `lyricsUnisono` - for more info see [MusicXML Limitations](./musicxml-limitations.md#lyrics-unisono).
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/lyricsUnisono-1.png" height="100">
+</p>
+
 
 ## Tempo
 
-- ❌ `tempoText`
-- ❌ `tempoRitardando`
-- ❌ `tempoAccelerando`
-- ❌ `tempoATempo`
+- ✅ `tempoText`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoText-3.png" height="100">
+</p>
+
+- ✅ `tempoRitardando`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoRitardando-2.png" height="100">
+</p>
+
+- ❌ `tempoRitardandoSpanner`
+- ✅ `tempoAccelerando`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoAccelerando-1.png" height="100">
+</p>
+
+- ❌ `tempoAccelerandoSpanner`
+- ✅ `tempoATempo`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/tempoATempo-1.png" height="100">
+</p>
 
 ## Text
 
-- ❌ `interpretationText`
+- ✅ `interpretationText`
 - ❌ `metadataText`
 - ❌ `measureNumber`
 
@@ -243,33 +269,31 @@ ScoreGraph makes no difference between clefs at the starf of a system (`{g,f,c}C
 
 ## Barlines
 
-Barlines are indirectly defined by measure starts and ends. Their attributes like `heavy`, `final` and `wing` are not supported.
-
-- ☑️ `barlineSingle`
+- ✅ `barlineSingle`.
 
 <p style="background-color: white; display: inline-block;">
   <img src="https://www.w3.org/2021/06/musicxml40/static/datatypes/bar-style-regular.png" height="100">
 </p>
 
-- ❌ `barlineHeavy`
+- ✅ `barlineHeavy`.
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/datatypes/bar-style-heavy.png" height="100">
 </p>
 
-- ❌ `barlineFinal`
+- ✅ `barlineFinal` - resolved into barline `heavy-heavy`, for more info see [MusicXML Limitations](./musicxml-limitations.md#barline-final)
 
 <p> 
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/barlineFinal-0.png" height="100">
 </p>
 
-- ❌ `barlineWing`
+- ☑️ `barlineWing` - property of a repeat barline.
 
 <p> 
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/barlineWing-0.png" height="100">
 </p>
 
-- ☑️ `measureSeparator`
+- ☑️ `measureSeparator` - separator contains individual barlines that are resolved into `BarStyle` (`regular`, `light-heavy`, ...).
 
 ## Staff Brackets and Dividers
 
@@ -376,13 +400,13 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/n-element.png" height="100">
 </p>
 
-- ❌ `dynamicDiminuendo`
+- ✅ `dynamicDiminuendo`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/dynamicDiminuendo-0.png" height="100">
 </p>
 
-- ❌ `dynamicCrescendo`
+- ✅ `dynamicCrescendo`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/dynamicCrescendo-0.png" height="100">
@@ -403,38 +427,40 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
 
 ## Repeats
 
-- ❌ `repeatLeft`
-- ❌ `repeatRight`
+Repeats are supported, but, some the possible bar styles are not supported by MSS4. We default to using those compatible with MSS4. For more info see [MuseScore Limitations](./musescore-limitations.md#unable-to-display-other-than-light-heavy-repeats---potentially-). MSS4 cannot import repeats that are located in the middle of a measure, see [MuseScore Limitation](./musescore-limitations.md#repeat-in-the-middle-of-a-measure-).
+
+- ✅ `repeatLeft`
+- ✅ `repeatRight`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/repeats-0.png" height="100">
 </p>
 
-- ❌ `repeatDot`
+- ☑️ `repeatDot` - there is not way in MusicXML to specify number of dots for a repeat, it is part of the repeat objects.
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/repeatDot-0.png" height="100">
 </p>
 
-- ❌ `volta`
+- ✅ `volta`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/volta-0.png" height="100">
 </p>
 
-- ❌ `voltaText`
+- ✅ `voltaText`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/img/voltaText-0.png" height="100">
 </p>
 
-- ❌ `segno`
+- ✅ `segno`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/segno-element.png" height="100">
 </p>
 
-- ❌ `coda`
+- ✅ `coda`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/coda-element.png" height="100">
@@ -496,26 +522,26 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
 
 ## Ornaments
 
-- ❌ `ornamentTrill`
-- ❌ `wiggleTrill`
+- ✅ `ornamentTrill`
+- 🚧 `wiggleTrill` - the trill in MuNG is linked to its ornament only, extension over other notes is not supported.
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/trill-mark-element.png" height="100">
 </p>
 
-- ❌ `ornamentTurn`
+- ✅ `ornamentTurn`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/turn-element.png" height="100">
 </p>
 
-- ❌ `ornamentTurnInverted`
+- ✅ `ornamentTurnInverted`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/inverted-turn-element.png" height="100">
 </p>
 
-- ❌ `ornamentShortTrill`
+- ✅ `ornamentShortTrill`
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/inverted-mordent-element.png" height="100">
@@ -531,3 +557,4 @@ Barlines are indirectly defined by measure starts and ends. Their attributes lik
 
 - ❌ `unclassified`
 - ❌ `UFO`
+

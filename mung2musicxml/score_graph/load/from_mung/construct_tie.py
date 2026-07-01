@@ -1,13 +1,15 @@
 from typing import Optional
 from mung import Node, NotationGraph
-from mung.graph import infer_horizontal_object_placement_relative_to_notes
+from mung.graph import infer_vertical_object_placement_relative_to_notes
 
 from ....logger import logger
 from ...graph import *
+from .collector import needs_graph
 from .utils import get_durable_pitch
 from .construct_slur import construct_slur
 
 
+@needs_graph
 def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGraph) -> Optional[Slur | Tie]:
     """
     A slur might be misclassified as a tie, in which case,
@@ -32,7 +34,7 @@ def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGr
         
         return _slur_from_tie_input(mung_tie, durables, graph)
     
-    placement = AboveBelowToken.from_int(infer_horizontal_object_placement_relative_to_notes(mung_tie, graph))
+    placement = AboveBelowToken.from_int(infer_vertical_object_placement_relative_to_notes(mung_tie, graph))
     
     if placement == AboveBelowToken.ABOVE:
         # minimizing:

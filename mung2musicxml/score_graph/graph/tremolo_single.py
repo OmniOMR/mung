@@ -12,6 +12,6 @@ class TremoloSingle(SceneObject):
 
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/tremolo/
     """
-    subevent: Subevent
+    parent: Subevent
     marks: int
     placement: AboveBelowToken

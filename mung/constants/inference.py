@@ -88,6 +88,12 @@ class InferenceEngineConstants(C):
         C.Dynamics.DYNAMIC_DIMINUENDO_HAIRPIN,
     ]
 
+    BARLINES = [
+        C.Barlines.BARLINE_HEAVY,
+        C.Barlines.BARLINE_SINGLE,
+        C.Barlines.BARLINE_FINAL
+    ]
+
     TREMOLO_SINGLES = C.Tremolo.all_numeral_members()
 
     IN_MEASURE_MODIFIERS = [

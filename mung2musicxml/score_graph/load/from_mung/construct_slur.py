@@ -5,8 +5,10 @@ from mung.graph import (
 )
 
 from ...graph import *
+from .collector import needs_graph
 
 
+@needs_graph
 def construct_slur(
         mung_slur: Node,
         subevents: list[Subevent],

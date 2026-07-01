@@ -6,8 +6,8 @@ from .multistem import MultistemResolver, MultistemResolverStrategy
 from ..inference import OnsetInferenceEngineWrapper, PitchInferenceEngineWrapper, OnsetsInferenceEngineWrapperStrategy
 from .voices import VoiceEngine, VoiceEngineStrategy
 from .in_measure_modifiers import tag_in_measure_part_modifiers_with_onset
+from .repeats import tag_repeats_with_onset
 from .grace_note_linking import link_grace_notes_to_parent
-
 
 class MuNGPreprocessingPipeline:
     """
@@ -41,6 +41,7 @@ class MuNGPreprocessingPipeline:
         self._pitch_engine(graph)
         self._voice_engine(graph)
         tag_in_measure_part_modifiers_with_onset(graph)
+        tag_repeats_with_onset(graph)
         return graph
 
     @classmethod

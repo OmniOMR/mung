@@ -2,14 +2,15 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from time import localtime, strftime
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Optional, Literal, Iterable
 from collections import defaultdict
 
 from mung2musicxml.score_graph.graph import Score
 from mung.interpret import TimeSigStruct
 from ...graph import *
+from ...graph.interface import ScoreText
 from ....logger import logger
-from ..id_pool import IDPool
+from ..id_pool import IDPoolRegister
 from .utils import _aggregate_mods
 from ..export_engine import ExportEngine
 from .settings import MusicXMLExportSettings
@@ -26,13 +27,11 @@ class MusicXML_ExportEngine(ExportEngine):
         else:
             self.settings = settings
         
-        self._wedge_register = IDPool()
-        self._slur_register = IDPool()
-        self._part_group_register = IDPool()
+        self._register = IDPoolRegister()
     
     def export(self, score: Score) -> ET.Element:
         output = self.xml_Score(score)
-        # self._reset()
+        self._reset()
         return output
     
     def export_to_file(self, score: Score, file_name: Path | str) -> None:
@@ -65,12 +64,8 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         Checks if ID pools are empty and resets them.
         """
-        assert self._wedge_register.is_empty()
-        assert self._slur_register.is_empty()
-        assert self._part_group_register.is_empty()
-        self._wedge_register.reset()
-        self._slur_register.reset()
-        self._part_group_register.reset()
+        assert self._register.is_empty(), self._register.report_unclosed()
+        self._register.reset()
 
     def create_forward(self, duration: int) -> ET.Element:
         """
@@ -127,6 +122,8 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/score-partwise/
         """
+        self._log_middle_barline_warning(score)
+        
         s = ET.Element("score-partwise", {"version": self.settings.musicxml_version})
         s.append(self.xml_Identification())
 
@@ -138,6 +135,13 @@ class MusicXML_ExportEngine(ExportEngine):
             s.append(self.xml_ScorePart(part))
         
         return s
+    
+    def _log_middle_barline_warning(self, score: Score) -> None:
+        for sm in score.score_measures:
+            for bar in sm.bars:
+                if bar.location == LeftRightMiddleToken.MIDDLE:
+                    logger.warning(f"{LeftRightMiddleToken.MIDDLE} not supported for {type(bar).__name__}")
+        
 
     def _str_xml(self, root: ET.Element, indent: int | str = 2) -> str:
         """
@@ -161,7 +165,7 @@ class MusicXML_ExportEngine(ExportEngine):
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-partwise/
         """
         logger.info(f"Writing score part: {score_part.id}")
-        sc = ET.Element("part", {"id": score_part.id})
+        sc = ET.Element("part", {"id": f"P{score_part.id}"})
         for id_ in range(1, score_part.score.max_measure_index + 1):
             measure = score_part.get_part_measure_by_id(id_)
 
@@ -360,6 +364,77 @@ class MusicXML_ExportEngine(ExportEngine):
         ET.SubElement(time_mod, "normal-notes").text = str(time_modification.normal)
         return time_mod
     
+    def _xml_direction_base(self, placement: AboveBelowToken, staff_id: int) -> tuple[ET.Element, ET.Element]:
+        dir = ET.Element("direction", {"placement": placement})
+        ET.SubElement(dir, "staff").text = str(staff_id)
+        dir_type = ET.SubElement(dir, "direction-type")
+        return dir, dir_type
+    
+    def _xml_font_settings(self, obj: SceneObject) -> dict[str, str]:
+        """
+        Finds font definition for a given object
+        inside setting and returns it formatted
+        as a dictionary with MusicXML keys and values.
+
+        Returns an empty dictionary if not font definition
+        is found.
+        """
+        fs = self.settings.text_settings.get(type(obj))
+        if fs is None:
+            return {}
+        else:
+            output: dict[str, str]= {}
+            for key, value in vars(fs).items():
+                key: str
+                if key.startswith("font") and value is not None:
+                    key = key.replace("_", "-")
+                    output[key] = str(value)
+            return output
+
+    def xml_Dynamics(self, subevent: Subevent) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/dynamics/
+        """
+        output = []
+        for dynamic in subevent.dynamics:
+            dir, dir_type = self._xml_direction_base(dynamic.placement, dynamic.staff.id)
+            dyn = ET.SubElement(dir_type, "dynamics")
+            dyn_impl = ET.SubElement(dyn, str(dynamic.type_))
+            if dynamic.type_ == DynamicsTypeToken.OTHER_DYNAMICS:
+                assert dyn_impl is not None
+                dyn_impl.text = dynamic.text
+            output.append(dir)
+        return output
+    
+    def xml_Segno_Coda(self, subevent: Subevent) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/segno/
+        
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/coda/
+        """
+        
+        output = []
+        staff_id = min(s.id for s in subevent.staffs)
+        
+        for sc in subevent.segnos + subevent.codas:
+            dir, dir_type = self._xml_direction_base(sc.placement, staff_id)
+            ET.SubElement(dir_type, type(sc).__name__.lower())
+            output.append(dir)
+        
+        return output
+    
+    def xml_ScoreText(self, subevent: Subevent, texts: Iterable[ScoreText]) -> list[ET.Element]:
+        """
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/words/
+        """
+        output = []
+        for text in texts:
+            if text.is_start(subevent):
+                dir, dir_type = self._xml_direction_base(text.placement, text.staff.id)
+                ET.SubElement(dir_type, "words", self._xml_font_settings(text)).text = text.text
+                output.append(dir)
+        return output
+    
     def xml_Subevent(self, subevent: Subevent) -> list[ET.Element]:
         """
         Subevent does not have a direct MusicXML equivalent.
@@ -372,15 +447,13 @@ class MusicXML_ExportEngine(ExportEngine):
         output = []
         
         output.extend(self.xml_Wedge(subevent, "start"))
+        output.extend(self.xml_Dynamics(subevent))
+        output.extend(self.xml_Segno_Coda(subevent))
+        output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
+        output.extend(self.xml_ScoreText(subevent, subevent.tempos))
+        output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
+        output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
 
-        for dynamic in subevent.dynamics:
-            dir = ET.Element("direction")
-            dir_type = ET.SubElement(dir, "direction-type")
-            dyn = ET.SubElement(dir_type, "dynamics")
-            # ET.SubElement(dir, "staff").text = "1"
-            ET.SubElement(dyn, str(dynamic.type_))
-            output.append(dir)
-        
         if isinstance(subevent, Chord):
             for note in subevent.notes:
                 for grace in note.grace_notes:
@@ -652,7 +725,7 @@ class MusicXML_ExportEngine(ExportEngine):
                 continue
             
             if start_stop == StartStopContinueToken.START:
-                id_ = self._slur_register.ask_id_start(slur)
+                id_ = self._register.ask_id_start(slur)
                 output.append(ET.Element(
                     "slur", {
                         "type": StartStopContinueToken.START,
@@ -661,7 +734,7 @@ class MusicXML_ExportEngine(ExportEngine):
                     }
                 ))
             elif start_stop == StartStopContinueToken.STOP:
-                id_ = self._slur_register.ask_id_stop(slur)
+                id_ = self._register.ask_id_stop(slur)
                 output.append(ET.Element(
                     "slur", {
                         "type": StartStopContinueToken.STOP,
@@ -698,16 +771,75 @@ class MusicXML_ExportEngine(ExportEngine):
         s = ET.Element("tremolo", {"type": TremoloType.SINGLE})
         s.text = str(single.marks)
         return s
+    
+    def xml_Turn(self, durable: Durable) -> ET.Element:
+        turn = durable.turn
+        assert turn is not None
+        if turn.is_inverted:
+            name = "inverted-turn"
+        else:
+            name = "turn"
+        
+        t = ET.Element(name, {"placement": turn.placement})
+        return t
+    
+    def xml_Trill(self, durable: Durable) -> list[ET.Element]:
+        output: list[ET.Element] = []
+        trill = durable.trill
+        assert trill is not None
+        output.append(ET.Element("trill-mark", {"placement": trill.placement}))
+        
+        # TODO: temporal solution
+        if trill.has_wiggle:
+            output.append(ET.Element("wavy-line", {"type": "start", "number": "1"}))
+            output.append(ET.Element("wavy-line", {"type": "stop", "number": "1"}))
+        
+        return output
+    
+    def xml_ShortTrill(self, durable: Durable) -> ET.Element:
+        s_trill = durable.short_trill
+        assert s_trill is not None
+        return ET.Element("inverted-mordent", {"placement": s_trill.placement})
 
     def xml_ornaments(self, durable: Durable) -> Optional[ET.Element]:
+        # TODO: MusicXML specifies that ornament element
+        # has only one ornament object (trill, turn etc.)
+        # inside of it -- vs MSS4 output all ornaments
+        # for a durable into same ornament element
         ornaments = ET.Element("ornaments")
-        
         # write tremolo beams only to first note of a chord
         if not self._durable_is_chord_continuation(durable):
+            # TRILL-MARK (aka TRILL)
+            if durable.trill is not None:
+                ornaments.extend(self.xml_Trill(durable))
+                       
+            # TURN
+            # INVERTED-TURN
+            if durable.turn is not None:
+                ornaments.append(self.xml_Turn(durable))
+            
+            # DELAYED-TURN
+            # DELAYED-INVERTED-TURN
+            # VERTICAL-TURN
+            # INVERTED-VERTICAL-TURN
+            # SHAKE
+            # WAVY-LINE
+
+            # MORDENT
+            if durable.short_trill is not None:
+                ornaments.append(self.xml_ShortTrill(durable))
+
+            # INVERTED-MORDENT
+            # SCHLEIFER
+            
+            # TREMOLO
             if durable.tremolo_beam is not None:
                 ornaments.append(self.xml_TremoloBeam(durable))
             if durable.tremolo_single is not None:
                 ornaments.append(self.xml_TremoloSingle(durable))
+            
+            # HAYDN
+            # OTHER-ORNAMENT
         
         if len(ornaments) > 0:
             return ornaments
@@ -732,25 +864,42 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         notations = ET.Element("notations")
         is_chord_continuation = self._durable_is_chord_continuation(durable)        
-
+        # TIED
+        notations.extend(self.xml_Ties(durable, notations=True))
         
         if not is_chord_continuation:
+        # SLUR
+            notations.extend(self.xml_Slurs(durable))
+            
+        # TUPLET
             if (xml_tuplet := self.xml_Tuplet(durable)) is not None:
                 notations.append(xml_tuplet)
-            
-            notations.extend(self.xml_Slurs(durable))
+        
+        # GLISSANDO
+        # SLIDE
 
-        notations.extend(self.xml_Ties(durable, notations=True))
-
+        # ORNAMENTS
         if (xml_ornaments := self.xml_ornaments(durable)) is not None:
             notations.append(xml_ornaments)
+        
+        # TECHNICAL
 
+        # ARTICULATIONS
         if not is_chord_continuation:
             if (xml_artic := self.xml_Articulations(durable)) is not None:
                 notations.append(xml_artic)
         
+        # DYNAMICS - implemented in "DIRECTION" element
+        
+        # FERMATA
         notations.extend(self.xml_Fermata(durable))
-
+        
+        # ARPEGGIATE
+        
+        # NON-ARPEGGIATE
+        # ACCIDENTAL-MARK
+        # OTHER-NOTATION>
+        
         if len(notations) > 0:
             return notations
         
@@ -792,11 +941,11 @@ class MusicXML_ExportEngine(ExportEngine):
 
         for wedge in wedges:
             if wedge.is_start(subevent) and pass_name == "start":
-                id_ = self._wedge_register.ask_id_start(wedge)
+                id_ = self._register.ask_id_start(wedge)
                 output.append(_create_wedge(id_, wedge))
 
             elif wedge.is_stop(subevent) and pass_name == "stop":
-                id_ = self._wedge_register.ask_id_stop(wedge)
+                id_ = self._register.ask_id_stop(wedge)
                 logger.debug(f"Closing wedge {id_}")
                 output.append(_close_wedge(id_, wedge))
 
@@ -810,9 +959,9 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         p = ET.Element("pitch")
         ET.SubElement(p, "step").text = pitch.step
-        ET.SubElement(p, "octave").text = str(pitch.octave.value)
         if pitch.alter != 0:
             ET.SubElement(p, "alter").text = str(pitch.alter.value)
+        ET.SubElement(p, "octave").text = str(pitch.octave.value)
         return p
     
     def xml_GraceNote(self, grace: GraceNote) -> ET.Element:
@@ -892,13 +1041,95 @@ class MusicXML_ExportEngine(ExportEngine):
         
         return frs
     
-    
     def _is_first_voice(self, voice_id: int) -> bool:
         """
         Returns true, if the given voice id is a first voice
         in its respective staff.
         """
         return voice_id in self.settings.first_voices
+    
+    def _normalize_repeat_style_mss4(self, repeat: RepeatBarline) -> BarStyleToken:
+        if repeat.bf == BackwardForwardToken.FORWARD:
+            return BarStyleToken.HEAVY_LIGHT
+        return BarStyleToken.LIGHT_HEAVY
+      
+    def xml_Barlines(self, measure: PartMeasure, location: LeftRightMiddleToken) -> list[ET.Element]:
+        def _gen_bar_style(
+                bar: Barline
+            ) -> ET.Element:
+            style = bar.style
+            if isinstance(bar, RepeatBarline) and self.settings.use_mss4_compatible_repeat_barline_style:
+                style = self._normalize_repeat_style_mss4(bar)
+            
+            barline = ET.Element("barline", {"location": bar.location})
+            ET.SubElement(barline, "bar-style").text = style
+            return barline
+
+        def _add_bar(
+                bar: Barline
+            ) -> ET.Element | None:
+            if isinstance(bar, RepeatBarline):
+                barline = _gen_bar_style(bar)
+                repeat = ET.SubElement(
+                    barline,
+                    "repeat",
+                    {
+                        "direction": bar.bf,
+                        "winged": bar.winged,
+                    }
+                )
+                return repeat
+        
+            if bar.style != BarStyleToken.default():
+                barline = ET.Element("barline", {"location": bar.location})
+                ET.SubElement(barline, "bar-style").text = bar.style
+                return barline
+        
+        output: list[ET.Element] = []
+        sm = measure.system_measure
+        for bar in sm.bars:
+            if bar.location == location:
+                b = _add_bar(bar)
+                if b is not None:
+                    output.append(b)
+        
+        if measure.score_part.is_first:
+                output.extend(self.xml_Voltas(sm, location))
+        
+        return output
+    
+    def xml_Voltas(self, score_measure: ScoreMeasure, location: LeftRightMiddleToken) -> list[ET.Element]:
+        output: list[ET.Element] = []
+        
+        for volta in score_measure.voltas:
+            start_stop: StartStopDiscontinueToken | None = None
+            if volta.is_start(score_measure) and location == LeftRightMiddleToken.LEFT:
+                start_stop = StartStopDiscontinueToken.START
+            elif volta.is_stop(score_measure) and location == LeftRightMiddleToken.RIGHT:
+                start_stop = StartStopDiscontinueToken.STOP
+            
+            if start_stop is not None:
+                if len(volta.numbers) == 0:
+                    number = "1"
+                else:
+                    number = ",".join(str(n) for n in volta.numbers)
+                
+                barline = ET.Element("barline", {"location": location})
+                ET.SubElement(
+                    barline,
+                    "ending",
+                    {"number": number, "type": start_stop}
+                ).text = volta.text
+                
+                output.append(barline)
+        
+        return output                
+        
+    def xml_right_Barlines(self, measure: PartMeasure) -> list[ET.Element]:
+        return self.xml_Barlines(measure, LeftRightMiddleToken.RIGHT)
+
+    def xml_left_Barlines(self, measure: PartMeasure) -> list[ET.Element]:
+        return self.xml_Barlines(measure, LeftRightMiddleToken.LEFT)        
     
     def _get_subevent_and_modifiers(self, measure: PartMeasure, subevents: list[Subevent], voice_id: int) -> list[InMeasureModifier | Subevent]:
         """
@@ -948,6 +1179,15 @@ class MusicXML_ExportEngine(ExportEngine):
             
         return attributes
     
+    def _add_empty_measure(self, m_element: ET.Element, measure: PartMeasure) -> ET.Element:
+        ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
+        if ed == 0:
+            ts = self._get_most_common_time_signature(measure.score_part.score)
+            ed = (ts * measure.score_part.divisions).numerator
+        
+        m_element.append(self.create_forward(ed))
+        return m_element
+    
     def xml_Measure(self, measure: PartMeasure) -> ET.Element:
         m = ET.Element("measure", {"number": str(measure.id)})
 
@@ -979,24 +1219,15 @@ class MusicXML_ExportEngine(ExportEngine):
         if full_repeat_attr is not None:
             attributes.extend(full_repeat_attr)
 
-        # if full_repeat_attr is not None:
-        #     attributes.extend(full_repeat_attr)
-
         if len(attributes) > 0:
             m.append(attributes)
         
-        def _add_empty_measure(m_element: ET.Element, measure: PartMeasure) -> ET.Element:
-            ed = measure.system_measure.get_expected_duration_for_part_measure(measure)
-            if ed == 0:
-                ts = self._get_most_common_time_signature(measure.score_part.score)
-                ed = (ts * measure.score_part.divisions).numerator
-            
-            m_element.append(self.create_forward(ed))
-            return m_element
-        
+        m.extend(self.xml_left_Barlines(measure))
+
         # empty measure
         if len(measure.subevents) == 0:
-            m = _add_empty_measure(m, measure)
+            m = self._add_empty_measure(m, measure)
+            m.extend(self.xml_right_Barlines(measure))
             return m
         
         subevents_by_voice: defaultdict[int, list[Subevent]] = defaultdict(list)
@@ -1093,12 +1324,14 @@ class MusicXML_ExportEngine(ExportEngine):
             if self.settings.error_handling.skip_broken_measure:
                 logger.critical(f"Measure written as empty")
                 logger.warning(msg, exc_info=True)
-                m = _add_empty_measure(m, measure)
+                m = self._add_empty_measure(m, measure)
                 return m
             else:
                 raise ValueError(msg) from e
         
         m.extend(m_buffer)
+        m.extend(self.xml_right_Barlines(measure))
+
         return m
     
     def _get_most_common_time_signature(self, score: Score) -> TimeSigStruct:
@@ -1128,6 +1361,17 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/part-list/
         """
+        # orders groups from smallest to largest
+        # (group id affects ordering in MSS4 render)
+        score_groups: set[PartGroup] = set()
+        for part in score.score_parts:
+            score_groups.update(part.part_groups)
+        
+        for group in sorted(score_groups, key=lambda g: -len(g.parts)):
+            self._register.ask_id_start(group)
+            # print([p.id for p in group.parts])
+
+        # create instrument group structure
         pl = ET.Element("part-list")
         for part in score.score_parts:
             pl.extend(self.xml_part_list_element(part))
@@ -1135,8 +1379,9 @@ class MusicXML_ExportEngine(ExportEngine):
     
     def xml_PartGroup(self, part_group: PartGroup, number: int, start_stop: StartStopContinueToken) -> ET.Element:
         pg = ET.Element("part-group", {"number": str(number), "type": start_stop})
-        ET.SubElement(pg, "group-symbol").text = part_group.bracket_type
-        ET.SubElement(pg, "group-barline").text = part_group.barline_type
+        if start_stop == StartStopContinueToken.START:
+            ET.SubElement(pg, "group-symbol").text = part_group.bracket_type
+            ET.SubElement(pg, "group-barline").text = part_group.barline_type
         return pg
 
     def xml_part_list_element(self, score_part: ScorePart) -> list[ET.Element]:
@@ -1148,16 +1393,18 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         group_starts: list[ET.Element] = []
         group_ends: list[ET.Element] = []
-
+        
+        
         for group in score_part.part_groups:
             if group.is_start(score_part):
-                number = self._part_group_register.ask_id_start(group)
+                number = self._register.ask_id_start(group)
+                
                 group_starts.append(self.xml_PartGroup(group, number, StartStopContinueToken.START))
             if group.is_stop(score_part):
-                number = self._part_group_register.ask_id_stop(group)
-                group_ends.append(self.xml_PartGroup(group, number, StartStopContinueToken.STOP))
+                number = self._register.ask_id_stop(group)
+                group_ends.append(self.xml_PartGroup(group, number, StartStopContinueToken.STOP))                
                 
-        sp = ET.Element("score-part", {"id": score_part.id})
+        sp = ET.Element("score-part", {"id": f"P{score_part.id}"})
         ET.SubElement(sp, "part-name").text = score_part.name
         
         return group_starts + [sp] + group_ends

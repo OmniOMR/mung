@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from .durable import Durable
 from .note import Note
 from .tokens import AboveBelowToken
-from .interface import GenericStartStop
+from .interface import GenericStartStopOnset
 
 
 @dataclass(kw_only=True)
-class Tie(GenericStartStop[Durable]):
+class Tie(GenericStartStopOnset[Durable]):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/tied/
 

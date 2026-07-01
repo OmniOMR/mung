@@ -118,9 +118,10 @@ class TimeSignatures(AllStrEnumNumeralMapped):
 class Lyrics(StrEnum):
     LYRICS_TEXT = "lyricsText"
     VERSE_NUMBER = "verseNumber"
+    LYRICS_UNISONO = "lyricsUnisono"
 
 
-class Tempo(StrEnum):
+class Tempo(AllExtendedStrEnum):
     TEMPO_TEXT = "tempoText"
     TEMPO_RITARDANDO = "tempoRitardando"
     TEMPO_ACCELERANDO = "tempoAccelerando"
@@ -194,8 +195,15 @@ class Repeat(StrEnum):
     REPEAT_LEFT = "repeatLeft"
     REPEAT_RIGHT = "repeatRight"
     REPEAT_DOT = "repeatDot"
-    # TODO: voltas
+
     REPEAT_1_BAR = "repeat1Bar"
+    
+    VOLTA = "volta"
+    VOLTA_TEXT = "voltaText"
+    
+    SEGNO = "segno"
+    CODA = "coda"
+    SEGNO_SERPENT = "segnoSerpent"
 
 
 class Tuplets(AllStrEnumNumeralMapped):
@@ -263,6 +271,7 @@ class ClassNameConstants:
     Articulation = Articulation
     Dynamics = Dynamics
     Repeat = Repeat
+    Tempo = Tempo
     Tuplets = Tuplets
     Tremolo = Tremolo
     Ornaments = Ornaments

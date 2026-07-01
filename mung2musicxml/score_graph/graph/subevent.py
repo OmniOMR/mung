@@ -14,6 +14,12 @@ if TYPE_CHECKING:
     from .part_measure import PartMeasure
     from .wedge import Wedge
     from .dynamics import Dynamics
+    from .tempo import Tempo
+    from .dynamics_text import DynamicsText
+    from .interpretation_text import InterpretationText
+    from .segno import Segno
+    from .coda import Coda
+    from .rest_text import RestText
 
 
 @dataclass
@@ -96,3 +102,34 @@ class Subevent(DurationObject):
     def dynamics(self) -> list["Dynamics"]:
         from .dynamics import Dynamics
         return Dynamics.many_of(self, lambda d: d.parent)
+    
+    
+    @property
+    def segnos(self) -> list["Segno"]:
+        from .segno import Segno
+        return Segno.many_of(self, lambda d: d.parent)
+    
+    @property
+    def codas(self) -> list["Coda"]:
+        from .coda import Coda
+        return Coda.many_of(self, lambda d: d.parent)
+    
+    @property
+    def tempos(self) -> list["Tempo"]:
+        from .tempo import Tempo
+        return Tempo.many_of(self, lambda d: d.all)
+    
+    @property
+    def dynamics_texts(self) -> list["DynamicsText"]:
+        from .dynamics_text import DynamicsText
+        return DynamicsText.many_of(self, lambda d: d.all)
+
+    @property
+    def interpretation_texts(self) -> list["InterpretationText"]:
+        from .interpretation_text import InterpretationText
+        return InterpretationText.many_of(self, lambda d: d.all)
+
+    @property
+    def rest_texts(self) -> list["RestText"]:
+        from .rest_text import RestText
+        return RestText.many_of(self, lambda d: d.all)

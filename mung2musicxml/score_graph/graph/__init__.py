@@ -36,3 +36,14 @@ from .fermata import Fermata
 from .lyric import Lyric
 from .lyric_level import LyricLevel
 from .verse_number import VerseNumber
+from .tempo import Tempo
+from .words_attributes import WordsAttributes
+from .dynamics_text import DynamicsText
+from .interpretation_text import InterpretationText
+from .barline import Barline
+from .repeat_barline import RepeatBarline
+from .volta import Volta
+from .segno import Segno
+from .coda import Coda
+from .rest_text import RestText
+from .ornaments import Turn, Trill, ShortTrill

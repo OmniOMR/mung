@@ -5,8 +5,12 @@ from functools import cached_property
 
 from .scene_object import SceneObject
 from .part_measure import PartMeasure
+from .barline import Barline
+from .repeat_barline import RepeatBarline
+
 if TYPE_CHECKING:
     from .score import Score
+    from .volta import Volta
 
 
 @dataclass
@@ -18,10 +22,19 @@ class ScoreMeasure(SceneObject):
     id: int
     part_measures: list[PartMeasure]
     is_new_system: bool
+    bars: list[Barline]
     
     def __post_init__(self) -> None:
         assert len(self.part_measures) > 0
         assert all(m.id == self.id for m in self.part_measures)
+        self._sort_bars()
+    
+    def _sort_bars(self) -> None:
+        self.bars.sort(
+            key=lambda b: (
+                b.location, b.fractional_onset_, isinstance(b, RepeatBarline)
+            )
+        )
     
     @cached_property
     def previous(self) -> "ScoreMeasure":
@@ -48,7 +61,12 @@ class ScoreMeasure(SceneObject):
     @property
     def score(self) -> "Score":
         from .score import Score
-        return Score.of(self, lambda s: s.score_measures)        
+        return Score.of(self, lambda s: s.score_measures)
+    
+    @property
+    def voltas(self) -> list["Volta"]:
+        from .volta import Volta
+        return Volta.many_of(self, lambda s: s.all)
 
     def get_most_common_onset(self) -> Fraction:
         return min(
@@ -76,4 +94,10 @@ class ScoreMeasure(SceneObject):
         duration = part_measure.score_part.divisions * self.fractional_duration
         assert duration.denominator == 1
         return duration.numerator
+    
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
     

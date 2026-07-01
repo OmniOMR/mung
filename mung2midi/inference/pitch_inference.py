@@ -651,8 +651,9 @@ class PitchInferenceEngine(object):
 
             # Corner cases: mistakes and staff breaks
             if len(tied_noteheads) > 2:
-                raise ValueError('Tie {0}: joining together more than 2'
+                logger.warning('Tie {0}: joining together more than 2'
                                  ' noteheads!'.format(t.id))
+                break
             if len(tied_noteheads) < 2:
                 logger.warning('Tie {0}: only one notehead. Staff break?'
                                 ''.format(t.id))

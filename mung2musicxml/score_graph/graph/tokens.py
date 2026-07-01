@@ -409,3 +409,71 @@ class SyllabicTypeToken(StrEnum):
     END = "end"
     MIDDLE = "middle"
     SINGLE = "single"
+
+
+class FontStyleToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-style/
+    """
+    NORMAL = "normal"
+    ITALIC = "italic"
+
+
+class FontWeightToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-weight/
+    """
+    NORMAL = "normal"
+    BOLD = "bold"
+
+
+class BarStyleToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/bar-style/
+    """
+    DASHED = "dashed"
+    DOTTED = "dotted"
+    HEAVY = "heavy"
+    HEAVY_HEAVY= "heavy-heavy"
+    HEAVY_LIGHT= "heavy-light"
+    LIGHT_HEAVY= "light-heavy"
+    LIGHT_LIGHT= "light-light"
+    NONE = "none"
+    REGULAR = "regular"
+    SHORT = "short"
+    TICK = "tick"
+
+    @classmethod
+    def default(cls) -> "BarStyleToken":
+        return cls.REGULAR
+    
+
+class BackwardForwardToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/backward-forward/
+    """
+    BACKWARD = "backward"
+    FORWARD = "forward"
+
+
+class WingedToken(StrEnum):
+    NONE = "none"
+    STRAIGHT = "straight"
+    CURVED = "curved"
+    DOUBLE_STRAIGHT = "double-straight"
+    DOUBLE_CURVED = "double-curved"
+
+
+class LeftRightMiddleToken(AutoOrderedStrEnum):
+    RIGHT = "right"
+    LEFT = "left"
+    MIDDLE = "middle"
+
+
+class StartStopDiscontinueToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-discontinue/
+    """
+    START = "start"
+    STOP = "stop"
+    DISCONTINUE = "discontinue"

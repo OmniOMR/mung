@@ -1,15 +1,17 @@
 from fractions import Fraction
 from pathlib import Path
-from typing import Self, Any
+from typing import Self, Any, Optional, Type
 from collections import defaultdict, Counter
 from itertools import chain
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from contextlib import contextmanager
+
 
 from mung import NotationGraph, Node
 from mung.constants import ClassNameConstants as C, InferenceEngineConstants as I
 from mung.subevents_from_nodes import subevents_from_list_of_symbols
 from mung.interpret import BasicTimeSignatureInterpreter
-from mung.graph import group_by_system_measure_and_system
+from mung.graph import group_by_system_measure_and_system, group_staffs_into_systems
 from ..load_engine import LoadEngine
 from ....preprocessing.instruments import (
     graph_to_instruments,
@@ -21,6 +23,7 @@ from ...graph.utils import IDClass
 from .utils import (
     get_voice,
     get_onset_beats,
+    _log_object_creation
 )
 from .construct_key_signature import construct_key_signature
 from .construct_time_signature import construct_time_signature
@@ -36,20 +39,28 @@ from .construct_tremolo import construct_tremolo_single
 from .construct_durable import construct_durable
 from .construct_fermata import construct_fermata
 from .construct_lyric import construct_lyric
+from .construct_tempo import construct_tempo
+from .construct_dynamics_text import construct_dynamics_text
+from .construct_interpretation_text import construct_interpretation_text
+from .construct_barline_mapping import compute_bar_styles
+from .construct_barlines import construct_bars_from_bar_mapping
+from .construct_volta import construct_volta
+from .construct_coda import construct_coda
+from .construct_segno import construct_segno
+from .construct_rest_text import construct_rest_text
+from .construct_ornaments import construct_turn, construct_trill, construct_short_trill
 
 
 from ....logger import logger
 from ....utils import find_subgraphs_bfs
-from .collector import SubeventCollector, CollectorRecord
-
-
-MEASURE_INDEX_START = 1
-MAX_VOICES = 8
+from .collector import SGObjectCollector, CollectorRecord
+from .settings import MuNGLoaderSettings
 
 
 class MuNG_LoadEngine(LoadEngine):
-    def __init__(self) -> None:
+    def __init__(self, settings: Optional[MuNGLoaderSettings] = None) -> None:
         self._btsi = BasicTimeSignatureInterpreter()
+        self._settings = settings if settings is not None else MuNGLoaderSettings()
     
     def _get_symbols_staff(self, symbol: Node, mapping: dict[Node, Staff], graph: NotationGraph):
         """
@@ -122,7 +133,7 @@ class MuNG_LoadEngine(LoadEngine):
             for staff in instrument_system:
                 durables = graph.parents(staff, class_filter=I.NOTEHEADS_AND_RESTS)
                 for durable in durables:
-                    lyrics.update(graph.children(durable, class_filter=C.Lyrics.LYRICS_TEXT))
+                    lyrics.update(graph.children(durable, class_filter=[C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO]))
             
             lyrics_per_system.append(lyrics)
 
@@ -146,17 +157,6 @@ class MuNG_LoadEngine(LoadEngine):
                         lyric.data["lyric_number"] = index
         
         return output
-
-    def _log_object_creation(self, obj: SceneObject, source_mung_node_or_nodes: Node | list[Node]) -> None:
-        """
-        Logs object into console creations via the mung2musicxml logger.
-        """
-        if isinstance(source_mung_node_or_nodes, Node):
-            source_str = str(source_mung_node_or_nodes)
-        else:
-            source_str = ", ".join(str(x) for x in source_mung_node_or_nodes)
-        
-        logger.debug(f"Added {type(obj).__name__} based on {source_str}")
     
     def load_from_file(self, file_name: Path | str) -> Score:
         return self.load(NotationGraph.from_file(file_name))
@@ -195,10 +195,10 @@ class MuNG_LoadEngine(LoadEngine):
         # for system:
         #   for instrument in system: (instrument is defined by one or two staffs)
         #       retrieve all nodes linked to these staff
-        next_measure_id = MEASURE_INDEX_START
+        next_measure_id = self._settings.measure_index_start
         for instrument_groups, sys in zip(instros, systems):
             offset = next_measure_id
-            if offset != MEASURE_INDEX_START:
+            if offset != self._settings.measure_index_start:
                 new_system_indexes.append(offset)
             
             for group in instrument_groups:
@@ -220,22 +220,39 @@ class MuNG_LoadEngine(LoadEngine):
         
         measures_by_id: defaultdict[int, list[PartMeasure]] = defaultdict(list)
         durables_by_voice: defaultdict[int, list[Durable]] = defaultdict(list)
-        durables_by_tie: defaultdict[Node, set[Durable]] = defaultdict(set)
 
         # for braces and brackets
         parts_by_group: defaultdict[Node, set[ScorePart]] = defaultdict(set)
+        # for volta
+        volta_by_system_measure_id: defaultdict[Node, set[int]] = defaultdict(set)
 
-        c = SubeventCollector(
+        durable_collector: SGObjectCollector[Durable] = SGObjectCollector(
             [
-                CollectorRecord(DurableBeam, C.NoteheadAttachments.BEAM),
-                CollectorRecord(Tuplet, C.Tuplets.TUPLET),
-                CollectorRecord(Slur, C.Spanners.SLUR),
-                CollectorRecord(Wedge, I.HAIRPINS), # type: ignore
-                CollectorRecord(TremoloBeam, C.Tremolo.TREMOLO_BEAM),
-                CollectorRecord(Articulation, C.Articulation.ALL()), #type: ignore
-                CollectorRecord(Dynamics, C.Dynamics.DYNAMICS_TEXT),
-                CollectorRecord(Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW]),
-                CollectorRecord(Lyric, C.Lyrics.LYRICS_TEXT),
+                CollectorRecord[Durable](Tie, C.Spanners.TIE, try_construct_tie),
+            ]
+        )
+        
+        subevent_collector: SGObjectCollector[Subevent] = SGObjectCollector(
+            [
+                CollectorRecord[Subevent](DurableBeam, C.NoteheadAttachments.BEAM, construct_durable_beam),
+                CollectorRecord[Subevent](Articulation, C.Articulation.ALL(), construct_articulation), # type: ignore
+                CollectorRecord[Subevent](Tuplet, C.Tuplets.TUPLET, construct_tuplet),
+                CollectorRecord[Subevent](Slur, C.Spanners.SLUR, construct_slur),
+                CollectorRecord[Subevent](Wedge, I.HAIRPINS, construct_wedge), # type: ignore
+                CollectorRecord[Subevent](Dynamics, C.Dynamics.DYNAMICS_TEXT, construct_dynamics),
+                CollectorRecord[Subevent](Fermata, [C.NoteheadAttachments.FERMATA_ABOVE, C.NoteheadAttachments.FERMATA_BELOW], construct_fermata),
+                CollectorRecord[Subevent](Tempo, C.Tempo.ALL(), construct_tempo), # type: ignore
+                CollectorRecord[Subevent](DynamicsText, [C.Dynamics.DYNAMIC_CRESCENDO, C.Dynamics.DYNAMIC_DIMINUENDO], construct_dynamics_text),
+                CollectorRecord[Subevent](InterpretationText, C.Text.INTERPRETATION_TEXT, construct_interpretation_text),
+                CollectorRecord[Subevent](Segno, C.Repeat.SEGNO, construct_segno),
+                CollectorRecord[Subevent](Coda, C.Repeat.CODA, construct_coda),
+                CollectorRecord[Subevent](RestText, C.Text.REST_TEXT, construct_rest_text),
+                CollectorRecord[Subevent](Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
+                CollectorRecord[Subevent](Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
+                CollectorRecord[Subevent](ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
+
+                CollectorRecord[Subevent](TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
+                CollectorRecord[Subevent](Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
             ]
         )
 
@@ -251,7 +268,7 @@ class MuNG_LoadEngine(LoadEngine):
             staff_to_others: defaultdict[Staff, list[Clef]] = defaultdict(list)
             logger.info(f"Processing instrument: {instrument}")
             
-            graph_measures: list[PartMeasure] = []
+            part_measures: list[PartMeasure] = []
 
             for measure in (chain.from_iterable(instros_to_measures[frozenset(s)] for s in instrument)):
                 single_measure_subevents: list[Subevent] = []
@@ -273,16 +290,17 @@ class MuNG_LoadEngine(LoadEngine):
 
                             durables_by_voice[get_voice(dur)].append(durable)
 
-                            c.collect_nodes(dur, graph)
+                            subevent_collector.collect_nodes(dur, graph)
+                            durable_collector.collect_nodes(dur, graph)
 
-                            # register tie per durable
-                            for tie in graph.children(dur, class_filter=C.Spanners.TIE):
-                                durables_by_tie[tie].add(durable)
-                            
                             # register tremolo singles
                             for tremolo_single in graph.children(dur, class_filter=I.TREMOLO_SINGLES):
                                 if tremolo_single not in found_tremolo_singles:
                                     found_tremolo_singles.append(tremolo_single)
+                            
+                            # register volta
+                            for volta in graph.parents(dur, class_filter=C.Repeat.VOLTA):
+                                volta_by_system_measure_id[volta].add(measure.id_)
 
                         # all durables inside a subevent should be either notes, rests or other
                         if isinstance(chordlike[0], Note):
@@ -295,7 +313,10 @@ class MuNG_LoadEngine(LoadEngine):
                             single_measure_subevents.append(chordlike[0])
                             subevent = chordlike[0]
                         
-                        c.add_subevent(subevent)
+                        subevent_collector.add_score_object(subevent)
+                        
+                        for d in subevent.all_durables:
+                            durable_collector.add_score_object(d)
                         
                         if len(found_tremolo_singles) > 0:
                             construct_tremolo_single(
@@ -319,7 +340,7 @@ class MuNG_LoadEngine(LoadEngine):
                         staff_to_others[
                             self._get_symbols_staff(mung_clef, mung_staffs_to_staffs, graph)
                         ].append(clef)
-                        self._log_object_creation(clef, mung_clef)
+                        _log_object_creation(clef, mung_clef)
                 
                 # KEY SIGNATURES
                 key_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -333,7 +354,7 @@ class MuNG_LoadEngine(LoadEngine):
 
                     key = construct_key_signature(ks, onset, graph)
                     modifiers.append(key)
-                    self._log_object_creation(key, ks)
+                    _log_object_creation(key, ks)
                 
                 # TIME SIGNATURES
                 time_sigs_by_onset: defaultdict[Fraction, list[Node]] = defaultdict(list)
@@ -349,7 +370,7 @@ class MuNG_LoadEngine(LoadEngine):
                         logger.warning(f"Could not interpret {ts}")
                         continue
                     modifiers.append(time_sig)
-                    self._log_object_creation(time_sig, ts)
+                    _log_object_creation(time_sig, ts)
                 
                 m = PartMeasure(
                     id=measure.id_,
@@ -358,45 +379,77 @@ class MuNG_LoadEngine(LoadEngine):
                 )
                 
                 measures_by_id[measure.id_].append(m)
-                graph_measures.append(m)
-                
+                part_measures.append(m)
+            
             for staff, values in staff_to_durables.items():
                 staff.durables = values
             
             for staff, values in staff_to_others.items():
                 staff.other_symbols = values # type: ignore
             
-            score_part = ScorePart(part_measures=graph_measures)
+            all_part_staff = set()
+            for pm in part_measures:
+                for d in pm.all_durables:
+                    all_part_staff.add(d.staff)
+            
+            score_part = ScorePart(part_measures=part_measures, staffs=list(all_part_staff))
             parts.append(score_part)
 
             # collect all braces and brackets
-            for grouping in set(chain.from_iterable(
+            for mung_grouping in set(chain.from_iterable(
                     graph.parents(staff, class_filter=C.StaffGroupingBracketsAndBraces.STAFF_GROUPING)
                     for staff in chain.from_iterable(instrument)
                 )):
-                parts_by_group[grouping].add(score_part)
-                
+                parts_by_group[mung_grouping].add(score_part)
+        
+
+        barline_types = compute_bar_styles(graph, self._settings.measure_index_start)
+        system_index = 0
+        measure_index = self._settings.measure_index_start
         for id_, measures in measures_by_id.items():
+            if id_ in new_system_indexes:
+                system_index += 1
+                measure_index = self._settings.measure_index_start
+
+            right_barline_onset = max(measures, key=lambda m: m.fractional_duration).fractional_duration
+            
+            bars = construct_bars_from_bar_mapping(
+                barline_types,
+                system_index,
+                measure_index,
+                right_barline_onset
+            )
+
             system_measures.append(ScoreMeasure(
                 id=id_,
                 part_measures=measures,
-                is_new_system=id_ in new_system_indexes
+                is_new_system=id_ in new_system_indexes,
+                bars=bars
             ))
+            measure_index += 1
         
         score = Score(score_parts=parts, score_measures=system_measures)
         
+        # REGISTER VOLTA
+        for mung_volta, sm_ids in volta_by_system_measure_id.items():
+            assert len(sm_ids) > 0
+            volta = construct_volta(
+                mung_volta,
+                [score.get_system_measure_by_id(id_) for id_ in sm_ids],
+                graph
+            )
+        
         for id_ in durables_by_voice.keys():
-            assert id_ <= MAX_VOICES, f"Unsupported number of voices. {id_}"
+            assert id_ <= self._settings.voice_limit, f"Unsupported number of voices. {id_}"
         
         voices: list[Voice] = []
-        for id_ in range(1, MAX_VOICES + 1):
+        for id_ in range(1, self._settings.voice_limit + 1):
             voices.append(Voice(id_, durables_by_voice[id_]))
         
 
         @dataclass(frozen=True)
         class _GroupingStruct:
-            # mung_grouping: Node
-            parts: tuple[ScorePart, ...]
+            parts: frozenset[ScorePart]
             bracket_type: GroupSymbolToken
 
             def __eq__(self, other: object) -> bool:
@@ -410,7 +463,7 @@ class MuNG_LoadEngine(LoadEngine):
             
             def __hash__(self) -> int:
                 # Hash based on part ids and bracket type
-                return hash((tuple(p.id for p in self.parts), self.bracket_type))
+                return hash((tuple(p._id for p in self.parts), self.bracket_type))
             
             def __str__(self) -> str:
                 return f"{type(self).__name__}({[x.id for x in self.parts]}, {self.bracket_type})"
@@ -420,101 +473,41 @@ class MuNG_LoadEngine(LoadEngine):
             brackets = graph.children(grouping, class_filter=I.INSTRUMENT_GROUP_BRACKETS)
             if len(brackets) > 1:
                 logger.warning(f"{grouping} has multiple brackets assigned, outputting all.")
-
             if len(brackets) == 0:
                 gs.add(_GroupingStruct(
-                    # grouping,
-                    tuple(score_parts),
-                    GroupSymbolToken.NONE
+                    frozenset(score_parts),
+                    GroupSymbolToken.NONE,
                 ))
             else:
                 for bracket in brackets:
                     gs.add(_GroupingStruct(
-                        # grouping,
-                        tuple(score_parts),
-                        GroupSymbolToken(bracket.class_name)
+                        frozenset(score_parts),
+                        GroupSymbolToken(bracket.class_name),
                     ))
         
         for g in gs:
-            PartGroup(list(g.parts), bracket_type=g.bracket_type)
-            
-        from contextlib import contextmanager
-
-        class CriticalClasses:
-            _non_critical: set[type] = {
-                Tie,
-                Slur,
-                Wedge,
-            }
-
-            def is_critical(self, type_: type) -> bool:
-                return type_ not in self._non_critical
-
-        @contextmanager
-        def _construction_guard(mung_obj, type_: type, critical: bool = True):
-            try:
-                yield
-            except Exception as e:
-                if not critical:
-                    logger.warning(f"Failed to create {type_} from {mung_obj}", exc_info=True)
-                else:
-                    raise ValueError(f"Failed to create {type_} from {mung_obj}") from e
-            
-
-        for mung_beam, subs in c.subevents_by(DurableBeam).items():
-            beam = construct_durable_beam(mung_beam, list(subs))
-            self._log_object_creation(beam, mung_beam)
-
-        for mung_articulation, subs in c.subevents_by(Articulation).items():
-            if len(subs) > 1:
-                logger.warning(f"{mung_articulation} is connected to more than one subevent")
-            for sub in subs:
-                articulation = construct_articulation(mung_articulation, sub)
-                self._log_object_creation(articulation, mung_articulation)
-
-        for mung_tuplet, subs in c.subevents_by(Tuplet).items():
-            with _construction_guard(mung_tuplet, Tuplet, False):
-                tuplet = construct_tuplet(mung_tuplet, list(subs), graph)
-                self._log_object_creation(tuplet, mung_tuplet)
+            if g.bracket_type == GroupSymbolToken.NONE:
+                continue
+            PartGroup(
+                list(g.parts),
+                bracket_type=g.bracket_type,
+            )
         
-        for mung_slur, subs in c.subevents_by(Slur).items():
-            slur = construct_slur(mung_slur, list(subs), graph)
-            self._log_object_creation(slur, mung_slur)
-
-        for mung_tie, durs in durables_by_tie.items():
-            with _construction_guard(mung_tie, Tie, CriticalClasses().is_critical(Tie)):
-                obj = try_construct_tie(mung_tie, list(durs), graph)
-
-                if obj is not None:
-                    self._log_object_creation(obj, mung_tie)
-
-        for mung_hairpin, subs in c.subevents_by(Wedge).items():
-            try:
-                wedge = construct_wedge(mung_hairpin, list(subs), graph)
-                self._log_object_creation(wedge, mung_hairpin)
-            except Exception as e:
-                raise ValueError(f"Failed to create {Wedge.__name__} from {mung_hairpin}") from e
-                
-        for mung_dynamics, subs in c.subevents_by(Dynamics).items():
-            dynamics = construct_dynamics(mung_dynamics, subs)
-            self._log_object_creation(dynamics, mung_dynamics)
-        
-        for mung_fermata, subs in c.subevents_by(Fermata).items():
-            for sub in subs:
-                fermata = construct_fermata(mung_fermata, sub)
-                self._log_object_creation(fermata, mung_fermata)
+        subevent_collector.run_constructors(graph, self._settings.critical_classes)
+        durable_collector.run_constructors(graph, self._settings.critical_classes)
 
         l_to_l: defaultdict[LyricLevel, list[Lyric]] = defaultdict(list)
-        for mung_lyric, subs in c.subevents_by(Lyric).items():
+        for mung_lyric, subs in subevent_collector.score_objects_by(Lyric).items():
             try:
+                if mung_lyric.class_name == C.Lyrics.LYRICS_UNISONO:
+                    mung_lyric.data["text_transcription"] = self._settings.lyrics_unisono_character
                 lyric = construct_lyric(mung_lyric, list(subs), graph)
                 if lyric is not None:
                     l_to_l[lyrics_to_level[mung_lyric]].append(lyric)
-                    self._log_object_creation(lyric, mung_lyric)
+                    _log_object_creation(lyric, mung_lyric)
             except AssertionError as ae:
                 raise ValueError(f"Unable to construct {Lyric.__name__} from: {mung_lyric}") from ae
-
-
+            
 
         for l_level, lyrics in l_to_l.items():
             l_level.lyrics = lyrics
@@ -539,8 +532,8 @@ class MuNG_LoadEngine(LoadEngine):
 
 
         # TODO: make beam filtering better, union find does not work - removes overlaps but also duplicates
-        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in c.subevents_by(TremoloBeam).values()]
-        for mung_tremolo_beam, subs in c.subevents_by(TremoloBeam).items():
+        connected_by_tremolo_beam: list[list[Subevent]] = [list(g) for g in subevent_collector.score_objects_by(TremoloBeam).values()]
+        for mung_tremolo_beam, subs in subevent_collector.score_objects_by(TremoloBeam).items():
             if len(subs) != 2:
                 logger.warning(
                     f"Invalid number of subevents connected to {mung_tremolo_beam}, "
@@ -552,10 +545,9 @@ class MuNG_LoadEngine(LoadEngine):
         # filter out tremolos that connect more than two subevents
         tbs = [TremoloBeamStruct.from_list(g) for g in connected_by_tremolo_beam if len(g) == 2]
         tremolo_counts = Counter(tbs)
-        for tb, c in tremolo_counts.items():
-            TremoloBeam(start=tb.start, stop=tb.stop, marks=c)
-            logger.info(f"Created tremolo beam with marks {c}")
-        # print(connected_by_tremolo_beam)
+        for tb, counts in tremolo_counts.items():
+            TremoloBeam(start=tb.start, stop=tb.stop, marks=counts)
+            logger.info(f"Created tremolo beam with marks {subevent_collector}")
         
         IDClass.reset()
         

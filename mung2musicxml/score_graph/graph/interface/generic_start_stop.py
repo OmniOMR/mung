@@ -1,15 +1,16 @@
 from dataclasses import dataclass, field
+from abc import abstractmethod, ABC
 from typing import Optional
 from typing import TypeVar, Generic
 
 from ..scene_object import SceneObject
 from . import InMeasureObject
 
-T = TypeVar("T", bound=InMeasureObject)
+T = TypeVar("T")
 
 
 @dataclass
-class GenericStartStop(SceneObject, Generic[T]):
+class GenericStartStop(SceneObject, Generic[T], ABC):
     start: Optional[T] = None
     stop: Optional[T] = None
     all: list[T] = field(init=False, repr=False)
@@ -27,6 +28,19 @@ class GenericStartStop(SceneObject, Generic[T]):
         self._check_start_or_stop_is_set()
         self._check_start_stop_onset()
         self.all = self._collect()
+    
+    @abstractmethod
+    def _t_lt(self, first: T, second: T) -> bool:
+        """
+        Compare two generic objects.
+        """
+        pass
+    
+    def _t_eq(self, first: T, second: T) -> bool:
+        return not self._t_lt(first, second) and not self._t_lt(second, first)
+    
+    def _t_leq(self, first: T, second: T) -> bool:
+        return self._t_lt(first, second) or self._t_eq(first, second)
 
     def __len__(self) -> int:
         return len(self.all)
@@ -50,11 +64,11 @@ class GenericStartStop(SceneObject, Generic[T]):
     
     def _check_start_stop_onset(self) -> None:
         if self.start is not None and self.stop is not None:
-            assert self.start.global_fractional_onset <= self.stop.global_fractional_onset
+            assert self._t_leq(self.start, self.stop)
     
     def _check_start_stop_onset_strong(self) -> None:
         if self.start is not None and self.stop is not None:
-            assert self.start.global_fractional_onset < self.stop.global_fractional_onset
+            assert self._t_lt(self.start, self.stop)
     
     def is_start(self, subevent: T) -> bool:
         """
@@ -85,11 +99,40 @@ class GenericStartStop(SceneObject, Generic[T]):
             and self.stop is not None
         )
 
+M = TypeVar("M", bound=InMeasureObject)
+
 
 @dataclass
-class GenericStartStopContinue(GenericStartStop[T]):
+class GenericStartStopOnset(GenericStartStop[M]):
+    start: Optional[M] = None
+    stop: Optional[M] = None
+    all: list[M] = field(init=False, repr=False)
+    
+    def __post_init__(self) -> None:
+        """
+        Automatically checks that::
+        - Start or stop is set.
+        - Onset of start is less than or equal to onset of stop.
+        - Onsets of `continue_`, if set, 
+            are greater than or equal to onset of start
+            and less than or equal to onset of stop.
+        - `continue_` is None or not empty.
+        """
+        self._check_start_or_stop_is_set()
+        self._check_start_stop_onset()
+        self.all = self._collect()
+
+    def __len__(self) -> int:
+        return len(self.all)
+    
+    def _t_lt(self, first: M, second: M) -> bool:
+        return first.global_fractional_onset < second.global_fractional_onset
+    
+
+@dataclass
+class GenericStartStopContinueOnset(GenericStartStopOnset[M]):
     # objects included in the object that are not `start` nor `stop`
-    continue_: Optional[list[T]] = None
+    continue_: Optional[list[M]] = None
 
     def __post_init__(self) -> None:
         """
@@ -105,8 +148,8 @@ class GenericStartStopContinue(GenericStartStop[T]):
         self._check_continue_none_or_not_empty()
         self._check_continue_onset()
 
-    def _collect(self) -> list[T]:
-        output: list[T] = []
+    def _collect(self) -> list[M]:
+        output: list[M] = []
         if self.start is not None:
             output.append(self.start)
         if self.continue_ is not None:
@@ -128,7 +171,7 @@ class GenericStartStopContinue(GenericStartStop[T]):
                     <= d.global_fractional_onset
                     <= self.stop.global_fractional_onset
                 ):
-                    raise ValueError(f"Onset {d.global_fractional_onset} of {d} not in allowed range: {self.start.global_fractional_onset} <= x <= {self.stop.global_fractional_onset}]")
+                    raise ValueError(f"Onset of {d} not in allowed range: {self.start.global_fractional_onset} <= {d.global_fractional_onset}  <= {self.stop.global_fractional_onset}]")
     
     def _check_continue_onset_strong(self) -> None:
         """

@@ -3,13 +3,13 @@ from typing import Optional
 
 from .tokens import AboveBelowToken, ShowTupleToken, YesNoToken
 from .time_modification import TimeModification
-from .interface import GenericStartStopContinue
+from .interface import GenericStartStopContinueOnset
 from .subevent import Subevent
 
 
 # TODO: add support for nested tuplets
 @dataclass(kw_only=True)
-class Tuplet(GenericStartStopContinue[Subevent]):
+class Tuplet(GenericStartStopContinueOnset[Subevent]):
     """
     https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/tuplet/
     """
