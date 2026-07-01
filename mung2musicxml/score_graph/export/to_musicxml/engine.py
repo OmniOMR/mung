@@ -807,26 +807,39 @@ class MusicXML_ExportEngine(ExportEngine):
         # inside of it -- vs MSS4 output all ornaments
         # for a durable into same ornament element
         ornaments = ET.Element("ornaments")
-        
         # write tremolo beams only to first note of a chord
         if not self._durable_is_chord_continuation(durable):
-            # TRILLS
+            # TRILL-MARK (aka TRILL)
             if durable.trill is not None:
                 ornaments.extend(self.xml_Trill(durable))
                        
-            # TURNS
+            # TURN
+            # INVERTED-TURN
             if durable.turn is not None:
                 ornaments.append(self.xml_Turn(durable))
             
-            # MORDENT aka SHORT TRILL
+            # DELAYED-TURN
+            # DELAYED-INVERTED-TURN
+            # VERTICAL-TURN
+            # INVERTED-VERTICAL-TURN
+            # SHAKE
+            # WAVY-LINE
+
+            # MORDENT
             if durable.short_trill is not None:
                 ornaments.append(self.xml_ShortTrill(durable))
+
+            # INVERTED-MORDENT
+            # SCHLEIFER
             
-            # TREMOLOS
+            # TREMOLO
             if durable.tremolo_beam is not None:
                 ornaments.append(self.xml_TremoloBeam(durable))
             if durable.tremolo_single is not None:
                 ornaments.append(self.xml_TremoloSingle(durable))
+            
+            # HAYDN
+            # OTHER-ORNAMENT
         
         if len(ornaments) > 0:
             return ornaments
@@ -851,25 +864,42 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         notations = ET.Element("notations")
         is_chord_continuation = self._durable_is_chord_continuation(durable)        
-
+        # TIED
+        notations.extend(self.xml_Ties(durable, notations=True))
         
         if not is_chord_continuation:
+        # SLUR
+            notations.extend(self.xml_Slurs(durable))
+            
+        # TUPLET
             if (xml_tuplet := self.xml_Tuplet(durable)) is not None:
                 notations.append(xml_tuplet)
-            
-            notations.extend(self.xml_Slurs(durable))
+        
+        # GLISSANDO
+        # SLIDE
 
-        notations.extend(self.xml_Ties(durable, notations=True))
-
+        # ORNAMENTS
         if (xml_ornaments := self.xml_ornaments(durable)) is not None:
             notations.append(xml_ornaments)
+        
+        # TECHNICAL
 
+        # ARTICULATIONS
         if not is_chord_continuation:
             if (xml_artic := self.xml_Articulations(durable)) is not None:
                 notations.append(xml_artic)
         
+        # DYNAMICS - implemented in "DIRECTION" element
+        
+        # FERMATA
         notations.extend(self.xml_Fermata(durable))
-
+        
+        # ARPEGGIATE
+        
+        # NON-ARPEGGIATE
+        # ACCIDENTAL-MARK
+        # OTHER-NOTATION>
+        
         if len(notations) > 0:
             return notations
         
