@@ -197,7 +197,7 @@ class GenericStartStopContinueOnset(GenericStartStopOnset[M]):
         if self.continue_ is not None:
             assert len(self.continue_) > 0, "'continue_' cannot be set and empty"
 
-    def is_continue(self, subevent: T) -> bool:        
+    def is_continue(self, subevent: M) -> bool:        
         """
         Returns true, if the given `subevent`
         is continue of this object.
