@@ -365,6 +365,11 @@ class MusicXML_ExportEngine(ExportEngine):
         return time_mod
     
     def _xml_direction_base(self, placement: AboveBelowToken, staff_id: int) -> tuple[ET.Element, ET.Element]:
+        """
+        Create base of the direction element.
+        
+        Returns [direction, direction-type].
+        """
         dir = ET.Element("direction", {"placement": placement})
         ET.SubElement(dir, "staff").text = str(staff_id)
         dir_type = ET.SubElement(dir, "direction-type")
@@ -938,29 +943,38 @@ class MusicXML_ExportEngine(ExportEngine):
         
         output = []
         wedges = set(subevent.wedges)
-
-        def _create_wedge(id_: int, wedge: Wedge) -> ET.Element:
-            directions = ET.Element("direction", {"placement": wedge.placement})
-            dtype = ET.SubElement(directions, "direction-type")
-            ET.SubElement(directions, "staff").text = str(wedge.staff_id)
-            ET.SubElement(dtype, "wedge", {"type": wedge.type_, "number": str(id_)})
-            return directions
         
-        def _close_wedge(id_: int, wedge: Wedge) -> ET.Element:
-            directions = ET.Element("direction", {"placement": wedge.placement})
-            dtype = ET.SubElement(directions, "direction-type")
-            ET.SubElement(dtype, "wedge", {"type": WedgeDirectionType.STOP, "number": str(id_)})
-            return directions
+        def _start_wedge(id_: int, wedge: Wedge) -> ET.Element:
+            dir, dir_type = self._xml_direction_base(wedge.placement, wedge.staff_id)
+            attrs: dict[str, str] = {"type": wedge.type_}
+            # diminuendo has niente at *stop*
+            # crescendo has niente at *start*
+            if wedge.niente == YesNoToken.YES and wedge.type_ == WedgeType.CRESCENDO:
+                attrs["niente"] = wedge.niente
+            attrs["number"] = str(id_)
+            ET.SubElement(dir_type, "wedge", attrs)
+            return dir
+        
+        def _stop_wedge(id_: int, wedge: Wedge) -> ET.Element:
+            dir, dir_type = self._xml_direction_base(wedge.placement, wedge.staff_id)
+            attrs: dict[str, str] = {"type": WedgeDirectionType.STOP}
+            # diminuendo has niente at *stop*
+            # crescendo has niente at *start*
+            if wedge.niente == YesNoToken.YES and wedge.type_ == WedgeType.DIMINUENDO:
+                attrs["niente"] = wedge.niente
+            attrs["number"] = str(id_)
+            ET.SubElement(dir_type, "wedge", attrs)
+            return dir
 
         for wedge in wedges:
             if wedge.is_start(subevent) and pass_name == "start":
                 id_ = self._register.ask_id_start(wedge)
-                output.append(_create_wedge(id_, wedge))
+                output.append(_start_wedge(id_, wedge))
 
             elif wedge.is_stop(subevent) and pass_name == "stop":
                 id_ = self._register.ask_id_stop(wedge)
                 logger.debug(f"Closing wedge {id_}")
-                output.append(_close_wedge(id_, wedge))
+                output.append(_stop_wedge(id_, wedge))
 
         return output
     

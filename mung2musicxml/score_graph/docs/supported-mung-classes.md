@@ -419,7 +419,7 @@ ScoreGraph makes no difference between clefs at the starf of a system (`{g,f,c}C
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/wedge-element.png" height="100">
 </p>
 
-- ❌ `dynamicNienteForHairpin`
+- ✅ `dynamicNienteForHairpin`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/dynamicNienteForHairpin-0.png" height=100>
