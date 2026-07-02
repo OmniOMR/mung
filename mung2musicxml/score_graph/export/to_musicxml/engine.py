@@ -807,8 +807,9 @@ class MusicXML_ExportEngine(ExportEngine):
         # inside of it -- vs MSS4 output all ornaments
         # for a durable into same ornament element
         ornaments = ET.Element("ornaments")
-        # write tremolo beams only to first note of a chord
-        if not self._durable_is_chord_continuation(durable):
+        is_chord_continuation = self._durable_is_chord_continuation(durable)
+        
+        if not is_chord_continuation:
             # TRILL-MARK (aka TRILL)
             if durable.trill is not None:
                 ornaments.extend(self.xml_Trill(durable))
@@ -856,6 +857,15 @@ class MusicXML_ExportEngine(ExportEngine):
 
         return output
     
+    def xml_Arpeggiato(self, durable: Durable) -> ET.Element:
+        arp = durable.arpeggiato
+        assert arp is not None
+        attrs = {"number": "1"}
+        if arp.direction is not None:
+            attrs["direction"] = arp.direction
+        
+        return ET.Element("arpeggiate", attrs)
+    
     def xml_notations(self, durable: Durable) -> Optional[ET.Element]:
         """
         Fills in `note`'s `notations` element with slurs, ties, ...
@@ -864,14 +874,15 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         notations = ET.Element("notations")
         is_chord_continuation = self._durable_is_chord_continuation(durable)        
+        
         # TIED
         notations.extend(self.xml_Ties(durable, notations=True))
         
         if not is_chord_continuation:
-        # SLUR
+            # SLUR
             notations.extend(self.xml_Slurs(durable))
             
-        # TUPLET
+            # TUPLET
             if (xml_tuplet := self.xml_Tuplet(durable)) is not None:
                 notations.append(xml_tuplet)
         
@@ -895,6 +906,8 @@ class MusicXML_ExportEngine(ExportEngine):
         notations.extend(self.xml_Fermata(durable))
         
         # ARPEGGIATE
+        if durable.arpeggiato is not None:
+            notations.append(self.xml_Arpeggiato(durable))
         
         # NON-ARPEGGIATE
         # ACCIDENTAL-MARK

@@ -253,7 +253,7 @@ class Other(StrEnum):
     UNCLASSIFIED = "unclassified"
 
 
-class Arpeggiato(StrEnum):
+class Arpeggiato(AllExtendedStrEnum):
     ARPEGGIATO = "arpeggiato"
     ARPEGGIATO_UP = "arpeggiatoUp"
     ARPEGGIATO_DOWN = "arpeggiatoDown"

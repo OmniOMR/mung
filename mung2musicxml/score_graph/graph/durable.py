@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from .part_measure import PartMeasure
     from .fermata import Fermata
     from .lyric import Lyric
-    from .ornaments import Turn, Trill, ShortTrill
+    from .ornaments import Turn, Trill, ShortTrill, Arpeggiato
 
 
 @dataclass
@@ -138,6 +138,11 @@ class Durable(DurationObject):
     def short_trill(self) -> Optional["ShortTrill"]:
         from .ornaments import ShortTrill
         return ShortTrill.of_or_none(self.subevent, lambda t: t.parent)
+    
+    @property
+    def arpeggiato(self) -> Optional["Arpeggiato"]:
+        from .ornaments import Arpeggiato
+        return Arpeggiato.of_or_none(self.subevent, lambda t: t.parent)
     
     @property
     def fermatas(self) -> list["Fermata"]:

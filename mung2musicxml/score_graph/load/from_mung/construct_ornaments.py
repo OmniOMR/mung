@@ -2,7 +2,15 @@ from mung import Node, NotationGraph
 from mung.constants import ClassNameConstants as C
 from mung.graph import infer_vertical_object_placement_relative_to_notes
 
-from ...graph import Subevent, Turn, Trill, ShortTrill, AboveBelowToken
+from ...graph import (
+    Subevent,
+    Turn,
+    Trill,
+    ShortTrill,
+    AboveBelowToken,
+    Arpeggiato,
+    DirectionToken,
+)
 from .collector import needs_graph
 
 
@@ -53,3 +61,19 @@ def construct_short_trill(
 ) -> ShortTrill:
     sub, placement = _ornament_base(mung_s_trill, subevents, graph)
     return ShortTrill(sub, placement)
+
+
+@needs_graph
+def construct_arpeggiato(
+    mung_arpeggiato: Node, subevents: list[Subevent], graph: NotationGraph
+) -> Arpeggiato:
+
+    def _name_to_direction(mung_arpeggiato: Node) -> DirectionToken | None:
+        if mung_arpeggiato.class_name == C.Arpeggiato.ARPEGGIATO_UP:
+            return DirectionToken.UP
+        elif mung_arpeggiato.class_name == C.Arpeggiato.ARPEGGIATO_DOWN:
+            return DirectionToken.DOWN
+        return None
+
+    sub, placement = _ornament_base(mung_arpeggiato, subevents, graph)
+    return Arpeggiato(sub, placement, _name_to_direction(mung_arpeggiato))

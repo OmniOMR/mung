@@ -477,3 +477,11 @@ class StartStopDiscontinueToken(StrEnum):
     START = "start"
     STOP = "stop"
     DISCONTINUE = "discontinue"
+
+
+class DirectionToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down/
+    """
+    UP = "up"
+    DOWN = "down"

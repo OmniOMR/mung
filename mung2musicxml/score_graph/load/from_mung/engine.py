@@ -48,7 +48,12 @@ from .construct_volta import construct_volta
 from .construct_coda import construct_coda
 from .construct_segno import construct_segno
 from .construct_rest_text import construct_rest_text
-from .construct_ornaments import construct_turn, construct_trill, construct_short_trill
+from .construct_ornaments import (
+    construct_turn,
+    construct_trill,
+    construct_short_trill,
+    construct_arpeggiato,
+)
 
 
 from ....logger import logger
@@ -250,6 +255,7 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord[Subevent](Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
                 CollectorRecord[Subevent](Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
                 CollectorRecord[Subevent](ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
+                CollectorRecord[Subevent](Arpeggiato, C.Arpeggiato.ALL(), construct_arpeggiato), # type: ignore
 
                 CollectorRecord[Subevent](TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
                 CollectorRecord[Subevent](Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
