@@ -8,6 +8,8 @@ from .voices import VoiceEngine, VoiceEngineStrategy
 from .in_measure_modifiers import tag_in_measure_part_modifiers_with_onset
 from .repeats import tag_repeats_with_onset
 from .grace_note_linking import link_grace_notes_to_parent
+from .ottava_linking import link_ottavas
+
 
 class MuNGPreprocessingPipeline:
     """
@@ -38,6 +40,7 @@ class MuNGPreprocessingPipeline:
         self._linker.complete_precedence_graph(graph)
         link_grace_notes_to_parent(graph)
         self._onset_engine(graph)
+        link_ottavas(graph)
         self._pitch_engine(graph)
         self._voice_engine(graph)
         tag_in_measure_part_modifiers_with_onset(graph)

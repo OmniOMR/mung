@@ -485,3 +485,15 @@ class DirectionToken(StrEnum):
     """
     UP = "up"
     DOWN = "down"
+
+
+class OctaveShiftType(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down-stop-continue/
+    """
+    
+    UP = "up"
+    DOWN = "down"
+    STOP = "stop"
+    CONTINUE = "continue"
+    

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from .segno import Segno
     from .coda import Coda
     from .rest_text import RestText
+    from .ottava import Ottava
 
 
 @dataclass
@@ -103,7 +104,6 @@ class Subevent(DurationObject):
         from .dynamics import Dynamics
         return Dynamics.many_of(self, lambda d: d.parent)
     
-    
     @property
     def segnos(self) -> list["Segno"]:
         from .segno import Segno
@@ -133,3 +133,8 @@ class Subevent(DurationObject):
     def rest_texts(self) -> list["RestText"]:
         from .rest_text import RestText
         return RestText.many_of(self, lambda d: d.all)
+    
+    @property
+    def ottavas(self) -> list["Ottava"]:
+        from .ottava import Ottava
+        return Ottava.many_of(self, lambda d: d.all)

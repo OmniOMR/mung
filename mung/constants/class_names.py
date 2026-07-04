@@ -259,6 +259,11 @@ class Arpeggiato(AllExtendedStrEnum):
     ARPEGGIATO_DOWN = "arpeggiatoDown"
 
 
+class Octaves(StrEnum):
+    OTTAVA = "ottava"
+    OTTAVA_SPANNER = "ottavaSpanner"
+
+
 class ClassNameConstants:
     Staves = Staves
     Noteheads = Noteheads
@@ -285,6 +290,7 @@ class ClassNameConstants:
     Other = Other
     Numerals = Numerals
     Arpeggiato = Arpeggiato
+    Octaves = Octaves
 
     ALL = [
         value

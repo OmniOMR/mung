@@ -54,6 +54,7 @@ from .construct_ornaments import (
     construct_short_trill,
     construct_arpeggiato,
 )
+from .construct_ottava import construct_ottava
 
 
 from ....logger import logger
@@ -256,6 +257,7 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord[Subevent](Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
                 CollectorRecord[Subevent](ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
                 CollectorRecord[Subevent](Arpeggiato, C.Arpeggiato.ALL(), construct_arpeggiato), # type: ignore
+                CollectorRecord[Subevent](Ottava, C.Octaves.OTTAVA_SPANNER, construct_ottava),
 
                 CollectorRecord[Subevent](TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
                 CollectorRecord[Subevent](Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),

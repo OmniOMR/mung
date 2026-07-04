@@ -452,6 +452,8 @@ class MusicXML_ExportEngine(ExportEngine):
         output = []
         
         output.extend(self.xml_Wedge(subevent, "start"))
+        output.extend(self.xml_Ottava(subevent, "start"))
+        
         output.extend(self.xml_Dynamics(subevent))
         output.extend(self.xml_Segno_Coda(subevent))
         output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
@@ -470,6 +472,7 @@ class MusicXML_ExportEngine(ExportEngine):
             return [self.create_forward(subevent.duration)]
         
         output.extend(self.xml_Wedge(subevent, "stop"))
+        output.extend(self.xml_Ottava(subevent, "stop"))
 
         return output
     
@@ -937,7 +940,7 @@ class MusicXML_ExportEngine(ExportEngine):
         When the `start` pass is active, only wedge starts are processed.
         Vice versa for the second option.
 
-        Currently does not support `continue` option for wedges.
+        Does not support `continue` option.
         """
         assert pass_name in ["start", "stop"]
         
@@ -975,6 +978,64 @@ class MusicXML_ExportEngine(ExportEngine):
                 id_ = self._register.ask_id_stop(wedge)
                 logger.debug(f"Closing wedge {id_}")
                 output.append(_stop_wedge(id_, wedge))
+
+        return output
+    
+    def xml_Ottava(self, subevent: Subevent, pass_name: Literal["start", "stop"]) -> list[ET.Element]:
+        """
+        Creates ottavas. Two pass options: `start`, `stop`.
+        When the `start` pass is active, only ottava starts are processed.
+        Vice versa for the second option.
+
+        Does not support `continue` option.
+        """
+        assert pass_name in ["start", "stop"]
+        
+        output = []
+        ottavas = set(subevent.ottavas)
+        
+        def _get_ottava_staff(ottava: Ottava) -> Staff:
+            staffs = ottava.staffs
+            assert len(staffs) > 0
+            if len(staffs) > 1:
+                logger.warning(
+                    "Found multiple staffs for Ottava starting at "
+                    f"{ottava.start.part_measure.id}. "
+                    "Using one with the lowest id."
+                )
+            return min(staffs, key=lambda s: s.id)
+
+        def _start_ottava(id_: int, ottava: Ottava) -> ET.Element:
+            staff = _get_ottava_staff(ottava)
+            dir, dir_type = self._xml_direction_base(ottava.placement, staff.id)
+            ET.SubElement(dir_type, "octave-shift", {
+                    "type": ottava.direction,
+                    "size": str(ottava.size),
+                    "number": str(id_)
+                }
+            )
+            return dir
+        
+        def _stop_ottava(id_: int, ottava: Ottava) -> ET.Element:
+            staff = _get_ottava_staff(ottava)
+            dir, dir_type = self._xml_direction_base(ottava.placement, staff.id)
+            ET.SubElement(dir_type, "octave-shift", {
+                    "type": OctaveShiftType.STOP,
+                    "size": str(ottava.size),
+                    "number": str(id_)
+                }
+            )
+            return dir
+
+        for ottava in ottavas:
+            if ottava.is_start(subevent) and pass_name == "start":
+                id_ = self._register.ask_id_start(ottava)
+                output.append(_start_ottava(id_, ottava))
+
+            elif ottava.is_stop(subevent) and pass_name == "stop":
+                id_ = self._register.ask_id_stop(ottava)
+                logger.debug(f"Closing wedge {id_}")
+                output.append(_stop_ottava(id_, ottava))
 
         return output
     
