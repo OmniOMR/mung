@@ -89,3 +89,18 @@ Algorithm, that separates the MuNG score into measures, considers both of these 
 <p>
 <img src="images/unclosed-measure-end-of-staff-render.png" height="200">
 </p>
+
+### Multi-Measure Rests Not Supported
+
+In MusicXML, a multi-measure rest spans several measures but is rendered visually as a single measure. Supporting this construct would require recomputing measure IDs, which would then no longer align with those in the source score. For this reason, multi-measure rests are not and will not be supported.
+
+The `restText` element is supported through its own dedicated class. Any measure containing a multi-measure rest is resolved into a single measure holding one full-measure rest:
+
+<p>
+<img src="images/multi-measure-rest-example.png" height="200">
+</p>
+<p>
+<img src="images/multi-measure-rest-resolved.png" height="200">
+</p>
+
+In practice, this decision has small impact: across a sample of approximately 300 scores, we encountered only 27 multi-measure rests spread across eight documents, compared to roughly 7,800 measures that contain no multi-measure rests.
