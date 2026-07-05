@@ -419,16 +419,29 @@ class MusicXML_ExportEngine(ExportEngine):
     def xml_Segno_Coda(self, subevent: Subevent) -> list[ET.Element]:
         """
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/segno/
+        """
         
+        output = []
+        staff_id = min(s.id for s in subevent.staffs)
+        
+        for sc in subevent.segnos:
+            dir, dir_type = self._xml_direction_base(sc.placement, staff_id)
+            ET.SubElement(dir_type, "segno")
+            output.append(dir)
+        
+        return output
+    
+    def xml_Coda(self, subevent: Subevent) -> list[ET.Element]:
+        """        
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/coda/
         """
         
         output = []
         staff_id = min(s.id for s in subevent.staffs)
         
-        for sc in subevent.segnos + subevent.codas:
+        for sc in subevent.codas:
             dir, dir_type = self._xml_direction_base(sc.placement, staff_id)
-            ET.SubElement(dir_type, type(sc).__name__.lower())
+            ET.SubElement(dir_type, "coda")
             output.append(dir)
         
         return output
