@@ -416,7 +416,7 @@ class MusicXML_ExportEngine(ExportEngine):
             output.append(dir)
         return output
     
-    def xml_Segno_Coda(self, subevent: Subevent) -> list[ET.Element]:
+    def xml_Segno(self, subevent: Subevent) -> list[ET.Element]:
         """
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/segno/
         """
@@ -458,6 +458,62 @@ class MusicXML_ExportEngine(ExportEngine):
                 output.append(dir)
         return output
     
+    def _xml_directions(self, subevent: Subevent, pass_name: Literal["start", "stop"]) -> list[ET.Element]:
+        """
+        Returns list of MusicXML directions,
+        their ordering is defined by MusicXML `direction-type`.
+        
+        Creates wedges. Two pass options: `start`, `stop`.
+        In `start` pass, wedge and ottava starts are processed
+        along with all other classes.
+        In `stop` pass, only wedge and ottava ends are processed.
+        """
+        output: list[ET.Element] = []
+        assert pass_name in {"start", "stop"}
+        
+        if pass_name == "start":
+            # REHEARSAL
+            # SEGNO
+            output.extend(self.xml_Segno(subevent))
+            # CODA
+            output.extend(self.xml_Coda(subevent))
+            # WORDS
+            for texts in [
+                subevent.dynamics_texts,
+                subevent.tempos,
+                subevent.interpretation_texts,
+                subevent.rest_texts
+            ]:
+                output.extend(self.xml_ScoreText(subevent, texts))
+            # SYMBOL
+            # WEDGE
+            output.extend(self.xml_Wedge(subevent, "start"))
+            # DYNAMICS
+            output.extend(self.xml_Dynamics(subevent))
+            # DASHES
+            # BRACKET
+            # PEDAL
+            # METRONOME
+            # OCTAVE SHIFT (aka Ottava)
+            output.extend(self.xml_Ottava(subevent, "start"))
+            # HARP PEDALS
+            # DAMP
+            # DAMP ALL
+            # EYEGLASSES
+            # STRING MUTE
+            # SCORDATURA
+            # IMAGE
+            # PRINCIPAL VOICE
+            # PERCUSSION
+            # ACCORDION REGISTRATION
+            # STAFF DIVIDE
+            # OTHER DIRECTION
+        else:
+            output.extend(self.xml_Wedge(subevent, "stop"))
+            output.extend(self.xml_Ottava(subevent, "stop"))
+            
+        return output
+    
     def xml_Subevent(self, subevent: Subevent) -> list[ET.Element]:
         """
         Subevent does not have a direct MusicXML equivalent.
@@ -469,16 +525,17 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         output = []
         
-        output.extend(self.xml_Wedge(subevent, "start"))
-        output.extend(self.xml_Ottava(subevent, "start"))
+        # output.extend(self.xml_Wedge(subevent, "start"))
+        # output.extend(self.xml_Ottava(subevent, "start"))
         
-        output.extend(self.xml_Dynamics(subevent))
-        output.extend(self.xml_Segno_Coda(subevent))
-        output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
-        output.extend(self.xml_ScoreText(subevent, subevent.tempos))
-        output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
-        output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
-
+        # output.extend(self.xml_Dynamics(subevent))
+        # output.extend(self.xml_Segno(subevent))
+        # output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
+        # output.extend(self.xml_ScoreText(subevent, subevent.tempos))
+        # output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
+        # output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
+        output.extend(self._xml_directions(subevent, "start"))
+        
         output.extend(self.xml_GraceNotes(subevent))
         
         if isinstance(subevent, Chord):
@@ -489,8 +546,9 @@ class MusicXML_ExportEngine(ExportEngine):
         elif isinstance(subevent, RepeatBar):
             return [self.create_forward(subevent.duration)]
         
-        output.extend(self.xml_Wedge(subevent, "stop"))
-        output.extend(self.xml_Ottava(subevent, "stop"))
+        # output.extend(self.xml_Wedge(subevent, "stop"))
+        # output.extend(self.xml_Ottava(subevent, "stop"))
+        output.extend(self._xml_directions(subevent, "stop"))
 
         return output
     
