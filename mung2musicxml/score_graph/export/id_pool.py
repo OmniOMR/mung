@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+
 @dataclass
 class _IDPoolRecord:
     id_: int
@@ -129,6 +130,6 @@ class IDPoolRegister:
         output = []
         for pool in self._pools.values():
             for obj, record in pool._stored.items():
-                output.append(f"Unclosed '{type(obj).__name__}': {record}")
+                output.append(f"Unclosed '{obj}': {record}")
         
         return ", ".join(output)

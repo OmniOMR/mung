@@ -69,6 +69,7 @@ class ClefSettings:
 @dataclass
 class ErrorHandlingSettings:
     skip_broken_measure: bool = False
+    permissive_unclosed_spanners: bool = False
 
 
 @dataclass

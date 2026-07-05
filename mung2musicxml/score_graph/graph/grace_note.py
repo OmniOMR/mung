@@ -1,48 +1,53 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from functools import cached_property
+from fractions import Fraction
 
-from .scene_object import SceneObject
-from .pitch import Pitch
-from .tokens import StemValueToken, NoteTypeValue
-from .voice import Voice
+from .chord import Chord
+from .note import Note
+from .subevent import Subevent
+
 if TYPE_CHECKING:
-    from .note import Note
+    from .voice import Voice
     from .staff import Staff
-    from .beam import GraceNoteBeam
 
-# TODO: add support for slash (yes/no)
-# TODO: add support for grace note chords and other "large" objects
-# TODO: turn around grace note - durable relation (grace note remembers its parent)
 
-@dataclass
-class GraceNote(SceneObject):
-    """
-    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/grace/
-    """
-    pitch: Pitch
-    type_: NoteTypeValue
-    at_durable_index: int
-    stem_orientation: StemValueToken
+@dataclass(kw_only=True)
+class GraceNote(Note):
+    fractional_duration_: Fraction = Fraction(0)
+    pass
 
-    @cached_property
-    def parent_note(self) -> "Note":
-        from .note import Note
-        return Note.of(self, lambda n: n.grace_notes)
-    
     @property
-    def voice(self) -> Voice:
-        return self.parent_note.voice
+    def global_fractional_onset(self) -> Fraction:
+        return self.in_measure_fractional_onset
+
+    @property
+    def subevent(self) -> "GraceChord":
+        return GraceChord.of(self, lambda gc: gc.notes)
+
+    @property
+    def voice(self) -> "Voice":
+        return self.subevent.voice
 
     @property
     def staff(self) -> "Staff":
-        return self.parent_note.staff
-    
+        from .staff import Staff
+
+        return Staff.of(self, lambda s: s.grace_notes)
+
+
+@dataclass(kw_only=True)
+class GraceChord(Chord):
+    notes: list[GraceNote]  # type: ignore
+    parent: Subevent
+
     @property
-    def beams(self) -> list["GraceNoteBeam"]:
-        from .beam import GraceNoteBeam
-        return GraceNoteBeam.many_of(self, lambda gn: gn.all_grace_notes)
-    
+    def global_fractional_onset(self) -> Fraction:
+        return self.notes[0].global_fractional_onset
+
+    @property
+    def voice(self) -> "Voice":
+        return self.parent.voice
+
     def __hash__(self) -> int:
         return id(self)
 

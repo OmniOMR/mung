@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .dot import Dot
     from .staff import Staff
     from .score_part import ScorePart
-    from .beam import DurableBeam
+    from .beam import Beam
     from .subevent import Subevent
     from .tuplet import Tuplet
     from .slur import Slur
@@ -83,10 +83,9 @@ class Durable(DurationObject):
         raise NotImplementedError
     
     @property
-    def beams(self) -> list["DurableBeam"]:
-        from .beam import DurableBeam
-        subevent = self.subevent
-        return DurableBeam.many_of(subevent, lambda b: b.all)
+    def beams(self) -> list["Beam"]:
+        from .beam import Beam
+        return Beam.many_of(self.subevent, lambda b: b.all)
 
     @property
     def tuplet(self) -> Optional["Tuplet"]:

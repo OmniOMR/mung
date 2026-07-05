@@ -1,9 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from .durable import Durable
 from .pitch import Pitch
-from .grace_note import GraceNote
 from .tokens import StemValueToken
 if TYPE_CHECKING:
     from .staff import Staff
@@ -18,7 +17,6 @@ class Note(Durable):
     """
     pitch: Pitch
     stem_orientation: StemValueToken
-    grace_notes: list[GraceNote] = field(default_factory=list)
 
     @property
     def staff(self) -> "Staff":

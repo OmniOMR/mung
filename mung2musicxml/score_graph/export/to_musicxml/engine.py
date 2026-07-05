@@ -49,7 +49,7 @@ class MusicXML_ExportEngine(ExportEngine):
         if not (file_name.name.endswith(".xml") or file_name.name.endswith(".musicxml")):
             logger.warning(f"Unknown file extension: '{file_name.name}'")
         
-        s = self.xml_Score(score)
+        s = self.export(score)
         with open(file_name, "w", encoding="utf8") as file:
             file.write(self._str_xml(s, indent=self._get_indent_str()))
 
@@ -64,7 +64,12 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         Checks if ID pools are empty and resets them.
         """
-        assert self._register.is_empty(), self._register.report_unclosed()
+        if not self._register.is_empty():
+            if self.settings.error_handling.permissive_unclosed_spanners:
+                logger.warning(self._register.report_unclosed())
+            else:
+                raise ValueError(self._register.report_unclosed())
+            
         self._register.reset()
 
     def create_forward(self, duration: int) -> ET.Element:
@@ -461,10 +466,10 @@ class MusicXML_ExportEngine(ExportEngine):
         output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
         output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
 
+        output.extend(self.xml_GraceNotes(subevent))
+        
         if isinstance(subevent, Chord):
             for note in subevent.notes:
-                for grace in note.grace_notes:
-                    output.append(self.xml_GraceNote(grace))
                 output.append(self.xml_Note(note))
         elif isinstance(subevent, Rest):
             output += [self.xml_Rest(subevent)]
@@ -479,54 +484,11 @@ class MusicXML_ExportEngine(ExportEngine):
     def xml_Note(self, note: Note) -> ET.Element:
         """
         `Note` does not correspond directly to MusicXML `note`.
+        This is a regular notehead.
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/
         """
-        n = ET.Element("note")
-        if note.is_chord_continuation:
-            ET.SubElement(n, "chord")
-
-        n.append(self.xml_Pitch(note.pitch))
-
-        ET.SubElement(n, "duration").text = str(note.duration)
-        for tie in self.xml_Ties(note, notations=False):
-            if tie.get("type") != TiedTypeToken.LET_RING:
-                n.append(tie)
-
-        ET.SubElement(n, "voice").text = str(note.voice.id)
-        ET.SubElement(n, "type").text = note.type_
-        
-        for _ in note.dots:
-            ET.SubElement(n, "dot")
-        
-        accidental = note.accidental
-        if accidental is not None:
-            ET.SubElement(n, "accidental").text = accidental.type_
-        
-        if note.tuplet is not None:
-            n.append(self.xml_TimeModification(note.tuplet.time_modification))
-        
-        if note.tremolo_beam is not None:
-            n.append(self.xml_TimeModification(note.tremolo_beam.time_modification))
-        
-        if note.has_stem:
-            ET.SubElement(n, "stem").text = note.chord_stem_orientation
-
-        ET.SubElement(n, "staff").text = str(note.staff.id)
-
-        if note.is_first_in_chord:
-            for beam in self.xml_Beams(note):
-                n.append(beam)
-        
-        notations = self.xml_notations(note)
-        if notations is not None:
-            n.append(notations)
-
-        if not note.is_chord_continuation:
-            lyrics = self.xml_Lyrics(note)
-            n.extend(lyrics)
-        
-        return n
+        return self.xml_notehead_like(note)
         
     def xml_Rest(self, rest: Rest) -> ET.Element:
         """
@@ -534,50 +496,7 @@ class MusicXML_ExportEngine(ExportEngine):
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/
         """
-        def _rest_is_measure_lasting(rest: Rest) -> bool:
-            """
-            Only rest with that one in its measure.
-            """
-            if rest.type_.can_be_measure_lasting():
-                # on the same staff in the same measure
-                i = set.intersection(set(rest.staff.durables), rest.part_measure.all_durables)
-                # same voice, care only about other rests
-                i = [d for d in i if (isinstance(d, Rest) and d.voice == rest.voice)]
-                return len(i) == 1
-            return False
-        
-        r = ET.Element("note")
-
-        if _rest_is_measure_lasting(rest):
-            ET.SubElement(r, "rest", {"measure": "yes"})
-        else:
-            ET.SubElement(r, "rest")
-        
-        ET.SubElement(r, "duration").text = str(rest.duration)
-        
-        for tie in self.xml_Ties(rest, notations=False):
-            if tie.get("type") != TiedTypeToken.LET_RING:
-                r.append(tie)
-
-        ET.SubElement(r, "voice").text = str(rest.voice.id)
-        ET.SubElement(r, "type").text = rest.type_
-        
-        for _ in rest.dots:
-            ET.SubElement(r, "dot")
-        
-        if rest.tuplet is not None:
-            r.append(self.xml_TimeModification(rest.tuplet.time_modification))
-        
-        ET.SubElement(r, "staff").text = str(rest.staff.id)
-        
-        for beam in self.xml_Beams(rest):
-            r.append(beam)
-        
-        notations = self.xml_notations(rest)
-        if notations is not None:
-            r.append(notations)
-
-        return r
+        return self.xml_notehead_like(rest)
     
     def xml_Ties(self, durable: Durable, notations: bool) -> list[ET.Element]:
         """
@@ -1052,48 +971,159 @@ class MusicXML_ExportEngine(ExportEngine):
         ET.SubElement(p, "octave").text = str(pitch.octave.value)
         return p
     
-    def xml_GraceNote(self, grace: GraceNote) -> ET.Element:
+    def _rest_is_measure_lasting(self, rest: Rest) -> bool:
         """
-        Grace note
-
-        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/grace/
+        Only rest with that one in its measure.
         """
-        # TODO: add support for dots, accidentals and beams
-
+        if rest.type_.can_be_measure_lasting():
+            # on the same staff in the same measure
+            i = set.intersection(set(rest.staff.durables), rest.part_measure.all_durables)
+            # same voice, care only about other rests
+            i = [d for d in i if (isinstance(d, Rest) and d.voice == rest.voice)]
+            return len(i) == 1
+        return False
+    
+    def xml_notehead_like(self, note: Note | Rest) -> ET.Element:
+        """
+        Creates XML Element of the MusicXML class `note`
+        for regular notes, grace notes and rests.
+        
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/
+        """
+        
+        is_grace = isinstance(note, GraceNote)
+        is_rest = isinstance(note, Rest)
         n = ET.Element("note")
-        ET.SubElement(n, "grace")
-        n.append(self.xml_Pitch(grace.pitch))
-
-        ET.SubElement(n, "voice").text = str(grace.voice.id)
-        ET.SubElement(n, "type").text = grace.type_
         
-        ET.SubElement(n, "stem").text = grace.stem_orientation
+        # GRACE
+        if is_grace:
+            ET.SubElement(n, "grace")
         
-        for beam in self.xml_Beams(grace):
-            n.append(beam)
+        # CHORD
+        if not is_rest and note.is_chord_continuation:
+            ET.SubElement(n, "chord")
+        
+        # PITCH
+        if not is_rest:
+            n.append(self.xml_Pitch(note.pitch))
+        
+        # REST
+        if is_rest:
+            if self._rest_is_measure_lasting(note):
+                ET.SubElement(n, "rest", {"measure": "yes"})
+            else:
+                ET.SubElement(n, "rest")
+            
+        # DURATION
+        if not is_grace:
+            ET.SubElement(n, "duration").text = str(note.duration)
+            
+        # TIE
+        if not is_grace:
+            for tie in self.xml_Ties(note, notations=False):
+                # Let-ring ties are written to notations only
+                if tie.get("type") != TiedTypeToken.LET_RING:
+                    n.append(tie)
+                
+        # VOICE
+        ET.SubElement(n, "voice").text = str(note.voice.id)
+        
+        # TYPE
+        ET.SubElement(n, "type").text = note.type_
+        
+        # DOT        
+        for _ in note.dots:
+            ET.SubElement(n, "dot")
+        
+        # ACCIDENTAL
+        if not is_rest:
+            accidental = note.accidental
+            if accidental is not None:
+                ET.SubElement(n, "accidental").text = accidental.type_
 
-        ET.SubElement(n, "staff").text = str(grace.staff.id)
-
+        # TIME MODIFICATION
+        if not is_grace:
+            if note.tuplet is not None:
+                n.append(self.xml_TimeModification(note.tuplet.time_modification))
+        
+        if not is_grace and not is_rest:
+            if note.tremolo_beam is not None:
+                n.append(self.xml_TimeModification(note.tremolo_beam.time_modification))
+        
+        # STEM
+        if not is_rest and note.has_stem:
+            ET.SubElement(n, "stem").text = note.chord_stem_orientation
+            
+        # NOTEHEAD
+        
+        # STAFF
+        ET.SubElement(n, "staff").text = str(note.staff.id)
+        
+        # BEAM
+        if not is_rest and note.is_first_in_chord:
+            n.extend(self.xml_Beams(note))
+        
+        # NOTATIONS
+        notations = self.xml_notations(note)
+        if notations is not None:
+            n.append(notations)
+            
+        # LYRIC
+        if not is_rest and not is_grace and not note.is_chord_continuation:
+            lyrics = self.xml_Lyrics(note)
+            n.extend(lyrics)
+            
         return n
     
-    def xml_Beams(self, note_like: Durable | GraceNote) -> list[ET.Element]:
+    def xml_GraceNotes(self, subevent: Subevent) -> list[ET.Element]:
+        """
+        All subevent's grace notes.
+        
+        https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/grace/
+        """
+        
+        output: list[ET.Element] = []
+        for chord in sorted(subevent.grace_chords, key=lambda gn: gn.in_measure_fractional_onset):
+            for grace in chord.notes:
+                output.append(self.xml_notehead_like(grace))
+        
+        return output
+    
+    def xml_Beams(self, note_like: Durable) -> list[ET.Element]:
         """
         Creates beams for durables and grace notes.
 
         https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beam/
         """
         beams = note_like.beams
-        beams.sort(key=lambda b: b.number)
-        output = []
-        for beam in beams:
-            b = ET.Element("beam", {"number": beam.number})
-            if isinstance(note_like, Durable):
-                assert isinstance(beam, DurableBeam)
-                b.text = beam.beam_value(note_like.subevent)
+
+        # from largest to smallest
+        beams.sort(key=lambda b: len(b), reverse=True)
+        
+        output: list[ET.Element] = []
+        for beam in beams:            
+            if beam.is_hook:
+                id_ = self._register.ask_id_start(beam)
+                # hack, immediately free the id
+                self._register.ask_id_stop(beam)
+                b_value = beam.beam_value(note_like.subevent)
+                
+            elif beam.is_start(note_like.subevent):
+                id_ = self._register.ask_id_start(beam)
+                b_value = BeamValueToken.BEGIN
+            elif beam.is_continue(note_like.subevent):
+                id_ = self._register.ask_id_continue(beam)
+                b_value = BeamValueToken.CONTINUE
+            elif beam.is_stop(note_like.subevent):
+                id_ = self._register.ask_id_stop(beam)
+                b_value = BeamValueToken.END
             else:
-                assert isinstance(beam, GraceNoteBeam)
-                b.text = beam.beam_value(note_like)
+                raise ValueError
+            
+            b = ET.Element("beam", {"number": str(id_)})
+            b.text = b_value
             output.append(b)
+        
         return output
     
     def _resolve_repeat_repeat(self, measure: PartMeasure) -> list[ET.Element]:
