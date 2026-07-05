@@ -64,11 +64,12 @@ class _GraceGroupWrapper:
             
             duration = Fraction(1) if note.class_name == C.Noteheads.NOTEHEAD_BLACK_SMALL else Fraction(2)
             duration = duration * Fraction(1, 2 ** flag_mod)
+            durations_wo_m[note.id] = duration
+            
             if dot_mod > 0:
                 duration = duration * (2 - (Fraction(1,2) ** dot_mod))
                 
             durations[note.id] = duration
-            durations_wo_m[note.id] = duration
                 
         for node in self._notes:
             _add_duration_data_to_node(
