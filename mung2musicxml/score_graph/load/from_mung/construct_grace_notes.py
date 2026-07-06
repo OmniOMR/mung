@@ -6,7 +6,15 @@ from mung import Node, NotationGraph
 from mung.constants import InferenceEngineConstants as I, ClassNameConstants as C
 
 from ....logger import logger
-from ...graph import GraceChord, GraceNote, StemValueToken, Subevent
+from ...graph import (
+    GraceChord,
+    GraceNote,
+    StemValueToken,
+    Subevent,
+    YesNoToken,
+    GraceSlur,
+    AboveBelowToken,
+)
 from .utils import (
     get_onset_beats,
     get_pitch,
@@ -15,6 +23,7 @@ from .utils import get_note_stem_orientation
 from .construct_beam import construct_durable_beam
 from .construct_accidental import construct_accidental_for_notehead
 from .construct_dots import construct_dots_for_durable_like
+from .collector import _construction_guard
 
 
 def _grace_notes_to_chords(
@@ -33,6 +42,12 @@ def _grace_notes_to_chords(
     return list(chords.values()) + wholes
 
 
+def _has_slash(mung_note: Node, graph: NotationGraph) -> YesNoToken:
+    return YesNoToken.from_bool(
+        graph.has_children(mung_note, class_filter=I.GRACE_NOTEHEAD_SLASHES)
+    )
+
+
 def _construct_grace_note(mung_note: Node, graph: NotationGraph) -> GraceNote:
     from .construct_note import _note_type_from_node
 
@@ -49,6 +64,7 @@ def _construct_grace_note(mung_note: Node, graph: NotationGraph) -> GraceNote:
         fractional_onset_=get_onset_beats(mung_note),
         pitch=get_pitch(mung_note),
         stem_orientation=stem_orientation,
+        slash=_has_slash(mung_note, graph),
     )
 
     construct_dots_for_durable_like(mung_note, n, graph)
@@ -75,6 +91,7 @@ def construct_grace_notes_for_durable(
         g_chords = _grace_notes_to_chords(mung_gns, graph)
         for chord in g_chords:
             beams: list[Node] = []
+            slur_or_tie: Node | None = None
             c: list[GraceNote] = []
             for note in chord:
                 gn = _construct_grace_note(note, graph)
@@ -84,16 +101,28 @@ def construct_grace_notes_for_durable(
                 beams.extend(
                     graph.children(note, class_filter=C.NoteheadAttachments.BEAM)
                 )
+                slurs_ties = graph.children(
+                    note, class_filter=[C.Spanners.SLUR, C.Spanners.TIE]
+                )
+                if slur_or_tie is None and len(slurs_ties) > 0:
+                    slur_or_tie = min(slurs_ties, key=lambda st: st.id)
 
             gc = GraceChord(
                 notes=c,
                 parent=parent,
             )
 
+            if slur_or_tie is not None:
+                with _construction_guard(slur_or_tie, GraceSlur, False):
+                    gs = GraceSlur(
+                        start=gc, stop=parent, placement=AboveBelowToken.BELOW
+                    )
+
             for beam in beams:
                 found_beams[beam].add(gc)
 
         for mung_beam, gcs in found_beams.items():
+            print(mung_beam, len(gcs))
             beam = construct_durable_beam(mung_beam, list(gcs))
 
         return mapping

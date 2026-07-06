@@ -525,15 +525,6 @@ class MusicXML_ExportEngine(ExportEngine):
         """
         output = []
         
-        # output.extend(self.xml_Wedge(subevent, "start"))
-        # output.extend(self.xml_Ottava(subevent, "start"))
-        
-        # output.extend(self.xml_Dynamics(subevent))
-        # output.extend(self.xml_Segno(subevent))
-        # output.extend(self.xml_ScoreText(subevent, subevent.dynamics_texts))
-        # output.extend(self.xml_ScoreText(subevent, subevent.tempos))
-        # output.extend(self.xml_ScoreText(subevent, subevent.interpretation_texts))
-        # output.extend(self.xml_ScoreText(subevent, subevent.rest_texts))
         output.extend(self._xml_directions(subevent, "start"))
         
         output.extend(self.xml_GraceNotes(subevent))
@@ -546,8 +537,6 @@ class MusicXML_ExportEngine(ExportEngine):
         elif isinstance(subevent, RepeatBar):
             return [self.create_forward(subevent.duration)]
         
-        # output.extend(self.xml_Wedge(subevent, "stop"))
-        # output.extend(self.xml_Ottava(subevent, "stop"))
         output.extend(self._xml_directions(subevent, "stop"))
 
         return output
@@ -704,7 +693,7 @@ class MusicXML_ExportEngine(ExportEngine):
             """
             stops: list[tuple[StartStopContinueToken, Slur]] = []
             starts: list[tuple[StartStopContinueToken, Slur]] = []
-            for slur in durable.slurs:
+            for slur in durable.slurs + durable.grace_slurs:
                 if slur.is_start(durable.subevent):
                     starts.append((StartStopContinueToken.START, slur))
                 elif slur.is_stop(durable.subevent):
@@ -1068,7 +1057,10 @@ class MusicXML_ExportEngine(ExportEngine):
         
         # GRACE
         if is_grace:
-            ET.SubElement(n, "grace")
+            if note.is_first_in_chord and note.subevent.slash:
+                ET.SubElement(n, "grace", {"slash": YesNoToken.YES})
+            else:
+                ET.SubElement(n, "grace")
         
         # CHORD
         if not is_rest and note.is_chord_continuation:

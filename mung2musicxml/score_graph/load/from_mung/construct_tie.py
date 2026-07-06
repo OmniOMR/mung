@@ -1,6 +1,7 @@
 from typing import Optional
 from mung import Node, NotationGraph
 from mung.graph import infer_vertical_object_placement_relative_to_notes
+from mung.constants import InferenceEngineConstants as I
 
 from ....logger import logger
 from ...graph import *
@@ -19,6 +20,11 @@ def try_construct_tie(mung_tie: Node, durables: list[Durable], graph: NotationGr
     The method first tries to construct a tie and if it fails,
     it creates a slur.
     """
+    
+    if graph.has_parents(mung_tie, class_filter=I.GRACE_NOTEHEAD_CLASS_NAMES):
+        logger.warning(f"{mung_tie} contains grace notes, skipping")
+        return None
+    
     unique_onsets = set(d.global_fractional_onset for d in durables)
     unique_pitches = set(d.pitch for d in durables if isinstance(d, Note))
     

@@ -55,6 +55,11 @@ class InferenceEngineConstants(C):
         C.Noteheads.NOTEHEAD_BLACK_SMALL,
         C.Noteheads.NOTEHEAD_WHOLE_SMALL
     ]
+    
+    GRACE_NOTEHEAD_SLASHES = {
+        C.NoteheadAttachments.GRACE_NOTE_SLASH_STEM_DOWN,
+        C.NoteheadAttachments.GRACE_NOTE_SLASH_STEM_UP
+    }
 
     NONGRACE_NOTEHEAD_CLASS_NAMES = [
         C.Noteheads.NOTEHEAD_BLACK,

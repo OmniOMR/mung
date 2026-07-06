@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from .fermata import Fermata
     from .lyric import Lyric
     from .ornaments import Turn, Trill, ShortTrill, Arpeggiato
+    from .grace_note import GraceSlur
 
 
 @dataclass
@@ -97,6 +98,11 @@ class Durable(DurationObject):
     def slurs(self) -> list["Slur"]:
         from .slur import Slur
         return Slur.many_of(self.subevent, lambda t: t.all)
+
+    @property
+    def grace_slurs(self) -> list["GraceSlur"]:
+        from .grace_note import GraceSlur
+        return GraceSlur.many_of(self.subevent, lambda gs: gs.stop)
 
     @property
     def ties(self) -> list["Tie"]:

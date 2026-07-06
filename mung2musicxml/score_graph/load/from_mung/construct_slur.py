@@ -1,10 +1,14 @@
+from typing import Optional
+
 from mung import Node, NotationGraph
+from mung.constants import InferenceEngineConstants as I
 from mung.graph import (
     infer_vertical_object_placement_relative_to_notes,
     infer_horizontal_object_placement_relative_to_notes
 )
 
 from ...graph import *
+from ....logger import logger
 from .collector import needs_graph
 
 
@@ -13,7 +17,7 @@ def construct_slur(
         mung_slur: Node,
         subevents: list[Subevent],
         graph: NotationGraph
-) -> Slur:
+) -> Optional[Slur]:
     """
     Slurs is connected to the earliest and the latest two subevents.
     If there are multiple subevents at the start or the end,
@@ -22,8 +26,13 @@ def construct_slur(
 
     Creates slurs with only start or only stop,
     even though MusicXML does not support them.
-    """        
+    """
     assert len(subevents) > 0, f"No subevents for {mung_slur}"
+    
+    if graph.has_parents(mung_slur, class_filter=I.GRACE_NOTEHEAD_CLASS_NAMES):
+        logger.warning(f"{mung_slur} contains grace notes, skipping")
+        return None
+    
     subevents.sort(key=lambda s: s.global_fractional_onset)
 
     placement = AboveBelowToken.from_int(infer_vertical_object_placement_relative_to_notes(mung_slur, graph))

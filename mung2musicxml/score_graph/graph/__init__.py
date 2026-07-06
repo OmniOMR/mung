@@ -46,4 +46,4 @@ from .coda import Coda
 from .rest_text import RestText
 from .ornaments import Turn, Trill, ShortTrill, Arpeggiato
 from .ottava import Ottava
-from .grace_note import GraceNote, GraceChord
+from .grace_note import GraceNote, GraceChord, GraceSlur
