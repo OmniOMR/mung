@@ -26,4 +26,4 @@ classifiers = [
 path = "mung/_version.py"
 
 [tool.hatch.build]
-include = ["/smashcima"]
+include = ["/mung"]
