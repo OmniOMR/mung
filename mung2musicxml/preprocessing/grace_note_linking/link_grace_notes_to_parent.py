@@ -35,7 +35,5 @@ def link_grace_notes_to_parent(graph: NotationGraph) -> None:
             logger.warning(f"Unable to find shared parent notehead for {sg}")
         
         else:
-            staff = graph.children(parent, class_filter=C.Staves.STAFF)[0]
             for node in sg:
                 graph.add_edge(parent, node)
-                graph.add_edge(node, staff)

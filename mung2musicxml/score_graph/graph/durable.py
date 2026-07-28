@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .dot import Dot
     from .staff import Staff
     from .score_part import ScorePart
-    from .beam import DurableBeam
+    from .beam import Beam
     from .subevent import Subevent
     from .tuplet import Tuplet
     from .slur import Slur
@@ -22,7 +22,8 @@ if TYPE_CHECKING:
     from .part_measure import PartMeasure
     from .fermata import Fermata
     from .lyric import Lyric
-    from .ornaments import Turn, Trill, ShortTrill
+    from .ornaments import Turn, Trill, ShortTrill, Arpeggiato
+    from .grace_note import GraceSlur
 
 
 @dataclass
@@ -83,10 +84,9 @@ class Durable(DurationObject):
         raise NotImplementedError
     
     @property
-    def beams(self) -> list["DurableBeam"]:
-        from .beam import DurableBeam
-        subevent = self.subevent
-        return DurableBeam.many_of(subevent, lambda b: b.all)
+    def beams(self) -> list["Beam"]:
+        from .beam import Beam
+        return Beam.many_of(self.subevent, lambda b: b.all)
 
     @property
     def tuplet(self) -> Optional["Tuplet"]:
@@ -98,6 +98,11 @@ class Durable(DurationObject):
     def slurs(self) -> list["Slur"]:
         from .slur import Slur
         return Slur.many_of(self.subevent, lambda t: t.all)
+
+    @property
+    def grace_slurs(self) -> list["GraceSlur"]:
+        from .grace_note import GraceSlur
+        return GraceSlur.many_of(self.subevent, lambda gs: gs.stop)
 
     @property
     def ties(self) -> list["Tie"]:
@@ -138,6 +143,11 @@ class Durable(DurationObject):
     def short_trill(self) -> Optional["ShortTrill"]:
         from .ornaments import ShortTrill
         return ShortTrill.of_or_none(self.subevent, lambda t: t.parent)
+    
+    @property
+    def arpeggiato(self) -> Optional["Arpeggiato"]:
+        from .ornaments import Arpeggiato
+        return Arpeggiato.of_or_none(self.subevent, lambda t: t.parent)
     
     @property
     def fermatas(self) -> list["Fermata"]:

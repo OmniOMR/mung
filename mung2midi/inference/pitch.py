@@ -159,3 +159,16 @@ class Pitch:
         if not isinstance(other, Pitch):
             return NotImplemented
         return self.to_midi() < other.to_midi()
+
+
+class OttavaConstants(StrEnum):
+    """
+    Keys for storing computed information about ottavas.
+    """
+    
+    DIRECTION = "direction"
+    SIZE = "size"
+
+
+OTTAVA_SIZE_DEFAULT = 8
+OTTAVA_SIZE_TO_OCTAVE_MAPPING: dict[int, int] = {8: 1, 13: 2, 22: 3}

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from .scene_object import SceneObject
 from .subevent import Subevent
-from .tokens import AboveBelowToken
+from .tokens import AboveBelowToken, DirectionToken
 
 
 @dataclass
@@ -40,3 +40,13 @@ class ShortTrill(Ornament):
     """
 
     pass
+
+
+@dataclass
+class Arpeggiato(Ornament):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arpeggiate/
+    """
+    
+    direction: DirectionToken | None
+    

@@ -19,6 +19,7 @@ class Staff(SceneObject):
     durables: list[Durable]
     id: int
     other_symbols: list[Clef | Wedge] = field(default_factory=list)
+    grace_notes: list = field(default_factory=list)
 
     def __post_init__(self) -> None:
         assert self.id in [1, 2]

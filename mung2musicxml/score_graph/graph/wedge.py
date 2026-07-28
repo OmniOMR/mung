@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .tuplet import GenericStartStopContinueOnset
-from .tokens import AboveBelowToken, WedgeType
+from .tokens import AboveBelowToken, WedgeType, YesNoToken
 from .subevent import Subevent
 
 if TYPE_CHECKING:
@@ -16,6 +16,7 @@ class Wedge(GenericStartStopContinueOnset[Subevent]):
     """
     type_: WedgeType
     placement: AboveBelowToken
+    niente: YesNoToken
     
     @property
     def staff(self) -> "Staff":

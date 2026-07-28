@@ -7,7 +7,7 @@ from .tuplet import Tuplet
 from .tie import Tie
 from .durable import Durable
 from .note import Note
-from .beam import DurableBeam
+from .beam import Beam
 from .score import Score
 from .wedge import Wedge
 from .score_part import ScorePart
@@ -20,8 +20,6 @@ from .staff import Staff
 from .clef import Clef
 from .score_measure import ScoreMeasure
 from .voice import Voice
-from .grace_note import GraceNote
-from .beam import GraceNoteBeam
 from .rest import Rest
 from .key import Key
 from .time_signature import TimeSignature
@@ -46,4 +44,6 @@ from .volta import Volta
 from .segno import Segno
 from .coda import Coda
 from .rest_text import RestText
-from .ornaments import Turn, Trill, ShortTrill
+from .ornaments import Turn, Trill, ShortTrill, Arpeggiato
+from .ottava import Ottava
+from .grace_note import GraceNote, GraceChord, GraceSlur

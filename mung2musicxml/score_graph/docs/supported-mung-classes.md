@@ -1,17 +1,18 @@
 # Supported MuNG Classes
 
-> **Last revision: March 7nd 2026**
+> **Last revision: July 5nd 2026**
 
-> **Based on Annotation instructions from: [Feb 6th 2026](https://github.com/OmniOMR/mung/blob/7bddc87d61e19b62ac46834a66c88239dbfebdc5/docs/annotation-instructions/annotation-instructions.md)**
+> **Based on Annotation instructions from: [May 18th 2026](https://github.com/OmniOMR/mung/blob/68151e2eaae2fe11233634343a7f7bf53fea1c6d/docs/annotation-instructions/annotation-instructions.md)**
 
 This document goes over classes from MuNG that are are implemented in ScoreGraph, the list is based on [Annotation Instructions](https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md). For potential limitations of **implemented** classes see [Exporter Limitations](./musicxml-exporter-limitations.md) and [MusicXML Limitations](./musicxml-limitations.md).
 
-There are four levels of implementation:
+Each of the classes is assigned one of the five levels of implementation:
 
-- ✅ Implemented explicitly, an object in ScoreGraph.
-- ☑️ Implemented as part of another object.
-- 🚧 Partially implemented.
-- ❌ Not implemented.
+- ✅ **Implemented** - a dedicated object exists in ScoreGraph.
+- ☑️ **Implemented implicitly** - handled as part of another object.
+- 🚧 **Partial** - some aspects are implemented, others are not.
+- ❌ **Not implemented, planned** - not yet implemented, but intended for a future version.
+- ⛔ **Wont't be implemented** - the class won't be included in any of the future version.
 
 ## Staves
 
@@ -103,9 +104,12 @@ Grace noteheads are partially implemented but, in this version, they cannot form
   <img src="./images/rests-overview.png" height="100">
 </p>
 
-- 🚧 `restHBar`
-- ❌ `restText`
+- ⛔ `restHBar` - for more info see [Exporter Limitations](./musicxml-exporter-limitations.md#multi-measure-rests-not-supported).
+- ✅ `restText`
 
+<p style="background-color: white; display: inline-block;">
+  <img src="https://www.w3.org/2021/06/musicxml40/static/elements/multiple-rest.png" height="100">
+</p>
 
 ## Accidentals
 
@@ -419,7 +423,7 @@ ScoreGraph makes no difference between clefs at the starf of a system (`{g,f,c}C
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/wedge-element.png" height="100">
 </p>
 
-- ❌ `dynamicNienteForHairpin`
+- ✅ `dynamicNienteForHairpin`
 
 <p>
   <img src="https://github.com/OmniOMR/mung/raw/1c569e916c21ad685a0a2783b59c61efc129ca5d/docs/annotation-instructions/img/dynamicNienteForHairpin-0.png" height=100>
@@ -513,6 +517,8 @@ Repeats are supported, but, some the possible bar styles are not supported by MS
 
 ## Fermata
 
+Fermata direction is an attribute of the `Fermata` class.
+
 - ✅ `fermataAbove`
 - ✅ `fermataBelow`
 
@@ -551,6 +557,29 @@ Repeats are supported, but, some the possible bar styles are not supported by MS
 
 <p style="background-color: white; display: inline-block; ">
   <img src="https://www.w3.org/2021/06/musicxml40/static/examples/schleifer-element.png" height="100">
+</p>
+
+## Octaves
+
+`ottava` is a text class used to determine the size of octave shift. The octave shift is implemented as a spanner named `Ottava`.
+
+- ☑️ `ottava`
+- ✅ `ottavaSpanner`
+
+<p style="background-color: white; display: inline-block;">
+  <img src="https://www.w3.org/2021/06/musicxml40/static/examples/octave-shift-element.png" height="100">
+</p>
+
+## Arpeggiato
+
+Arpeggiato orientation, if any, is an attribute of the `Arpeggiato` class.
+
+- ✅ `arpeggiato`
+- ☑️ `arpeggiatoUp`
+- ☑️ `arpeggiatoDown`
+
+<p>
+  <img src="https://github.com/OmniOMR/mung/raw/main/docs/annotation-instructions/img/arpeggiato-0.png" height="100">
 </p>
 
 ## Unclassified

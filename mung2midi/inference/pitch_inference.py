@@ -8,6 +8,7 @@ from mung import  NotationGraph, Node
 from .pitch import Pitch, Octave, Step, Alter
 from ..logger import logger
 from .clefs_impl import get_clef_data_from_node
+from .ottava_direction_size import compute_ottava_direction_and_size, OTTAVA_SIZE_TO_OCTAVE_MAPPING
 
 
 @dataclass(frozen=True)
@@ -268,7 +269,7 @@ class PitchInferenceEngineState(object):
         
         assert isinstance(pitch_mod, int) and -2 <= pitch_mod <= 2
 
-        return pitch_mod
+        return pitch_mod          
 
     def pitch(self, delta: int) -> int:
         """Given a staffline delta, returns the current MIDI pitch code.
@@ -309,23 +310,7 @@ class PitchInferenceEngineState(object):
         output_step = I.PITCH_STEPS[(self.base_pitch_step + delta) % 7]
         output_octave = self.base_pitch_octave + ((delta + self.base_pitch_step) // 7)
 
-        # output_mod = ''
         accidental = self.accidental(delta)
-        # match accidental:
-        #     case 1:
-        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_SHARP]
-        #     case 2:
-        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_DOUBLE_SHARP]
-        #     case -1:
-        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_FLAT]
-        #     case -2:
-        #         output_mod = I.ACCIDENTAL_CODES[C.ACCIDENTAL_DOUBLE_FLAT]
-        #     case 0:
-        #         pass
-        #     case _:
-        #         raise ValueError(f"Unsupported accidental value: {accidental}")
-        
-        # print(Pitch(Octave(output_octave), Step(output_step), Alter(accidental)))
         return Pitch(Octave(output_octave), Step(output_step), Alter(accidental))
 
 
@@ -727,21 +712,37 @@ class PitchInferenceEngine(object):
             elif len(accidentals) == 1:
                 self.pitch_state.set_inline_accidental(delta, accidentals[0])
 
+
         # Get the actual pitch
         # --------------------
         p = self.pitch_state.pitch(delta)
 
-        ### DEBUG
-        # if notehead.id in [131, 83, 89, 94]:
-        #     logger.info('PitchInferenceEngine: results of pitch processing'
-        #                  ' for notehead {0}'.format(notehead.id))
-        #     logger.info('\tties: {0}'.format(ties))
-        #     logger.info('\taccidentals: {0}'.format(accidentals))
-        #     logger.info('\tdelta: {0}'.format(delta))
-        #     logger.info('\tpitch: {0}'.format(p))
-
         output: list = [p]
         po = self.pitch_state.pitch_name(delta)
+
+        ottavas = self.__children(notehead, [C.Octaves.OTTAVA_SPANNER])
+        if len(ottavas) > 0:
+            logger.debug(f"Found {len(ottavas)} for {notehead}")
+            if len(ottavas) > 1:
+                logger.warning(f"Multiple ottavas found for {notehead}, will use one with lower id")
+            ottava = min(ottavas, key=lambda o: o.id)
+            ottava_texts = self.__children(ottava, [C.Octaves.OTTAVA])
+            ottava_text: Node | None = None
+            if len(ottava_texts) > 0:
+                ottava_text = ottava_texts[0]
+                
+            direction, size = compute_ottava_direction_and_size(
+                ottava=ottava,
+                durables=self.__parents(ottava, I.CLASSES_BEARING_DURATIONS),
+                ottava_text=ottava_text
+            )
+            octave = OTTAVA_SIZE_TO_OCTAVE_MAPPING[size]
+
+            # Add ottava delta
+            p += direction * octave * 12
+            po = Pitch(Octave(po.octave + direction * octave), po.step, po.alter)
+            
+
         if with_name:
             output.append(po.to_tuple_repr())
         if with_pitch_object:

@@ -1,5 +1,6 @@
 from enum import StrEnum
 from fractions import Fraction
+from typing import Literal
 from mung.constants import ClassNameConstants as C
 
 from .utils import AutoOrderedStrEnum
@@ -83,6 +84,9 @@ class YesNoToken(StrEnum):
     """
     YES = "yes"
     NO = "no"
+    
+    def __bool__(self) -> bool:
+        return self == YesNoToken.YES
 
     @classmethod
     def from_bool(cls, value: bool) -> "YesNoToken":
@@ -477,3 +481,23 @@ class StartStopDiscontinueToken(StrEnum):
     START = "start"
     STOP = "stop"
     DISCONTINUE = "discontinue"
+
+
+class DirectionToken(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down/
+    """
+    UP = "up"
+    DOWN = "down"
+
+
+class OctaveShiftType(StrEnum):
+    """
+    https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down-stop-continue/
+    """
+    
+    UP = "up"
+    DOWN = "down"
+    STOP = "stop"
+    CONTINUE = "continue"
+    

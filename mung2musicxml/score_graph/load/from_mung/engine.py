@@ -48,7 +48,13 @@ from .construct_volta import construct_volta
 from .construct_coda import construct_coda
 from .construct_segno import construct_segno
 from .construct_rest_text import construct_rest_text
-from .construct_ornaments import construct_turn, construct_trill, construct_short_trill
+from .construct_ornaments import (
+    construct_turn,
+    construct_trill,
+    construct_short_trill,
+    construct_arpeggiato,
+)
+from .construct_ottava import construct_ottava
 
 
 from ....logger import logger
@@ -234,7 +240,7 @@ class MuNG_LoadEngine(LoadEngine):
         
         subevent_collector: SGObjectCollector[Subevent] = SGObjectCollector(
             [
-                CollectorRecord[Subevent](DurableBeam, C.NoteheadAttachments.BEAM, construct_durable_beam),
+                CollectorRecord[Subevent](Beam, C.NoteheadAttachments.BEAM, construct_durable_beam),
                 CollectorRecord[Subevent](Articulation, C.Articulation.ALL(), construct_articulation), # type: ignore
                 CollectorRecord[Subevent](Tuplet, C.Tuplets.TUPLET, construct_tuplet),
                 CollectorRecord[Subevent](Slur, C.Spanners.SLUR, construct_slur),
@@ -250,6 +256,8 @@ class MuNG_LoadEngine(LoadEngine):
                 CollectorRecord[Subevent](Turn, [C.Ornaments.ORNAMENT_TURN, C.Ornaments.ORNAMENT_TURN_INVERTED], construct_turn),
                 CollectorRecord[Subevent](Trill, C.Ornaments.ORNAMENT_TRILL, construct_trill),
                 CollectorRecord[Subevent](ShortTrill, C.Ornaments.ORNAMENT_SHORT_TRILL, construct_short_trill),
+                CollectorRecord[Subevent](Arpeggiato, C.Arpeggiato.ALL(), construct_arpeggiato), # type: ignore
+                CollectorRecord[Subevent](Ottava, C.Octaves.OTTAVA_SPANNER, construct_ottava),
 
                 CollectorRecord[Subevent](TremoloBeam, C.Tremolo.TREMOLO_BEAM, None),
                 CollectorRecord[Subevent](Lyric, [C.Lyrics.LYRICS_TEXT, C.Lyrics.LYRICS_UNISONO], None),
@@ -266,12 +274,15 @@ class MuNG_LoadEngine(LoadEngine):
             # instrument -> staffs in a system -> staffs
             staff_to_durables: defaultdict[Staff, list[Durable]] = defaultdict(list)
             staff_to_others: defaultdict[Staff, list[Clef]] = defaultdict(list)
+            from ...graph.grace_note import GraceNote
+            staff_to_grace_notes: defaultdict[Staff, list[GraceNote]] = defaultdict(list)
             logger.info(f"Processing instrument: {instrument}")
             
             part_measures: list[PartMeasure] = []
 
             for measure in (chain.from_iterable(instros_to_measures[frozenset(s)] for s in instrument)):
                 single_measure_subevents: list[Subevent] = []
+                found_grace_notes: set[Node] = set()
 
                 subs = subevents_from_list_of_symbols([x for x in measure.nodes if x.class_name in I.CLASSES_BEARING_DURATIONS], graph)
                 
@@ -301,8 +312,11 @@ class MuNG_LoadEngine(LoadEngine):
                             # register volta
                             for volta in graph.parents(dur, class_filter=C.Repeat.VOLTA):
                                 volta_by_system_measure_id[volta].add(measure.id_)
+                            
+                            # register grace notes
+                            found_grace_notes.update(graph.children(dur, class_filter=I.GRACE_NOTEHEAD_CLASS_NAMES))
 
-                        # all durables inside a subevent should be either notes, rests or other
+                        # All durables inside a subevent should be either notes, rests or other
                         if isinstance(chordlike[0], Note):
                             chord = Chord(chordlike)
                             subevent = chord
@@ -313,11 +327,12 @@ class MuNG_LoadEngine(LoadEngine):
                             single_measure_subevents.append(chordlike[0])
                             subevent = chordlike[0]
                         
+                        # Update collectors
                         subevent_collector.add_score_object(subevent)
-                        
                         for d in subevent.all_durables:
                             durable_collector.add_score_object(d)
                         
+                        # TREMOLO SINGLES
                         if len(found_tremolo_singles) > 0:
                             construct_tremolo_single(
                                 subevent,
@@ -325,6 +340,13 @@ class MuNG_LoadEngine(LoadEngine):
                                 found_tremolo_singles,
                                 graph
                             )
+                            
+                        # GRACE NOTES
+                        from .construct_grace_notes import construct_grace_notes_for_durable
+                        for mung_grace, grace in construct_grace_notes_for_durable(sub, subevent, graph):
+                            staff_to_grace_notes[
+                                    self._get_symbols_staff(mung_grace, mung_staffs_to_staffs, graph)
+                                ].append(grace)
                             
                     except AssertionError as ae:
                         raise ValueError(f"Unable to construct subevent from: {sub}") from ae
@@ -383,6 +405,9 @@ class MuNG_LoadEngine(LoadEngine):
             
             for staff, values in staff_to_durables.items():
                 staff.durables = values
+                
+            for staff, values in staff_to_grace_notes.items():
+                staff.grace_notes = values
             
             for staff, values in staff_to_others.items():
                 staff.other_symbols = values # type: ignore

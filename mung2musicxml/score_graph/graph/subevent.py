@@ -7,7 +7,7 @@ from .interface import DurationObject
 if TYPE_CHECKING:
     from .staff import Staff
     from .durable import Durable
-    from .beam import DurableBeam
+    from .beam import Beam
     from .voice import Voice
     from .tuplet import Tuplet
     from .score_part import ScorePart
@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from .segno import Segno
     from .coda import Coda
     from .rest_text import RestText
+    from .ottava import Ottava
+    from .grace_note import GraceChord
 
 
 @dataclass
@@ -29,6 +31,12 @@ class Subevent(DurationObject):
     that start at the same onset and belong the same voice.
     These are chords, rests and repeats.
     """
+    
+    @property
+    def grace_chords(self) -> list["GraceChord"]:
+        from .grace_note import GraceChord
+        return GraceChord.many_of(self, lambda s: s.parent)
+    
     @property
     def in_measure_fractional_onset(self) -> Fraction:
         # avoid infinite recursion for descendants
@@ -69,9 +77,9 @@ class Subevent(DurationObject):
         raise NotImplementedError
 
     @property
-    def beams(self) -> list["DurableBeam"]:
-        from .beam import DurableBeam
-        return DurableBeam.many_of(self, lambda b: b.all)
+    def beams(self) -> list["Beam"]:
+        from .beam import Beam
+        return Beam.many_of(self, lambda b: b.all)
     
     @property
     def tuplet(self) -> Optional["Tuplet"]:
@@ -103,7 +111,6 @@ class Subevent(DurationObject):
         from .dynamics import Dynamics
         return Dynamics.many_of(self, lambda d: d.parent)
     
-    
     @property
     def segnos(self) -> list["Segno"]:
         from .segno import Segno
@@ -133,3 +140,8 @@ class Subevent(DurationObject):
     def rest_texts(self) -> list["RestText"]:
         from .rest_text import RestText
         return RestText.many_of(self, lambda d: d.all)
+    
+    @property
+    def ottavas(self) -> list["Ottava"]:
+        from .ottava import Ottava
+        return Ottava.many_of(self, lambda d: d.all)

@@ -1,48 +1,84 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from functools import cached_property
+from fractions import Fraction
 
-from .scene_object import SceneObject
-from .pitch import Pitch
-from .tokens import StemValueToken, NoteTypeValue
-from .voice import Voice
+from .chord import Chord
+from .note import Note
+from .subevent import Subevent
+from .tokens import YesNoToken
+from .slur import Slur
+
 if TYPE_CHECKING:
-    from .note import Note
+    from .voice import Voice
     from .staff import Staff
-    from .beam import GraceNoteBeam
 
-# TODO: add support for slash (yes/no)
-# TODO: add support for grace note chords and other "large" objects
-# TODO: turn around grace note - durable relation (grace note remembers its parent)
 
-@dataclass
-class GraceNote(SceneObject):
-    """
-    https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/grace/
-    """
-    pitch: Pitch
-    type_: NoteTypeValue
-    at_durable_index: int
-    stem_orientation: StemValueToken
+@dataclass(kw_only=True)
+class GraceNote(Note):
+    fractional_duration_: Fraction = Fraction(0)
+    slash: YesNoToken
 
-    @cached_property
-    def parent_note(self) -> "Note":
-        from .note import Note
-        return Note.of(self, lambda n: n.grace_notes)
-    
     @property
-    def voice(self) -> Voice:
-        return self.parent_note.voice
+    def global_fractional_onset(self) -> Fraction:
+        return self.in_measure_fractional_onset
+
+    @property
+    def subevent(self) -> "GraceChord":
+        return GraceChord.of(self, lambda gc: gc.notes)
+
+    @property
+    def voice(self) -> "Voice":
+        return self.subevent.voice
 
     @property
     def staff(self) -> "Staff":
-        return self.parent_note.staff
-    
+        from .staff import Staff
+        return Staff.of(self, lambda s: s.grace_notes)
+
     @property
-    def beams(self) -> list["GraceNoteBeam"]:
-        from .beam import GraceNoteBeam
-        return GraceNoteBeam.many_of(self, lambda gn: gn.all_grace_notes)
-    
+    def grace_slurs(self) -> list["GraceSlur"]:
+        return GraceSlur.many_of(self.subevent, lambda gs: gs.start)
+
+
+@dataclass(kw_only=True)
+class GraceChord(Chord):
+    notes: list[GraceNote]  # type: ignore
+    parent: Subevent
+
+    @property
+    def global_fractional_onset(self) -> Fraction:
+        return self.notes[0].global_fractional_onset
+
+    @property
+    def slash(self) -> YesNoToken:
+        return YesNoToken.from_bool(any(note.slash for note in self.notes))
+
+    @property
+    def voice(self) -> "Voice":
+        return self.parent.voice
+
+    def __hash__(self) -> int:
+        return id(self)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
+
+
+@dataclass
+class GraceSlur(Slur):
+    """
+    Equivalent to regular slur
+    but between grace notes and regular notes.
+    Has less strict validation rules during initialization.
+    """
+
+    start: GraceChord  # type: ignore
+    stop: Subevent  # type: ignore
+
+    def __post_init__(self):
+        self._check_start_is_set()
+        self._check_stop_is_set()
+
     def __hash__(self) -> int:
         return id(self)
 

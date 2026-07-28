@@ -707,7 +707,10 @@ class NotationGraph(object):
                 if predecessor_id not in descendant.data[P.PRECEDENCE_INLINKS]:
                     descendant.data[P.PRECEDENCE_INLINKS].append(predecessor_id)
 
-    def has_edge(self, from_id: int, to_id: int) -> bool:
+    def has_edge(self, from_node_or_id: Node | int, to_node_or_id: Node | int) -> bool:
+        from_id = self.__to_id(from_node_or_id)
+        to_id = self.__to_id(to_node_or_id)
+        
         if from_id not in self.__id_to_node_mapping:
             logger.warning('Asking for object {}, which is not in graph.'.format(from_id))
         if to_id not in self.__id_to_node_mapping:
@@ -1317,7 +1320,7 @@ def infer_stem_orientation(stem: Node, graph: NotationGraph) -> int:
     `+1` means that the stem is oriented upwards,
     `-1` downwards.
     """
-    noteheads = graph.parents(stem, class_filter=I.CLASSES_BEARING_DURATIONS)
+    noteheads = graph.parents(stem, class_filter=I.NOTEHEAD_CLASS_NAMES)
     distance = sum(n.vertical_center - stem.vertical_center for n in noteheads)
     if distance < 0:
         return -1
