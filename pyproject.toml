@@ -26,4 +26,4 @@ classifiers = [
 path = "mung/_version.py"
 
 [tool.hatch.build]
-include = ["/mung"]
+include = ["/mung", "/mung2midi", "/mung2musicxml"]
